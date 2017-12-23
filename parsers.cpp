@@ -9,55 +9,55 @@
 // TODO: Restructure parsers as lexer + synth
 // TODO: Better whitespace checking + better end of line checking (unify \r\n and \n)
 
-bool ParseUInt16(char *c, uint16_t *num)
+bool parse_uint16(char *c, uint16_t *num)
 {
-	static uint16_t currentNumber = 0;
+	static uint16_t current_number = 0;
 	static bool parsing = false;
 
-	bool endedParsing = false;
+	bool ended_parsing = false;
 
 	if (isdigit(*c))
 	{
 		int16_t num = *c - '0';
-		currentNumber = currentNumber * 10 + num;
+		current_number = current_number * 10 + num;
 		parsing = true;
 	}
 	else if (parsing)
 	{
-		*num = currentNumber;
+		*num = current_number;
 
-		currentNumber = 0;
+		current_number = 0;
 		parsing = false;
-		endedParsing = true;
+		ended_parsing = true;
 	}
 	if (*c == '/' && !parsing)
 	{
 		parsing = true;
 	}
 
-	return endedParsing;
+	return ended_parsing;
 }
 
-bool ParseFloat(char *c, float *num)
+bool parse_float(char *c, float *num)
 {
-	static float currentNumber = 0;
+	static float current_number = 0;
 	static float fraction = -1.0f;
 	static float sign = 1.0f;
 	static bool parsing = false;
 
-	bool endedParsing = false;
+	bool ended_parsing = false;
 
 	if (isdigit(*c))
 	{
 		int16_t num = *c - '0';
 		if (fraction <= 0.0f)
 		{
-			currentNumber = 10.0f * currentNumber + (float)num;
+			current_number = 10.0f * current_number + (float)num;
 			fraction = 0.0f;
 		}
 		else
 		{
-			currentNumber = currentNumber + (float)num / fraction;
+			current_number = current_number + (float)num / fraction;
 			fraction *= 10.0f;
 		}
 		parsing = true;
@@ -73,25 +73,25 @@ bool ParseFloat(char *c, float *num)
 	}
 	else if (parsing)
 	{
-		*num = currentNumber * sign;
+		*num = current_number * sign;
 
-		currentNumber = 0;
+		current_number = 0;
 		fraction = -1.0f;
 		sign = 1.0f;
 		parsing = false;
-		endedParsing = true;
+		ended_parsing = true;
 	}
 
-	return endedParsing;
+	return ended_parsing;
 }
 
 template <typename T>
-bool ParseNNumbers(char *c, T *storage, uint32_t number, bool parsingFunction(char *, T *))
+bool parse_n_numbers(char *c, T *storage, uint32_t number, bool parsing_function(char *, T *))
 {
 	static uint32_t count = 0;
 	bool finished = false;
 
-	if (parsingFunction(c, storage + count))
+	if (parsing_function(c, storage + count))
 	{
 		count++;
 		if (count == number)
@@ -114,21 +114,21 @@ enum OBJParserState
 	GO_TO_NEXT_LINE
 };
 
-MeshData parsers::GetMeshFromOBJ(File file, StackAllocator *allocator)
+MeshData parsers::get_mesh_from_obj(File file, StackAllocator *allocator)
 {
-	char *fileStart = (char *)file.data;
+	char *file_start = (char *)file.data;
 	uint32_t size = file.size;
 
 	OBJParserState state = START_OF_LINE;
 
-	uint32_t positionCount = 0;
-	uint32_t normalCount = 0;
-	uint32_t texcoordCount = 0;
-	uint32_t indexCount = 0;
+	uint32_t position_count = 0;
+	uint32_t normal_count = 0;
+	uint32_t texcoord_count = 0;
+	uint32_t index_count = 0;
 
 	char *ptr = 0;
 	uint32_t counter = 0;
-	for (counter = 0, ptr = fileStart; ptr && counter < size; counter++, ptr++)
+	for (counter = 0, ptr = file_start; ptr && counter < size; counter++, ptr++)
 	{
 		switch (state)
 		{
@@ -136,19 +136,19 @@ MeshData parsers::GetMeshFromOBJ(File file, StackAllocator *allocator)
 		{
 			if (strncmp(ptr, "vn", 2) == 0)
 			{
-				normalCount++;
+				normal_count++;
 			}
 			else if (strncmp(ptr, "vt", 2) == 0)
 			{
-				texcoordCount++;
+				texcoord_count++;
 			}
 			else if (*ptr == 'v')
 			{
-				positionCount++;
+				position_count++;
 			}
 			else if (*ptr == 'f')
 			{
-				indexCount += 3;
+				index_count += 3;
 			} 
 			state = GO_TO_NEXT_LINE;
 		} break;
@@ -162,41 +162,41 @@ MeshData parsers::GetMeshFromOBJ(File file, StackAllocator *allocator)
 		}
 	}
 
-	assert(positionCount > 0);
-	if (positionCount == 0)
+	assert(position_count > 0);
+	if (position_count == 0)
 	{
 		logging::print_error("No. positions in OBJ file is 0.");
 	}
 
-	uint32_t vertexStride = 4;
-	if (texcoordCount > 0)
+	uint32_t vertex_stride = 4;
+	if (texcoord_count > 0)
 	{
-		vertexStride += 2;
+		vertex_stride += 2;
 	}
 
-	if (normalCount > 0)
+	if (normal_count > 0)
 	{
-		vertexStride += 4;
+		vertex_stride += 4;
 	}
-	float *vertices = memory::alloc_stack<float>(allocator, indexCount * vertexStride);
-	uint16_t *indices = memory::alloc_stack<uint16_t>(allocator, indexCount);
+	float *vertices = memory::alloc_stack<float>(allocator, index_count * vertex_stride);
+	uint16_t *indices = memory::alloc_stack<uint16_t>(allocator, index_count);
 
 	StackAllocatorState stack_state = memory::save_stack_state(allocator);
 
-	// helperIndices store indices for positions/normals/texcoords for each vertex.
+	// helper_indices store indices for positions/normals/texcoords for each vertex.
 	// e.g. if you have f 1/1/1 in obj file, helperIndices will store [1,1,1].
-	uint16_t *helperIndices = memory::alloc_stack<uint16_t>(allocator, indexCount * 3);
-	float *positions = memory::alloc_stack<float>(allocator, positionCount * 4);
-	float *normals = memory::alloc_stack<float>(allocator, normalCount * 4);
-	float *texcoords = memory::alloc_stack<float>(allocator, texcoordCount * 2);
+	uint16_t *helper_indices = memory::alloc_stack<uint16_t>(allocator, index_count * 3);
+	float *positions = memory::alloc_stack<float>(allocator, position_count * 4);
+	float *normals = memory::alloc_stack<float>(allocator, normal_count * 4);
+	float *texcoords = memory::alloc_stack<float>(allocator, texcoord_count * 2);
 
-	uint16_t *indexPtr = helperIndices;
-	float *positionPtr = positions;
-	float *normalPtr = normals;
-	float *texcoordPtr = texcoords;
+	uint16_t *index_ptr = helper_indices;
+	float *position_ptr = positions;
+	float *normal_ptr = normals;
+	float *texcoord_ptr = texcoords;
 
 	state = START_OF_LINE;
-	for (counter = 0, ptr = fileStart; ptr && counter < size; counter++, ptr++)
+	for (counter = 0, ptr = file_start; ptr && counter < size; counter++, ptr++)
 	{
 		switch (state)
 		{
@@ -221,33 +221,33 @@ MeshData parsers::GetMeshFromOBJ(File file, StackAllocator *allocator)
 		} break;
 		case PARSE_FACE:
 		{
-			if (ParseNNumbers<uint16_t>(ptr, indexPtr, 9, ParseUInt16))
+			if (parse_n_numbers<uint16_t>(ptr, index_ptr, 9, parse_uint16))
 			{
-				indexPtr += 9;
+				index_ptr += 9;
 				state = GO_TO_NEXT_LINE;
 			}
 		} break;
 		case PARSE_POSITION:
 		{
-			if (ParseNNumbers<float>(ptr, positionPtr, 4, ParseFloat))
+			if (parse_n_numbers<float>(ptr, position_ptr, 4, parse_float))
 			{
-				positionPtr += 4;
+				position_ptr += 4;
 				state = GO_TO_NEXT_LINE;
 			}
 		} break;
 		case PARSE_NORMAL:
 		{
-			if (ParseNNumbers<float>(ptr, normalPtr, 4, ParseFloat))
+			if (parse_n_numbers<float>(ptr, normal_ptr, 4, parse_float))
 			{
-				normalPtr += 4;
+				normal_ptr += 4;
 				state = GO_TO_NEXT_LINE;
 			}
 		} break;
 		case PARSE_TEXCOORD:
 		{
-			if (ParseNNumbers<float>(ptr, texcoordPtr, 2, ParseFloat))
+			if (parse_n_numbers<float>(ptr, texcoord_ptr, 2, parse_float))
 			{
-				texcoordPtr += 2;
+				texcoord_ptr += 2;
 				state = GO_TO_NEXT_LINE;
 			}
 		} break;
@@ -262,51 +262,51 @@ MeshData parsers::GetMeshFromOBJ(File file, StackAllocator *allocator)
 	}
 
 	// TODO: Check if vertex exists, do not duplicate
-	float *verticesPtr = vertices;
-	uint16_t *indicesPtr = indices;
-	uint16_t *helperIndicesPtr = helperIndices;
-	for (uint32_t i = 0; i < indexCount; ++i)
+	float *vertices_ptr = vertices;
+	uint16_t *indices_ptr = indices;
+	uint16_t *helper_indices_ptr = helper_indices;
+	for (uint32_t i = 0; i < index_count; ++i)
 	{
-		*(indicesPtr++) = i;
+		*(indices_ptr++) = i;
 
-		uint16_t positionIndex = *(helperIndicesPtr) - 1;
-		float *position = positions + positionIndex * 4;
-		memcpy(verticesPtr, position, sizeof(float) * 4);
-		verticesPtr += 4;
+		uint16_t position_index = *(helper_indices_ptr) - 1;
+		float *position = positions + position_index * 4;
+		memcpy(vertices_ptr, position, sizeof(float) * 4);
+		vertices_ptr += 4;
 
-		if (texcoordCount > 0)
+		if (texcoord_count > 0)
 		{
-			uint16_t texcoordIndex = *(helperIndicesPtr + 1) - 1;
-			float *texcoord = texcoords + texcoordIndex * 2;
-			memcpy(verticesPtr, texcoord, sizeof(float) * 2);
-			verticesPtr += 2;
+			uint16_t texcoord_index = *(helper_indices_ptr + 1) - 1;
+			float *texcoord = texcoords + texcoord_index * 2;
+			memcpy(vertices_ptr, texcoord, sizeof(float) * 2);
+			vertices_ptr += 2;
 		}
 
-		if (normalCount > 0)
+		if (normal_count > 0)
 		{
-			uint16_t normalIndex = *(helperIndicesPtr + 2) - 1;
-			float *normal = normals + normalIndex * 4;
-			memcpy(verticesPtr, normal, sizeof(float) * 4);
-			verticesPtr += 4;
+			uint16_t normal_index = *(helper_indices_ptr + 2) - 1;
+			float *normal = normals + normal_index * 4;
+			memcpy(vertices_ptr, normal, sizeof(float) * 4);
+			vertices_ptr += 4;
 		}
 
-		helperIndicesPtr += 3;
+		helper_indices_ptr += 3;
 	}
 
-	MeshData meshData;
+	MeshData mesh_data;
 
-	meshData.vertices = vertices;
-	meshData.indices = indices;
-	meshData.vertexCount = indexCount;
-	meshData.indexCount = indexCount;
-	meshData.vertexStride = sizeof(float) * vertexStride;
+	mesh_data.vertices = vertices;
+	mesh_data.indices = indices;
+	mesh_data.vertex_count = index_count;
+	mesh_data.index_count = index_count;
+	mesh_data.vertex_stride = sizeof(float) * vertex_stride;
 
 	memory::load_stack_state(allocator, stack_state);
 
-	return meshData;
+	return mesh_data;
 }
 
-char *assetStrings[] =
+char *asset_strings[] =
 {
 	"NONE",
 	"MESH",
@@ -317,15 +317,15 @@ char *assetStrings[] =
 	"FONT"
 };
 
-uint32_t AssetTypeFromString(char *string, uint32_t stringLength)
+uint32_t asset_type_from_string(char *string, uint32_t string_length)
 {
 	uint32_t type = NONE;
 
-	for (uint32_t assetType = 0; assetType < ARRAYSIZE(assetStrings); ++assetType)
+	for (uint32_t asset_type = 0; asset_type < ARRAYSIZE(asset_strings); ++asset_type)
 	{
-		if (strlen(assetStrings[assetType]) == stringLength && strncmp(string, assetStrings[assetType], stringLength) == 0)
+		if (strlen(asset_strings[asset_type]) == string_length && strncmp(string, asset_strings[asset_type], string_length) == 0)
 		{
-			type = assetType;
+			type = asset_type;
 			break;
 		}
 	}
@@ -333,7 +333,7 @@ uint32_t AssetTypeFromString(char *string, uint32_t stringLength)
 	return type;
 }
 
-AssetDatabase parsers::GetAssetDBFromADF(File adfFile, StackAllocator *stackAllocator)
+AssetDatabase parsers::get_assets_db_from_adf(File adf_file, StackAllocator *stack_allocator)
 {
 	enum State
 	{
@@ -342,40 +342,40 @@ AssetDatabase parsers::GetAssetDBFromADF(File adfFile, StackAllocator *stackAllo
 		PARSING_TYPE
 	};
 
-	char *c = (char *)adfFile.data;
+	char *c = (char *)adf_file.data;
 	State state = PARSING_NAME;
 
-	uint32_t assetCount = 0;
-	for (uint32_t i = 0; i < adfFile.size; ++i, ++c)
+	uint32_t asset_count = 0;
+	for (uint32_t i = 0; i < adf_file.size; ++i, ++c)
 	{
 		// Increase asset count in case there's end of line or end of file, AND you're not on a blank line
-		if ((*c == '\n' || i == adfFile.size - 1) && *(c - 2) != '\n')
+		if ((*c == '\n' || i == adf_file.size - 1) && *(c - 2) != '\n')
 		{
-			assetCount++;
+			asset_count++;
 		}
 	}
 
-	logging::print("Asset count: %d", assetCount);
+	logging::print("Asset count: %d", asset_count);
 
-	sid *keys = memory::alloc_stack<sid>(stackAllocator, assetCount);
-	AssetInfo *infos = memory::alloc_stack<AssetInfo>(stackAllocator, assetCount);
-	for (uint32_t i = 0; i < assetCount; ++i)
+	sid *keys = memory::alloc_stack<sid>(stack_allocator, asset_count);
+	AssetInfo *infos = memory::alloc_stack<AssetInfo>(stack_allocator, asset_count);
+	for (uint32_t i = 0; i < asset_count; ++i)
 	{
-		infos[i].path = memory::alloc_stack<char>(stackAllocator, ASSET_MAX_PATH_LENGTH);
+		infos[i].path = memory::alloc_stack<char>(stack_allocator, ASSET_MAX_PATH_LENGTH);
 	}
 
-	c = (char *)adfFile.data;
-	uint32_t assetCounter = 0;
-	for (uint32_t i = 0; i < adfFile.size; ++i, ++c)
+	c = (char *)adf_file.data;
+	uint32_t asset_counter = 0;
+	for (uint32_t i = 0; i < adf_file.size; ++i, ++c)
 	{
 		switch (state)
 		{
 		case PARSING_NAME:
 		{
-			static uint32_t nameLength = 0;
+			static uint32_t name_length = 0;
 			if (*c == '\r' || *c == '\n')
 			{
-				if (nameLength == 0)
+				if (name_length == 0)
 				{
 					// OK, just an empty line
 				}
@@ -386,73 +386,73 @@ AssetDatabase parsers::GetAssetDBFromADF(File adfFile, StackAllocator *stackAllo
 			}
 			else if (*c == ' ' && *(c - 1) == ')')
 			{
-				char *nameStart = c - 11;
-				nameLength = 10;
-				char nameBuffer[ASSET_MAX_NAME_LENGTH];
-				if (nameLength > ASSET_MAX_NAME_LENGTH - 1) // Have to account for 0 terminating character
+				char *name_start = c - 11;
+				name_length = 10;
+				char name_buffer[ASSET_MAX_NAME_LENGTH];
+				if (name_length > ASSET_MAX_NAME_LENGTH - 1) // Have to account for 0 terminating character
 				{
 					logging::print_error("Name length read from ADF too long!");
-					nameLength = ASSET_MAX_NAME_LENGTH - 1;
+					name_length = ASSET_MAX_NAME_LENGTH - 1;
 				}
-				memcpy(nameBuffer, nameStart, MIN(nameLength, ASSET_MAX_NAME_LENGTH - 1));
-				nameBuffer[nameLength] = 0;
-				keys[assetCounter] = strtoul(nameBuffer, NULL, 16);
+				memcpy(name_buffer, name_start, MIN(name_length, ASSET_MAX_NAME_LENGTH - 1));
+				name_buffer[name_length] = 0;
+				keys[asset_counter] = strtoul(name_buffer, NULL, 16);
 				state = PARSING_PATH;
-				nameLength = 0;
+				name_length = 0;
 			}
 			else
 			{
-				nameLength++;
+				name_length++;
 			}
 		}
 		break;
 		case PARSING_PATH:
 		{
-			static uint32_t pathLength = 0;
+			static uint32_t path_length = 0;
 			if (*c == '\r' || *c == '\n')
 			{
 				logging::print_error("Incorrect ADF format! End of line before asset type read.");
 			}
 			else if (*c == ' ')
 			{
-				char *pathStart = c - pathLength;
-				if (pathLength > ASSET_MAX_PATH_LENGTH - 1) // Have to account for 0 terminating character
+				char *path_start = c - path_length;
+				if (path_length > ASSET_MAX_PATH_LENGTH - 1) // Have to account for 0 terminating character
 				{
 					logging::print_error("Path read from ADF too long!");
-					pathLength = ASSET_MAX_PATH_LENGTH - 1;
+					path_length = ASSET_MAX_PATH_LENGTH - 1;
 				}
-				memcpy(infos[assetCounter].path, pathStart, pathLength);
-				infos[assetCounter].path[pathLength] = 0;
+				memcpy(infos[asset_counter].path, path_start, path_length);
+				infos[asset_counter].path[path_length] = 0;
 
-				pathLength = 0;
+				path_length = 0;
 				state = PARSING_TYPE;
 			}
 			else
 			{
-				pathLength++;
+				path_length++;
 			}
 		}
 		break;
 		case PARSING_TYPE:
 		{
-			static uint32_t typeLength = 0;
-			if (*c == '\r' || *c == '\n' || i == adfFile.size - 1)
+			static uint32_t type_length = 0;
+			if (*c == '\r' || *c == '\n' || i == adf_file.size - 1)
 			{
-				char *typeStart = c - typeLength;
-				if (i == adfFile.size - 1)
+				char *type_start = c - type_length;
+				if (i == adf_file.size - 1)
 				{
-					typeLength++;
+					type_length++;
 				}
-				infos[assetCounter].type = AssetTypeFromString(typeStart, typeLength);
+				infos[asset_counter].type = asset_type_from_string(type_start, type_length);
 
-				typeLength = 0;
+				type_length = 0;
 				state = PARSING_NAME;
 
-				assetCounter++;
+				type_length++;
 			}
 			else
 			{
-				typeLength++;
+				type_length++;
 			}
 		}
 		break;
@@ -461,16 +461,16 @@ AssetDatabase parsers::GetAssetDBFromADF(File adfFile, StackAllocator *stackAllo
 
 	AssetDatabase result = {};
 
-	result.asset_count = assetCount;
+	result.asset_count = asset_count;
 	result.keys = keys;
 	result.asset_infos = infos;
 
 	return result;
 }
 
-uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vertexInputDescs[VERTEX_SHADER_MAX_INPUT_COUNT])
+uint32_t parsers::get_vertex_input_desc_from_shader(File shader, VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT])
 {
-	const char *structName = "VertexInput";
+	const char *struct_name = "VertexInput";
 	char *c = (char *)shader.data;
 	enum State
 	{
@@ -481,8 +481,8 @@ uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vert
 	};
 
 	State state = SEARCHING;
-	uint32_t typeLength = 0;
-	uint32_t semanticNameLength = 0;
+	uint32_t type_length = 0;
+	uint32_t semantic_name_length = 0;
 	uint32_t type = 0;
 
 #define SHADER_TYPE_FLOAT4 0
@@ -499,7 +499,7 @@ uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vert
 	};
 
 	uint32_t i = 0;
-	uint32_t vertexInputCount = 0;
+	uint32_t vertex_input_count = 0;
 
 	while (i < shader.size)
 	{
@@ -507,26 +507,26 @@ uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vert
 		{
 		case SEARCHING:
 		{
-			if (strncmp(c, structName, strlen(structName)) == 0)
+			if (strncmp(c, struct_name, strlen(struct_name)) == 0)
 			{
 				state = PARSING_TYPE;
-				i += (uint32_t)strlen(structName);
-				c += (uint32_t)strlen(structName);
+				i += (uint32_t)strlen(struct_name);
+				c += (uint32_t)strlen(struct_name);
 			}
 		}
 		break;
 		case PARSING_TYPE:
 		{
-			if (*c == ' ' && typeLength > 0)
+			if (*c == ' ' && type_length > 0)
 			{
 				for (uint32_t j = 0; j < ARRAYSIZE(types); ++j)
 				{
-					if (strncmp(c - typeLength, types[j], typeLength) == 0)
+					if (strncmp(c - type_length, types[j], type_length) == 0)
 					{
 						type = j;
 
 						state = SKIPPING_NAME;
-						typeLength = 0;
+						type_length = 0;
 
 						break;
 					}
@@ -534,7 +534,7 @@ uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vert
 			}
 			else if (isalnum(*c))
 			{
-				typeLength++;
+				type_length++;
 			}
 		}
 		break;
@@ -548,27 +548,27 @@ uint32_t parsers::GetVertexInputDescFromShader(File shader, VertexInputDesc vert
 		break;
 		case PARSING_SEMANTIC_NAME:
 		{
-			if ((isspace(*c) || *c == ';') && semanticNameLength > 0)
+			if ((isspace(*c) || *c == ';') && semantic_name_length > 0)
 			{
-				if (vertexInputCount < VERTEX_SHADER_MAX_INPUT_COUNT)
+				if (vertex_input_count < VERTEX_SHADER_MAX_INPUT_COUNT)
 				{
-					vertexInputDescs[vertexInputCount].format = formats[type];
-					memcpy(vertexInputDescs[vertexInputCount].semantic_name, c - semanticNameLength, semanticNameLength);
-					vertexInputDescs[vertexInputCount].semantic_name[semanticNameLength] = 0;
+					vertex_input_descs[vertex_input_count].format = formats[type];
+					memcpy(vertex_input_descs[vertex_input_count].semantic_name, c - semantic_name_length, semantic_name_length);
+					vertex_input_descs[vertex_input_count].semantic_name[semantic_name_length] = 0;
 				}
-				vertexInputCount++;
+				vertex_input_count++;
 
 				state = PARSING_TYPE;
-				semanticNameLength = 0;
+				semantic_name_length = 0;
 			}
 			else if (isalnum(*c) || *c == '_')
 			{
-				semanticNameLength++;
+				semantic_name_length++;
 			}
 		}
 		}
 		++c; ++i;
 	}
 
-	return vertexInputCount;
+	return vertex_input_count;
 }

@@ -103,7 +103,7 @@ void resources::init(char *adf_file)
 	File asset_definition_file = file_system::read_file(adf_file);
 	if (asset_definition_file.size > 0)
 	{
-		asset_db = parsers::GetAssetDBFromADF(asset_definition_file, &allocator);
+		asset_db = parsers::get_assets_db_from_adf(asset_definition_file, &allocator);
 		for (uint32_t i = 0; i < asset_db.asset_count; ++i)
 		{
 			table::add(&assets, asset_db.keys[i], asset_db.asset_infos[i]);
@@ -141,11 +141,11 @@ void process_mesh(AssetInfo mesh_info, sid id)
 
 	StackAllocatorState stack_state = memory::save_stack_state(&allocator);
 
-	MeshData mesh_data = parsers::GetMeshFromOBJ(mesh_file, &allocator);
+	MeshData mesh_data = parsers::get_mesh_from_obj(mesh_file, &allocator);
 	file_system::release_file(mesh_file);
 
-	Mesh mesh = graphics::get_mesh(mesh_data.vertices, mesh_data.vertexCount, mesh_data.vertexStride,
-								   mesh_data.indices, mesh_data.indexCount, sizeof(uint16_t));
+	Mesh mesh = graphics::get_mesh(mesh_data.vertices, mesh_data.vertex_count, mesh_data.vertex_stride,
+								   mesh_data.indices, mesh_data.index_count, sizeof(uint16_t));
 	table::add(&meshes, id, mesh);
 
 	memory::load_stack_state(&allocator, stack_state);
@@ -170,7 +170,7 @@ void process_vertex_shader(AssetInfo vertex_shader_info, sid id)
 	//	vertex_input_descs[i].semantic_name = semantic_names + i * max_semantic_name_length;
 	//}
 
-	uint32_t vertex_input_count = parsers::GetVertexInputDescFromShader(vertex_shader_file, vertex_input_descs);
+	uint32_t vertex_input_count = parsers::get_vertex_input_desc_from_shader(vertex_shader_file, vertex_input_descs);
 	logging::print("Compiling vertex shader %s.", vertex_shader_info.path);
 	CompiledShader vertex_shader_code = graphics::compile_vertex_shader(vertex_shader_file.data, vertex_shader_file.size);
 	file_system::release_file(vertex_shader_file);
