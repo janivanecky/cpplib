@@ -160,18 +160,11 @@ void process_vertex_shader(AssetInfo vertex_shader_info, sid id)
 		return;
 	}
 
+	uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader((char *)vertex_shader_file.data, vertex_shader_file.size, NULL);
 	StackAllocatorState allocator_state = memory::save_stack_state(&allocator);
+	VertexInputDesc *vertex_input_descs = memory::alloc_stack<VertexInputDesc>(&allocator, vertex_input_count);
+	graphics::get_vertex_input_desc_from_shader((char *)vertex_shader_file.data, vertex_shader_file.size, vertex_input_descs);
 
-	VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT];
-	char *semantic_names = memory::alloc_stack<char>(&allocator, VERTEX_SHADER_MAX_INPUT_COUNT);
-	const uint32_t max_semantic_name_length = 12;
-	// TODO: remove?
-	//for (uint32_t i = 0; i < VERTEX_SHADER_MAX_INPUT_COUNT; ++i)
-	//{
-	//	vertex_input_descs[i].semantic_name = semantic_names + i * max_semantic_name_length;
-	//}
-
-	uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader((char *)vertex_shader_file.data, vertex_shader_file.size, vertex_input_descs);
 	logging::print("Compiling vertex shader %s.", vertex_shader_info.path);
 	CompiledShader vertex_shader_code = graphics::compile_vertex_shader(vertex_shader_file.data, vertex_shader_file.size);
 	file_system::release_file(vertex_shader_file);

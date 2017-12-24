@@ -3,6 +3,7 @@
 #include "memory.h"
 #include <DXGI.h>
 #include <d3dcompiler.h>
+#include <assert.h>
 
 static GraphicsContext graphics_context_;
 GraphicsContext *graphics_context = &graphics_context_;
@@ -774,7 +775,7 @@ void graphics::release(CompiledShader *shader)
 
 
 // UTILS
-uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT])
+uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs)
 {
 	const char *struct_name = "VertexInput";
 	char *c = vertex_string;
@@ -856,7 +857,8 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 		{
 			if ((isspace(*c) || *c == ';') && semantic_name_length > 0)
 			{
-				if (vertex_input_count < VERTEX_SHADER_MAX_INPUT_COUNT)
+				assert(semantic_name_length < MAX_SEMANTIC_NAME_LENGTH);
+				if (vertex_input_descs)
 				{
 					vertex_input_descs[vertex_input_count].format = formats[type];
 					memcpy(vertex_input_descs[vertex_input_count].semantic_name, c - semantic_name_length, semantic_name_length);

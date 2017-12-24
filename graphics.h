@@ -78,9 +78,10 @@ struct ConstantBuffer
 	uint32_t size;
 };
 
+const uint32_t MAX_SEMANTIC_NAME_LENGTH = 10;
 struct VertexInputDesc
 {
-	char semantic_name[10];
+	char semantic_name[MAX_SEMANTIC_NAME_LENGTH];
 	DXGI_FORMAT format;
 };
 
@@ -206,6 +207,6 @@ namespace graphics
 
 	// UTILS
 	// TODO: move to another file
-	uint32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT]);
+	uint32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc *vertex_input_descs);
 
 }

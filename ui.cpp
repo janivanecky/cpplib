@@ -230,7 +230,7 @@ void ui::init()
     font_ui = font::get(&font_data, 24);
 
     file_system::release_file(font_file);
-    free(font_data.data);
+    memory::free_heap(font_data.data);
 
     array::init(&text_items, 100);
     array::init(&rect_items, 100);
