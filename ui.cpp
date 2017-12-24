@@ -17,6 +17,9 @@ static VertexShader vertex_shader_font;
 static PixelShader pixel_shader_font;
 static VertexShader vertex_shader_rect;
 static PixelShader pixel_shader_rect;
+
+static TextureSampler texture_sampler;
+
 static Font font_ui;
 
 char vertex_shader_font_string[] = 
@@ -214,6 +217,9 @@ void ui::init()
     pixel_shader_rect = graphics::get_pixel_shader(&pixel_shader_rect_compiled);
     graphics::release(&pixel_shader_rect_compiled);
 
+    // Init texture sampler
+    texture_sampler = graphics::get_texture_sampler(SampleMode::CLAMP);
+
     // Init font
     File font_file = file_system::read_file("consola.ttf");
 	
@@ -238,6 +244,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
     graphics::set_pixel_shader(&pixel_shader_font);
     graphics::set_vertex_shader(&vertex_shader_font);
     graphics::set_texture(&font->texture, 0);
+    graphics::set_texture_sampler(&texture_sampler, 0);
     graphics::set_blend_state(&alpha_blend_state);
     graphics::set_constant_buffer(&buffer_pv, 0);
     graphics::set_constant_buffer(&buffer_model, 1);
@@ -492,6 +499,9 @@ void ui::release()
     graphics::release(&buffer_model);
     graphics::release(&buffer_color);
     graphics::release(&alpha_blend_state);
+
+    graphics::release(&quad_mesh);
+    graphics::release(&texture_sampler);
 
     graphics::release(&vertex_shader_font);
     graphics::release(&pixel_shader_font);

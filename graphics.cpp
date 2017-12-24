@@ -772,3 +772,109 @@ void graphics::release(CompiledShader *shader)
 	RELEASE_DX_RESOURCE(shader->blob);
 }
 
+
+// UTILS
+uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT])
+{
+	const char *struct_name = "VertexInput";
+	char *c = vertex_string;
+	enum State
+	{
+		SEARCHING,
+		PARSING_TYPE,
+		SKIPPING_NAME,
+		PARSING_SEMANTIC_NAME
+	};
+
+	State state = SEARCHING;
+	uint32_t type_length = 0;
+	uint32_t semantic_name_length = 0;
+	uint32_t type = 0;
+
+#define SHADER_TYPE_FLOAT4 0
+#define SHADER_TYPE_FLOAT2 1
+
+	char *types[] =
+	{
+		"float4", "float2", "int4"
+	};
+
+	DXGI_FORMAT formats[]
+	{
+		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT
+	};
+
+	uint32_t i = 0;
+	uint32_t vertex_input_count = 0;
+
+	while (i < size)
+	{
+		switch (state)
+		{
+		case SEARCHING:
+		{
+			if (strncmp(c, struct_name, strlen(struct_name)) == 0)
+			{
+				state = PARSING_TYPE;
+				i += (uint32_t)strlen(struct_name);
+				c += (uint32_t)strlen(struct_name);
+			}
+		}
+		break;
+		case PARSING_TYPE:
+		{
+			if (*c == ' ' && type_length > 0)
+			{
+				for (uint32_t j = 0; j < ARRAYSIZE(types); ++j)
+				{
+					if (strncmp(c - type_length, types[j], type_length) == 0)
+					{
+						type = j;
+
+						state = SKIPPING_NAME;
+						type_length = 0;
+
+						break;
+					}
+				}
+			}
+			else if (isalnum(*c))
+			{
+				type_length++;
+			}
+		}
+		break;
+		case SKIPPING_NAME:
+		{
+			if (*c == ':')
+			{
+				state = PARSING_SEMANTIC_NAME;
+			}
+		}
+		break;
+		case PARSING_SEMANTIC_NAME:
+		{
+			if ((isspace(*c) || *c == ';') && semantic_name_length > 0)
+			{
+				if (vertex_input_count < VERTEX_SHADER_MAX_INPUT_COUNT)
+				{
+					vertex_input_descs[vertex_input_count].format = formats[type];
+					memcpy(vertex_input_descs[vertex_input_count].semantic_name, c - semantic_name_length, semantic_name_length);
+					vertex_input_descs[vertex_input_count].semantic_name[semantic_name_length] = 0;
+				}
+				vertex_input_count++;
+
+				state = PARSING_TYPE;
+				semantic_name_length = 0;
+			}
+			else if (isalnum(*c) || *c == '_')
+			{
+				semantic_name_length++;
+			}
+		}
+		}
+		++c; ++i;
+	}
+
+	return vertex_input_count;
+}

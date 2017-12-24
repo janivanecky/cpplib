@@ -120,6 +120,9 @@ struct Viewport
 	float height;
 };
 
+// TODO: move to another file with utils
+const uint32_t VERTEX_SHADER_MAX_INPUT_COUNT = 5;
+
 namespace graphics
 {
 	void init(LUID *adapter_luid = NULL);
@@ -199,4 +202,10 @@ namespace graphics
 	void release(GeometryShader *shader);
 	void release(BlendState *state);
 	void release(CompiledShader *shader);
+
+
+	// UTILS
+	// TODO: move to another file
+	uint32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc vertex_input_descs[VERTEX_SHADER_MAX_INPUT_COUNT]);
+
 }

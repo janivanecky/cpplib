@@ -28,8 +28,6 @@ const uint32_t ASSET_MAX_PATH_LENGTH= 50;
 const uint32_t ASSET_MAX_NAME_LENGTH = 50;
 const uint32_t ASSET_MAX_TYPE_LENGTH = 20;
 
-const uint32_t VERTEX_SHADER_MAX_INPUT_COUNT = 5;
-
 #define NONE 0
 #define MESH 1
 #define VERTEX_SHADER 2
