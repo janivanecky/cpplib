@@ -11,7 +11,6 @@ static ConstantBuffer buffer_rect;
 static ConstantBuffer buffer_pv;
 static ConstantBuffer buffer_model;
 static ConstantBuffer buffer_color;
-static BlendState alpha_blend_state;
 static Mesh quad_mesh;
 static VertexShader vertex_shader_font;
 static PixelShader pixel_shader_font;
@@ -184,7 +183,6 @@ void ui::init()
     buffer_pv = graphics::get_constant_buffer(sizeof(Matrix4x4) * 2);
     buffer_rect = graphics::get_constant_buffer(sizeof(Vector4));
     buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
-    alpha_blend_state = graphics::get_blend_state(ALPHA_BLEND);
     quad_mesh = graphics::get_mesh(quad_vertices, 4, sizeof(float) * 6, quad_indices, 6, 2);
     
     // TODO: Parse attributes from shader
@@ -245,7 +243,8 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
     graphics::set_vertex_shader(&vertex_shader_font);
     graphics::set_texture(&font->texture, 0);
     graphics::set_texture_sampler(&texture_sampler, 0);
-    graphics::set_blend_state(&alpha_blend_state);
+    BlendType old_blend_state = graphics::get_blend_state();
+    graphics::set_blend_state(BlendType::ALPHA);
     graphics::set_constant_buffer(&buffer_pv, 0);
     graphics::set_constant_buffer(&buffer_model, 1);
     graphics::set_constant_buffer(&buffer_rect, 6);
@@ -284,6 +283,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
 
         text++;
     }
+    graphics::set_blend_state(old_blend_state);
 };
 
 void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color)
@@ -295,7 +295,8 @@ void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
 {
     graphics::set_pixel_shader(&pixel_shader_rect);
     graphics::set_vertex_shader(&vertex_shader_rect);
-    graphics::set_blend_state(&alpha_blend_state);
+    BlendType old_blend_state = graphics::get_blend_state();
+    graphics::set_blend_state(BlendType::ALPHA);
     graphics::set_constant_buffer(&buffer_pv, 0);
     graphics::set_constant_buffer(&buffer_model, 1);
     graphics::set_constant_buffer(&buffer_color, 7);
@@ -310,6 +311,7 @@ void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
     Matrix4x4 model_matrix = math::get_translation(x, SCREEN_HEIGHT - y, 0) * math::get_scale(width, height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
     graphics::update_constant_buffer(&buffer_model, &model_matrix);
     graphics::draw_mesh(&quad_mesh);
+    graphics::set_blend_state(old_blend_state);
 }
 
 void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color)
@@ -498,7 +500,6 @@ void ui::release()
     graphics::release(&buffer_pv);
     graphics::release(&buffer_model);
     graphics::release(&buffer_color);
-    graphics::release(&alpha_blend_state);
 
     graphics::release(&quad_mesh);
     graphics::release(&texture_sampler);

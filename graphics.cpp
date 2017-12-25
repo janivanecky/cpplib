@@ -10,6 +10,40 @@ GraphicsContext *graphics_context = &graphics_context_;
 static SwapChain swap_chain_;
 static SwapChain *swap_chain = &swap_chain_;
 
+static BlendState alpha_blend_state;
+static BlendState solid_blend_state;
+
+static BlendState *blend_states[] = {
+	&alpha_blend_state,
+	&solid_blend_state
+};
+
+static BlendType current_blend_type;
+
+
+BlendState get_blend_state(BlendType blend_type)
+{
+	BlendState blend_state = {};
+
+	D3D11_BLEND_DESC blend_state_desc = {};
+	if (blend_type == ALPHA)
+	{
+		blend_state_desc.RenderTarget[0].BlendEnable 		   = TRUE;
+		blend_state_desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+		blend_state_desc.RenderTarget[0].DestBlend 			   = D3D11_BLEND_INV_SRC_ALPHA;
+		blend_state_desc.RenderTarget[0].BlendOp	 		   = D3D11_BLEND_OP_ADD;
+		blend_state_desc.RenderTarget[0].SrcBlendAlpha	 	   = D3D11_BLEND_ONE;
+		blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_ZERO;
+		blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
+	}
+	blend_state_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	HRESULT hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_state.state);
+	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
+
+	return blend_state;
+}	
+
 void graphics::init(LUID *adapter_luid)
 {
 
@@ -72,6 +106,11 @@ void graphics::init(LUID *adapter_luid)
 
 	graphics_context->context->RSSetState(rasterizer_state);
 	rasterizer_state->Release();
+
+	// Initialize blending states
+	alpha_blend_state = get_blend_state(BlendType::ALPHA);
+	solid_blend_state = get_blend_state(BlendType::SOLID);
+	current_blend_type = BlendType::SOLID;
 }
 
 void graphics::init_swap_chain(Window *window)
@@ -396,36 +435,17 @@ void graphics::unset_texture(uint32_t slot)
 	graphics_context->context->PSSetShaderResources(slot, 1, null);
 }
 
-BlendState graphics::get_blend_state(BlendType blend_type)
+void graphics::set_blend_state(BlendType type)
 {
-	BlendState blend_state = {};
-
-	D3D11_BLEND_DESC blend_state_desc = {};
-	if (blend_type == ALPHA_BLEND)
-	{
-		blend_state_desc.RenderTarget[0].BlendEnable 		   = TRUE;
-		blend_state_desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
-		blend_state_desc.RenderTarget[0].DestBlend 			   = D3D11_BLEND_INV_SRC_ALPHA;
-		blend_state_desc.RenderTarget[0].BlendOp	 		   = D3D11_BLEND_OP_ADD;
-		blend_state_desc.RenderTarget[0].SrcBlendAlpha	 	   = D3D11_BLEND_ONE;
-		blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_ZERO;
-		blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
-	}
-	blend_state_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	HRESULT hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_state.state);
-	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
-
-	return blend_state;
-}	
-
-// TODO: change to boolean instead of BlendState
-void graphics::set_blend_state(BlendState *blend_state)
-{
+	current_blend_type = type;
 	float blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	graphics_context->context->OMSetBlendState(blend_state->state, blend_factor, 0xffffffff);
+	graphics_context->context->OMSetBlendState(blend_states[current_blend_type]->state, blend_factor, 0xffffffff);
 }
 
+BlendType graphics::get_blend_state()
+{
+	return current_blend_type;
+}
 
 D3D11_TEXTURE_ADDRESS_MODE m2m[3] =
 {

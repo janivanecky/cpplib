@@ -104,8 +104,8 @@ struct TextureSampler
 
 enum BlendType
 {
-	ALPHA_BLEND = 0,
-	OPAQUE_BLEND
+	ALPHA = 0,
+	SOLID = 1
 };
 
 struct BlendState
@@ -155,8 +155,8 @@ namespace graphics
 	void set_texture(Texture *texture, uint32_t slot);
 	void unset_texture(uint32_t slot);
 
-	BlendState get_blend_state(BlendType type = OPAQUE_BLEND);
-	void set_blend_state(BlendState *blend_state);
+	void set_blend_state(BlendType type);
+	BlendType get_blend_state();
 
 	TextureSampler get_texture_sampler(SampleMode mode = CLAMP);
 	void set_texture_sampler(TextureSampler *sampler, uint32_t slot);
