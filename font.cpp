@@ -11,8 +11,11 @@ Font font::get(FontData *data, float size)
     float font_scale = stbtt_ScaleForPixelHeight(&font.font_info, size);
 
     font.scale = font_scale;
-    // TODO: change to stack allocator
-    uint8_t *font_buffer = memory::alloc_heap<uint8_t>(512 * 512);
+    
+    StackAllocator *allocator = memory::get_temp_stack();
+    StackAllocatorState memory_state = memory::save_stack_state(allocator);
+    
+    uint8_t *font_buffer = memory::alloc_stack<uint8_t>(allocator, 512 * 512);
     int32_t x = 0, y = 0;
     int ascent, descent, line_gap;
     stbtt_GetFontVMetrics(&font.font_info, &ascent, &descent, &line_gap);
@@ -36,7 +39,7 @@ Font font::get(FontData *data, float size)
     }
     
     font.texture = graphics::get_texture(font_buffer, 512, 512, DXGI_FORMAT_R8_UNORM, 1);
-    memory::free_heap(font_buffer);
+    memory::load_stack_state(allocator, memory_state);
 
     return font;
 }

@@ -22,9 +22,6 @@ void audio::init()
     debug_config.TraceMask = XAUDIO2_LOG_ERRORS | XAUDIO2_LOG_WARNINGS | XAUDIO2_LOG_MEMORY;
     audio_context->engine->SetDebugConfiguration(&debug_config, NULL);
 #endif
-
-    // TODO: remove
-    audio_context->master_voice->SetVolume(0.2f);
 }
 
 Sound audio::get_sound_ogg(void *data, uint32_t data_size)
@@ -78,7 +75,6 @@ float audio::get_playback_position(Sound *sound)
 void audio::release(Sound *sound)
 {
     sound->source_voice->DestroyVoice();
-    // TODO: find out what kind of free you should use
     free(sound->samples);
     *sound = {};
 }
