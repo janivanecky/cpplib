@@ -208,5 +208,6 @@ namespace graphics
 	// UTILS
 	// TODO: move to another file
 	uint32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc *vertex_input_descs);
-
+	VertexShader get_vertex_shader_from_code(char *code, uint32_t code_length);
+	PixelShader get_pixel_shader_from_code(char *code, uint32_t code_length);
 }

@@ -900,3 +900,33 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 
 	return vertex_input_count;
 }
+
+// TODO: Should this handle incorrect shaders? As in resources.cpp
+VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length)
+{
+	StackAllocator *allocator = memory::get_temp_stack();
+	StackAllocatorState allocator_state = memory::save_stack_state(allocator);
+
+    uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
+	VertexInputDesc *vertex_input_descs = memory::alloc_stack<VertexInputDesc>(allocator, vertex_input_count);
+	graphics::get_vertex_input_desc_from_shader(code, code_length, vertex_input_descs);
+
+    CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
+    VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, 2);
+    graphics::release(&vertex_shader_compiled);
+
+	memory::load_stack_state(allocator, allocator_state);
+
+	return vertex_shader;
+}
+
+
+// TODO: Should this handle incorrect shaders? As in resources.cpp
+PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length)
+{
+	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length);
+    PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_compiled);
+    graphics::release(&pixel_shader_compiled);
+
+	return pixel_shader;
+}

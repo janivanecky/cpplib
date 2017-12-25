@@ -3,8 +3,6 @@
 #include "graphics.h"
 #include "array.h"
 #include "input.h"
-// TODO: maybe set as not dependent on resources, but rather pass in necessary resources during init call
-#include "resources.h"
 #include "file_system.h"
 #include <cassert>
 
@@ -192,35 +190,10 @@ void ui::init(float screen_width, float screen_height)
     buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
     quad_mesh = graphics::get_mesh(quad_vertices, 4, sizeof(float) * 6, quad_indices, 6, 2);
     
-    // TODO: Parse attributes from shader
-    VertexInputDesc vertex_shader_input_descs[2];
-    memcpy(vertex_shader_input_descs[0].semantic_name, "POSITION", 8);
-    vertex_shader_input_descs[0].semantic_name[8] = 0;
-    vertex_shader_input_descs[0].format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    memcpy(vertex_shader_input_descs[1].semantic_name, "TEXCOORD", 8);
-    vertex_shader_input_descs[1].semantic_name[8] = 0;
-    vertex_shader_input_descs[1].format = DXGI_FORMAT_R32G32_FLOAT;
-
-    // Init shaders
-    CompiledShader vertex_shader_font_compiled =
-        graphics::compile_vertex_shader(vertex_shader_font_string, ARRAYSIZE(vertex_shader_font_string));
-    vertex_shader_font = graphics::get_vertex_shader(&vertex_shader_font_compiled, vertex_shader_input_descs, 2);
-    graphics::release(&vertex_shader_font_compiled);
-
-    CompiledShader pixel_shader_font_compiled =
-        graphics::compile_pixel_shader(pixel_shader_font_string, ARRAYSIZE(pixel_shader_font_string));
-    pixel_shader_font = graphics::get_pixel_shader(&pixel_shader_font_compiled);
-    graphics::release(&pixel_shader_font_compiled);
-
-    CompiledShader vertex_shader_rect_compiled =
-        graphics::compile_vertex_shader(vertex_shader_rect_string, ARRAYSIZE(vertex_shader_rect_string));
-    vertex_shader_rect = graphics::get_vertex_shader(&vertex_shader_rect_compiled, vertex_shader_input_descs, 1);
-    graphics::release(&vertex_shader_rect_compiled);
-
-    CompiledShader pixel_shader_rect_compiled =
-        graphics::compile_pixel_shader(pixel_shader_rect_string, ARRAYSIZE(pixel_shader_rect_string));
-    pixel_shader_rect = graphics::get_pixel_shader(&pixel_shader_rect_compiled);
-    graphics::release(&pixel_shader_rect_compiled);
+    vertex_shader_font = graphics::get_vertex_shader_from_code(vertex_shader_font_string, ARRAYSIZE(vertex_shader_font_string));
+    pixel_shader_font = graphics::get_pixel_shader_from_code(pixel_shader_font_string, ARRAYSIZE(pixel_shader_font_string));
+    vertex_shader_rect = graphics::get_vertex_shader_from_code(vertex_shader_rect_string, ARRAYSIZE(vertex_shader_rect_string));
+    pixel_shader_rect = graphics::get_pixel_shader_from_code(pixel_shader_rect_string, ARRAYSIZE(pixel_shader_rect_string));
 
     // Init texture sampler
     texture_sampler = graphics::get_texture_sampler(SampleMode::CLAMP);
