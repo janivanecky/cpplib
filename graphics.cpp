@@ -793,8 +793,10 @@ void graphics::release(CompiledShader *shader)
 	RELEASE_DX_RESOURCE(shader->blob);
 }
 
+////////////////////////////////////////////////
+/// HIGHER LEVEL API
+////////////////////////////////////////////////
 
-// UTILS
 uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs)
 {
 	const char *struct_name = "VertexInput";
