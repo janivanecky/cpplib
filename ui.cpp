@@ -6,6 +6,7 @@
 // TODO: maybe set as not dependent on resources, but rather pass in necessary resources during init call
 #include "resources.h"
 #include "file_system.h"
+#include <cassert>
 
 static ConstantBuffer buffer_rect;
 static ConstantBuffer buffer_pv;
@@ -177,8 +178,14 @@ uint16_t quad_indices[] = {
     2, 1, 0
 };
 
-void ui::init()
+static float SCREEN_WIDTH = -1, SCREEN_HEIGHT = -1;
+#define ASSERT_SCREEN_SIZE assert(SCREEN_WIDTH > 0 && SCREEN_HEIGHT > 0)
+
+void ui::init(float screen_width, float screen_height)
 {
+    SCREEN_WIDTH = screen_width;
+    SCREEN_HEIGHT = screen_height;
+    
     buffer_model = graphics::get_constant_buffer(sizeof(Matrix4x4));
     buffer_pv = graphics::get_constant_buffer(sizeof(Matrix4x4) * 2);
     buffer_rect = graphics::get_constant_buffer(sizeof(Vector4));
@@ -235,10 +242,9 @@ void ui::init()
     array::init(&rect_items_bg, 100);
 }
 
-// TODO: change screen size to arguments
-static float SCREEN_WIDTH = 800, SCREEN_HEIGHT = 600;
 void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
 {
+    ASSERT_SCREEN_SIZE;
     graphics::set_pixel_shader(&pixel_shader_font);
     graphics::set_vertex_shader(&vertex_shader_font);
     graphics::set_texture(&font->texture, 0);
@@ -293,6 +299,7 @@ void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color)
 
 void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
 {
+    ASSERT_SCREEN_SIZE;
     graphics::set_pixel_shader(&pixel_shader_rect);
     graphics::set_vertex_shader(&vertex_shader_rect);
     BlendType old_blend_state = graphics::get_blend_state();
