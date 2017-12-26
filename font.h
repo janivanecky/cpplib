@@ -11,11 +11,6 @@ struct Glyph
     int advance;
 };
 
-struct FontData
-{
-    uint8_t *data;
-};
-
 struct Font
 {
     Glyph glyphs[96];
@@ -28,7 +23,7 @@ struct Font
 
 namespace font
 {
-    Font get(FontData *data, float size);
+    Font get(uint8_t *data, float size, uint32_t texture_size);
     float get_row_height(Font *font);
     float get_kerning(Font *font, char c1, char c2);
     void release(Font *font);

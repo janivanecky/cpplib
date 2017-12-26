@@ -5,18 +5,22 @@
 #include "input.h"
 #include "file_system.h"
 #include <cassert>
+#include <cstdio>
 
 static ConstantBuffer buffer_rect;
 static ConstantBuffer buffer_pv;
 static ConstantBuffer buffer_model;
 static ConstantBuffer buffer_color;
-static Mesh quad_mesh;
+
+
 static VertexShader vertex_shader_font;
 static PixelShader pixel_shader_font;
 static VertexShader vertex_shader_rect;
 static PixelShader pixel_shader_rect;
 
 static TextureSampler texture_sampler;
+
+static Mesh quad_mesh;
 
 static Font font_ui;
 
@@ -146,8 +150,6 @@ static Array<TextItem> text_items;
 static Array<RectItem> rect_items;
 static Array<RectItem> rect_items_bg;
 
-int32_t active_id = -1;
-
 int32_t hash_string(char *string)
 {
     int32_t hash_value = 5381;
@@ -177,39 +179,41 @@ uint16_t quad_indices[] = {
 };
 
 static float SCREEN_WIDTH = -1, SCREEN_HEIGHT = -1;
+
+const float FONT_TEXTURE_SIZE = 512.0f;
+
 #define ASSERT_SCREEN_SIZE assert(SCREEN_WIDTH > 0 && SCREEN_HEIGHT > 0)
 
 void ui::init(float screen_width, float screen_height)
 {
+    // Set screen size
     SCREEN_WIDTH = screen_width;
     SCREEN_HEIGHT = screen_height;
     
+    // Create constant buffers
     buffer_model = graphics::get_constant_buffer(sizeof(Matrix4x4));
     buffer_pv = graphics::get_constant_buffer(sizeof(Matrix4x4) * 2);
     buffer_rect = graphics::get_constant_buffer(sizeof(Vector4));
     buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
+
+    // Create mesh
     quad_mesh = graphics::get_mesh(quad_vertices, 4, sizeof(float) * 6, quad_indices, 6, 2);
     
+    // Create shaders
     vertex_shader_font = graphics::get_vertex_shader_from_code(vertex_shader_font_string, ARRAYSIZE(vertex_shader_font_string));
     pixel_shader_font = graphics::get_pixel_shader_from_code(pixel_shader_font_string, ARRAYSIZE(pixel_shader_font_string));
     vertex_shader_rect = graphics::get_vertex_shader_from_code(vertex_shader_rect_string, ARRAYSIZE(vertex_shader_rect_string));
     pixel_shader_rect = graphics::get_pixel_shader_from_code(pixel_shader_rect_string, ARRAYSIZE(pixel_shader_rect_string));
 
-    // Init texture sampler
+    // Create texture sampler
     texture_sampler = graphics::get_texture_sampler(SampleMode::CLAMP);
 
     // Init font
     File font_file = file_system::read_file("consola.ttf");
-	
-	FontData font_data;
-	font_data.data = memory::alloc_heap<uint8_t>(font_file.size);
-	memcpy(font_data.data, font_file.data, font_file.size);
-
-    font_ui = font::get(&font_data, 24);
-
+    font_ui = font::get((uint8_t *)font_file.data, 24, (uint32_t)FONT_TEXTURE_SIZE);
     file_system::release_file(font_file);
-    memory::free_heap(font_data.data);
 
+    // Init rendering arrays
     array::init(&text_items, 100);
     array::init(&rect_items, 100);
     array::init(&rect_items_bg, 100);
@@ -218,17 +222,26 @@ void ui::init(float screen_width, float screen_height)
 void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
 {
     ASSERT_SCREEN_SIZE;
+
+    // Set font shaders
     graphics::set_pixel_shader(&pixel_shader_font);
     graphics::set_vertex_shader(&vertex_shader_font);
+    
+    // Set font texture
     graphics::set_texture(&font->texture, 0);
     graphics::set_texture_sampler(&texture_sampler, 0);
+    
+    // Set alpha blending state
     BlendType old_blend_state = graphics::get_blend_state();
     graphics::set_blend_state(BlendType::ALPHA);
+
+    // Set constant buffers
     graphics::set_constant_buffer(&buffer_pv, 0);
     graphics::set_constant_buffer(&buffer_model, 1);
     graphics::set_constant_buffer(&buffer_rect, 6);
     graphics::set_constant_buffer(&buffer_color, 7);
 
+    // Update constant buffer values
     Matrix4x4 pv_matrices[2] = {
         math::get_orthographics_projection_dx_rh(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, -1, 1),
         math::get_identity()
@@ -241,27 +254,33 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
     {
         char c = *text;
         Glyph glyph = font->glyphs[c - 32];
-        float rel_x = glyph.bitmap_x / 512.0f;
-        float rel_y = glyph.bitmap_y / 512.0f;
-        float rel_width = glyph.bitmap_width / 512.0f;
-        float rel_height = glyph.bitmap_height / 512.0f;
+        
+        // Set up source rectangle
+        float rel_x = glyph.bitmap_x / FONT_TEXTURE_SIZE;
+        float rel_y = glyph.bitmap_y / FONT_TEXTURE_SIZE;
+        float rel_width = glyph.bitmap_width / FONT_TEXTURE_SIZE;
+        float rel_height = glyph.bitmap_height / FONT_TEXTURE_SIZE;
         Vector4 source_rect = {rel_x, rel_y, rel_width, rel_height};
         graphics::update_constant_buffer(&buffer_rect, &source_rect);
 
-        float xx = x;
-        float yy = y;
-        xx += glyph.x_offset;
-        yy += glyph.y_offset;
+        // Get final letter start
+        float final_x = x + glyph.x_offset;
+        float final_y = y + glyph.y_offset;
 
+        // Set up model matrix
         // TODO: solve y axis downwards in an elegant way
-        Matrix4x4 model_matrix = math::get_translation(xx, SCREEN_HEIGHT - yy, 0) * math::get_scale((float)glyph.bitmap_width, (float)glyph.bitmap_height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
+        Matrix4x4 model_matrix = math::get_translation(final_x, SCREEN_HEIGHT - final_y, 0) * math::get_scale((float)glyph.bitmap_width, (float)glyph.bitmap_height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
         graphics::update_constant_buffer(&buffer_model, &model_matrix);
+
         graphics::draw_mesh(&quad_mesh);
+
+        // Update current position for next letter
         if (*(text + 1)) x += font::get_kerning(font, c, *(text + 1));
         x += glyph.advance;
-
         text++;
     }
+
+    // Reset previous blend state
     graphics::set_blend_state(old_blend_state);
 };
 
@@ -273,24 +292,36 @@ void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color)
 void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
 {
     ASSERT_SCREEN_SIZE;
+
+    // Set rect shaders
     graphics::set_pixel_shader(&pixel_shader_rect);
     graphics::set_vertex_shader(&vertex_shader_rect);
+
+    // Set alpha blending state
     BlendType old_blend_state = graphics::get_blend_state();
     graphics::set_blend_state(BlendType::ALPHA);
+
+    // Set constant bufers
     graphics::set_constant_buffer(&buffer_pv, 0);
     graphics::set_constant_buffer(&buffer_model, 1);
     graphics::set_constant_buffer(&buffer_color, 7);
 
+    // Get constant buffer values
     Matrix4x4 pv_matrices[2] = {
         math::get_orthographics_projection_dx_rh(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, -1, 1),
         math::get_identity()
     };
+    Matrix4x4 model_matrix = math::get_translation(x, SCREEN_HEIGHT - y, 0) * math::get_scale(width, height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
+
+    // Update constant buffers
     graphics::update_constant_buffer(&buffer_pv, pv_matrices);
     graphics::update_constant_buffer(&buffer_color, &color);
-
-    Matrix4x4 model_matrix = math::get_translation(x, SCREEN_HEIGHT - y, 0) * math::get_scale(width, height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
     graphics::update_constant_buffer(&buffer_model, &model_matrix);
+
+    // Render rect
     graphics::draw_mesh(&quad_mesh);
+
+    // Reset previous blending state
     graphics::set_blend_state(old_blend_state);
 }
 
@@ -302,6 +333,13 @@ void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color)
 const float vertical_padding = 15.0f;
 const float horizontal_padding = 15.0f;
 const float inner_padding = 5.0f;
+static int32_t active_id = -1;
+static int32_t hot_id = -1;
+
+static Vector4 color_background = Vector4(0.2f, 0.2f, 0.2f, .7f);
+static Vector4 color_foreground = Vector4(0.2f, 0.8f, 0.2f, 1.0f);
+static Vector4 color_title = Vector4(1, 0, 0, 1);
+static Vector4 color_label = Vector4(1, 0, 0, 1);
 
 Panel ui::start_panel(char *name, Vector2 pos, float width)
 {
@@ -324,13 +362,11 @@ Panel ui::start_panel(char *name, float x, float y, float width)
 void ui::end_panel(Panel *panel)
 {
     float panel_height = panel->item_pos.y + vertical_padding - inner_padding;
-    Vector4 color = Vector4(0.2f, 0.2f, 0.2f, .7f);
-    RectItem panel_bg = {color, panel->pos, Vector2(panel->width, panel_height)};
+    RectItem panel_bg = {color_background, panel->pos, Vector2(panel->width, panel_height)};
     array::add(&rect_items_bg, panel_bg);
 
-    Vector4 title_color = Vector4(1, 0, 0, 1);
     Vector2 title_pos = panel->pos + Vector2(horizontal_padding, vertical_padding);
-    TextItem title = {title_color, title_pos, panel->name};
+    TextItem title = {color_title, title_pos, panel->name};
     array::add(&text_items, title);
 }
 
@@ -342,49 +378,117 @@ bool is_in_rect(Vector2 position, Vector2 rect_position, Vector2 rect_size)
     return false;
 }
 
+void unset_hot(int32_t item_id)
+{
+    if(hot_id == item_id)
+    {
+        hot_id = -1;
+    }
+}
+
+void unset_active(int32_t item_id)
+{
+    if(active_id == item_id)
+    {
+        active_id = -1;
+    }
+}
+
+bool is_hot(int32_t item_id)
+{
+    return item_id == hot_id;
+}
+
+bool is_active(int32_t item_id)
+{
+    return item_id == active_id;
+}
+
+void set_hot(int32_t item_id)
+{
+    if(hot_id == -1)
+    {
+        hot_id = item_id;
+    }
+}
+
+void set_active(int32_t item_id)
+{
+    if(active_id == -1)
+    {
+        active_id = item_id;
+    }
+}
+
 bool ui::add_toggle(Panel *panel, char *label, bool active)
 {
+    const float box_middle_to_total = 0.6f;
+    
     float height = font::get_row_height(&font_ui);
     Vector2 item_pos = panel->pos + panel->item_pos;
-    
-    // Toggle box background
-    Vector4 box_bg_color = Vector4(0,1,0,1);
+    int32_t toggle_id = hash_string(label);
+
     Vector2 box_bg_size = Vector2(height, height);
     Vector2 box_bg_pos = item_pos;
-    
+
     // Check for mouse input
     if(input::ui_active())
     {
+        // Check if mouse over
         Vector2 mouse_position = input::mouse_position();
         if(is_in_rect(mouse_position, box_bg_pos, box_bg_size))
         {
-            box_bg_color *= 0.8f;
-            if(input::mouse_left_button_pressed()) active = !active;
+            set_hot(toggle_id);
+        }
+        // Remove hotness only if this toggle was hot before
+        else
+        {
+            unset_hot(toggle_id);
+        }
+
+        // If toggle is hot, check for mouse press
+        if (is_hot(toggle_id) && input::mouse_left_button_pressed())
+        {
+            active = !active;
 
             // In case some other element was active, now it shouldn't be
             active_id = -1;
         }
     }
+    else
+    {
+        unset_hot(toggle_id);
+    }
 
-    RectItem toggle_bg = {box_bg_color, box_bg_pos, box_bg_size};
+    // Toggle box background
+    Vector4 color_box = color_foreground;
+    Vector4 color_middle = color_background;
+    if (is_hot(toggle_id))
+    {
+        color_box *= 0.8f;
+        color_middle *= 0.8f;
+        color_middle.a = 1.0f;
+    }
+
+    // Draw bg rectangle
+    RectItem toggle_bg = {color_box, box_bg_pos, box_bg_size};
     array::add(&rect_items, toggle_bg);
 
+    // Active part of toggle box
     if (active)
     {
-        // Active part of toggle box
-        Vector4 box_fg_color = Vector4(1,1,0,1);
-        Vector2 box_fg_size = Vector2(height * 0.6f, height * 0.6f);
+        Vector2 box_fg_size = Vector2(height * box_middle_to_total, height * box_middle_to_total);
         Vector2 box_fg_pos = box_bg_pos + (box_bg_size - box_fg_size) / 2.0f;
-        RectItem toggle_fg = {box_fg_color, box_fg_pos, box_fg_size};
+        RectItem toggle_fg = {color_middle, box_fg_pos, box_fg_size};
         array::add(&rect_items, toggle_fg);
     }
 
-    // Toggle label
-    Vector4 text_color = Vector4(1,0,0,1);
+    // Draw toggle label
     Vector2 text_pos = box_bg_pos + Vector2(inner_padding + box_bg_size.x, 0);
-    TextItem toggle_label = {text_color, text_pos, label};
+    TextItem toggle_label = {color_label, text_pos, label};
     array::add(&text_items, toggle_label);
 
+    // Move current panel item position
     panel->item_pos.y += height + inner_padding;
     return active;
 }
@@ -392,47 +496,62 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
 float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
 {
     int32_t slider_id = hash_string(label);
-    
+    Vector2 item_pos = panel->pos + panel->item_pos;
     float height = font::get_row_height(&font_ui);
     float slider_width = 50.0f;
-    Vector2 item_pos = panel->pos + panel->item_pos;
     
     // Slider bar
-    Vector4 slider_bar_color = Vector4(0,1,0,1);
+    Vector4 slider_bar_color = color_foreground;
     Vector2 slider_bar_pos = item_pos + Vector2(0.0f, height * 0.25f);
     Vector2 slider_bar_size = Vector2(slider_width, height * 0.5f);
     RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
     array::add(&rect_items, slider_bar);
 
-    Vector4 slider_color = Vector4(0,1,0,1);
+    Vector4 slider_color = color_foreground;
     float slider_x = (pos - min) / max * slider_width;
     Vector2 slider_pos = item_pos + Vector2(slider_x, 0.0f);
     Vector2 slider_size = Vector2(height * 0.5f, height);
+
     // Check for mouse input
     if(input::ui_active())
     {
         Vector2 mouse_position = input::mouse_position();
         if(is_in_rect(mouse_position, slider_pos, slider_size))
-        {
-            slider_color *= 0.8f;
-            slider_color.w = 1.0f;
-            if(input::mouse_left_button_down())
-            {
-                active_id = slider_id;
-            }
+        {       
+            set_hot(slider_id);
         }
-        else if(!input::mouse_left_button_down())
+        else if(!is_active(slider_id))
         {
-            active_id = -1;
+            unset_hot(slider_id);
         }
 
-        if(slider_id == active_id)
+        if(is_hot(slider_id) && !is_active(slider_id) && input::mouse_left_button_down())
         {
-             float dx = input::mouse_delta_position().x;
-             float x_movement = dx / slider_width;
-             pos += x_movement;
-             pos = math::clamp(pos, min, max);
+            set_active(slider_id);
         }
+        else if (is_active(slider_id) && !input::mouse_left_button_down())
+        {
+            unset_active(slider_id);
+        }
+    }
+    else 
+    {
+        unset_hot(slider_id);
+        unset_active(slider_id);
+    }
+
+    if (is_hot(slider_id))
+    {
+        slider_color *= 0.8f;
+        slider_color.w = 1.0f;
+    }
+
+    if(is_active(slider_id))
+    {
+        float dx = input::mouse_delta_position().x;
+        float x_movement = dx / slider_width;
+        pos += x_movement;
+        pos = math::clamp(pos, min, max);
     }
 
     // Slider
@@ -440,9 +559,8 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     array::add(&rect_items, slider);
 
     // Toggle label
-    Vector4 text_color = Vector4(1,0,0,1);
     Vector2 text_pos = item_pos + Vector2(inner_padding + slider_bar_size.x, 0);
-    TextItem toggle_label = {text_color, text_pos, label};
+    TextItem toggle_label = {color_label, text_pos, label};
     array::add(&text_items, toggle_label);
 
     panel->item_pos.y += height + inner_padding;
