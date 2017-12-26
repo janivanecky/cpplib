@@ -337,6 +337,7 @@ void graphics::set_render_targets(RenderTarget *buffer, DepthBuffer *depth_buffe
 
 void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffer_count, DepthBuffer *depth_buffer)
 {
+	memory::push_temp_state();
 	D3D11_VIEWPORT *viewports = memory::alloc_temp<D3D11_VIEWPORT>(buffer_count);
 
 	for (uint32_t i = 0; i < buffer_count; ++i)
@@ -356,7 +357,7 @@ void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffe
 	graphics_context->context->RSSetViewports(buffer_count, viewports);
 	graphics_context->context->OMSetRenderTargets(buffer_count, rt_views, depth_buffer->ds_view);
 
-	memory::free_temp();
+	memory::pop_temp_state();
 }
 
 void graphics::set_render_targets_viewport(RenderTarget *buffer, DepthBuffer *depth_buffer)
@@ -626,6 +627,7 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 		logging::print_error("Failed to create vertex shader.");
 	}
 
+	memory::push_temp_state();
 	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = memory::alloc_temp<D3D11_INPUT_ELEMENT_DESC>(vertex_input_count);
 	for (uint32_t i = 0; i < vertex_input_count; ++i)
 	{
@@ -641,7 +643,7 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 		logging::print_error("Failed to create input layout.");
 	}
 
-	memory::free_temp();
+	memory::pop_temp_state();
 
 	return shader;
 }
@@ -906,18 +908,17 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 // TODO: Should this handle incorrect shaders? As in resources.cpp
 VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length)
 {
-	StackAllocator *allocator = memory::get_temp_stack();
-	StackAllocatorState allocator_state = memory::save_stack_state(allocator);
+	memory::push_temp_state();
 
     uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
-	VertexInputDesc *vertex_input_descs = memory::alloc_stack<VertexInputDesc>(allocator, vertex_input_count);
+	VertexInputDesc *vertex_input_descs = memory::alloc_temp<VertexInputDesc>(vertex_input_count);
 	graphics::get_vertex_input_desc_from_shader(code, code_length, vertex_input_descs);
 
     CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
     VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, 2);
     graphics::release(&vertex_shader_compiled);
 
-	memory::load_stack_state(allocator, allocator_state);
+	memory::pop_temp_state();
 
 	return vertex_shader;
 }

@@ -41,6 +41,9 @@ namespace memory
     }
 
     StackAllocator *get_temp_stack();
+
+    void push_temp_state();
+    void pop_temp_state();
     
     template <typename T>
     T *alloc_temp(uint32_t count)
