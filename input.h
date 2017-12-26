@@ -21,4 +21,6 @@ namespace input
     void set_key_down(KeyCode code);
     void set_key_up(KeyCode code);
     bool key_pressed(KeyCode code);
+
+    void register_event(Event *event);
 }

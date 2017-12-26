@@ -87,3 +87,26 @@ bool input::key_pressed(KeyCode code)
 {
     return key_pressed_[code];
 }
+
+void input::register_event(Event *event)
+{
+    switch(event->type)
+    {
+        case MOUSE_MOVE:
+        {
+            MouseMoveData *data = (MouseMoveData *)event->data;
+            input::set_mouse_position(Vector2(data->x, data->y));
+        }
+        break;
+        case MOUSE_LBUTTON_DOWN:
+        {
+            input::set_mouse_left_button_down();
+        }
+        break;
+        case MOUSE_LBUTTON_UP:
+        {
+            input::set_mouse_left_button_up();
+        }
+        break;
+    }
+}
