@@ -1,5 +1,5 @@
 #include "memory.h"
-#include "array.h"
+#include "stack.h"
 
 static StackAllocator allocator_temp = memory::get_stack_allocator(MEGABYTES(10));
 static Stack<StackAllocatorState> temp_state_stack = stack::get<StackAllocatorState>(10);
