@@ -1,5 +1,4 @@
 #include "memory.h"
-#include <cstdlib>
 #include "array.h"
 
 static StackAllocator allocator_temp = memory::get_stack_allocator(MEGABYTES(10));

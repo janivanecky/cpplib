@@ -2,7 +2,6 @@
 #include "logging.h"
 #include <windows.h>
 
-#include <stdio.h>
 namespace file_system
 {
     File read_file(char *path)

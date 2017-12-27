@@ -1,7 +1,6 @@
 #include "graphics.h"
 #include "logging.h"
 #include "memory.h"
-#include <DXGI.h>
 #include <d3dcompiler.h>
 #include <assert.h>
 

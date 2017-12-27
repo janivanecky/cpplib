@@ -5,7 +5,6 @@
 #include "input.h"
 #include "file_system.h"
 #include <cassert>
-#include <cstdio>
 
 static ConstantBuffer buffer_rect;
 static ConstantBuffer buffer_pv;

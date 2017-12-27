@@ -1,7 +1,6 @@
 #include <windowsx.h>
 #include "platform.h"
 #include "logging.h"
-#include <stdio.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {

@@ -1,5 +1,4 @@
 #pragma once
-#include <d3dcompiler.h>
 #include <D3D11.h>
 #include <dxgi.h>
 
