@@ -20,15 +20,14 @@ namespace array
         array->size = size;
         array->count = 0;
         array->data = memory::alloc_heap<T>(size);
+        assert(array->data);
     }
 
     template <typename T>
     Array<T> get(uint32_t size)
     {
         Array<T> array;
-        array.size = size;
-        array.count = 0;
-        array.data = memory::alloc_heap<T>(size);
+        array::init(&array, size);
         return array;
     }
 
@@ -44,6 +43,7 @@ namespace array
         if(array->size == array->count)
         {
             T *new_mem = memory::alloc_heap<T>(array->size * 2);
+            assert(new_mem);
             memcpy(new_mem, array->data, sizeof(T) * array->size);
             memory::free_heap(array->data);
             array->data = new_mem;
@@ -70,15 +70,14 @@ namespace stack
         stack->size = size;
         stack->top = 0;
         stack->data = memory::alloc_heap<T>(size);
+        assert(stack->data);
     }
 
     template <typename T>
     Stack<T> get(uint32_t size)
     {
         Stack<T> stack;
-        stack.size = size;
-        stack.top = 0;
-        stack.data = memory::alloc_heap<T>(size);
+        stack::init(&stack, size);
         return stack;
     }
 
@@ -94,6 +93,7 @@ namespace stack
         if(stack->size == stack->top)
         {
             T *new_mem = memory::alloc_heap<T>(stack->size * 2);
+            assert(new_mem);
             memcpy(new_mem, stack->data, sizeof(T) * stack->size);
             memory::free_heap(stack->data);
             stack->data = new_mem;

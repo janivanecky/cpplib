@@ -12,7 +12,6 @@ static ConstantBuffer buffer_pv;
 static ConstantBuffer buffer_model;
 static ConstantBuffer buffer_color;
 
-
 static VertexShader vertex_shader_font;
 static PixelShader pixel_shader_font;
 static VertexShader vertex_shader_rect;
@@ -196,21 +195,35 @@ void ui::init(float screen_width, float screen_height)
     buffer_rect = graphics::get_constant_buffer(sizeof(Vector4));
     buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
 
+    // Assert constant buffers are ready
+    assert(graphics::is_ready(&buffer_model));
+    assert(graphics::is_ready(&buffer_pv));
+    assert(graphics::is_ready(&buffer_rect));
+    assert(graphics::is_ready(&buffer_color));
+
     // Create mesh
     quad_mesh = graphics::get_mesh(quad_vertices, 4, sizeof(float) * 6, quad_indices, 6, 2);
+    assert(graphics::is_ready(&quad_mesh));
     
     // Create shaders
     vertex_shader_font = graphics::get_vertex_shader_from_code(vertex_shader_font_string, ARRAYSIZE(vertex_shader_font_string));
     pixel_shader_font = graphics::get_pixel_shader_from_code(pixel_shader_font_string, ARRAYSIZE(pixel_shader_font_string));
     vertex_shader_rect = graphics::get_vertex_shader_from_code(vertex_shader_rect_string, ARRAYSIZE(vertex_shader_rect_string));
     pixel_shader_rect = graphics::get_pixel_shader_from_code(pixel_shader_rect_string, ARRAYSIZE(pixel_shader_rect_string));
+    assert(graphics::is_ready(&vertex_shader_font));
+    assert(graphics::is_ready(&pixel_shader_font));
+    assert(graphics::is_ready(&vertex_shader_rect));
+    assert(graphics::is_ready(&pixel_shader_rect));
 
     // Create texture sampler
     texture_sampler = graphics::get_texture_sampler(SampleMode::CLAMP);
+    assert(graphics::is_ready(&texture_sampler));
 
     // Init font
     File font_file = file_system::read_file("consola.ttf");
+    assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, 24, (uint32_t)FONT_TEXTURE_SIZE);
+    assert(graphics::is_ready(&font_ui.texture));
     file_system::release_file(font_file);
 
     // Init rendering arrays

@@ -9,6 +9,7 @@ StackAllocator memory::get_stack_allocator(uint32_t size)
 {
     StackAllocator allocator = {};
     allocator.storage = malloc(size);
+    assert(allocator.storage);
     allocator.size = size;
     return allocator;
 }

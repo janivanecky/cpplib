@@ -724,6 +724,41 @@ void graphics::show_live_objects()
 	debug_device->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 }
 
+bool graphics::is_ready(Texture *texture)
+{
+	return texture->texture && texture->sr_view;
+}
+
+bool graphics::is_ready(RenderTarget *render_target)
+{
+	return render_target->rt_view && render_target->texture;
+}
+
+bool graphics::is_ready(Mesh *mesh)
+{
+	return mesh->vertex_buffer && mesh->index_buffer;
+}
+
+bool graphics::is_ready(ConstantBuffer *buffer)
+{
+	return buffer->buffer;
+}
+
+bool graphics::is_ready(TextureSampler *sampler)
+{
+	return sampler->sampler;
+}
+
+bool graphics::is_ready(VertexShader *shader)
+{
+	return shader->vertex_shader && shader->input_layout;
+}
+
+bool graphics::is_ready(PixelShader *shader)
+{
+	return shader->pixel_shader;
+}
+
 #define RELEASE_DX_RESOURCE(resource) if(resource) resource->Release(); resource = NULL;
 
 void graphics::release()
@@ -731,6 +766,8 @@ void graphics::release()
 	RELEASE_DX_RESOURCE(swap_chain->swap_chain);
 	RELEASE_DX_RESOURCE(graphics_context->context);
 	RELEASE_DX_RESOURCE(graphics_context->device);
+	RELEASE_DX_RESOURCE(alpha_blend_state.state);
+	RELEASE_DX_RESOURCE(solid_blend_state.state);
 }
 
 void graphics::release(RenderTarget *buffer)

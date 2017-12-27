@@ -2,6 +2,7 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 #include "memory.h"
+#include "logging.h"
 
 Font font::get(uint8_t *data, float size, uint32_t texture_size)
 {
@@ -37,6 +38,10 @@ Font font::get(uint8_t *data, float size, uint32_t texture_size)
     }
     
     font.texture = graphics::get_texture(font_buffer, texture_size, texture_size, DXGI_FORMAT_R8_UNORM, 1);
+    if(!graphics::is_ready(&font.texture))
+    {
+        logging::print_error("Could not create texture for font.");
+    }
     memory::pop_temp_state();
 
     return font;

@@ -1,4 +1,5 @@
 #include "file_system.h"
+#include "logging.h"
 #include <windows.h>
 
 #include <stdio.h>
@@ -9,11 +10,16 @@ namespace file_system
         File file = {};
 
         HANDLE file_handle = CreateFileA(path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (file_handle == INVALID_HANDLE_VALUE) return file;
+        if (file_handle == INVALID_HANDLE_VALUE)
+        {
+            logging::print_error("Unable to open read handle to file %s.", path);
+            return file;
+        } 
 
         WIN32_FILE_ATTRIBUTE_DATA file_attributes;
         if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes))
         {
+            logging::print_error("Unable to get attributes of file %s.", path);
             CloseHandle(file_handle);
             return file;
         }
@@ -29,6 +35,7 @@ namespace file_system
         }
         else
         {
+            logging::print_error("Unable to read opened file %s.", path);
             HeapFree(heap, 0, file.data);
             CloseHandle(file_handle);
             return file;
@@ -51,12 +58,14 @@ namespace file_system
                                 FILE_ATTRIBUTE_NORMAL, NULL);
         if (file_handle == INVALID_HANDLE_VALUE)
         {
+            logging::print_error("Unable to open write handle to file %s.", path);
             return 0;
         }
 
         DWORD bytes_written = 0;
         if(!WriteFile(file_handle, data, size, &bytes_written, NULL))
         {
+            logging::print_error("Unable to write to file %s.", path);
             return 0;
         }
         

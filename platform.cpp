@@ -1,5 +1,6 @@
 #include <windowsx.h>
 #include "platform.h"
+#include "logging.h"
 #include <stdio.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -102,7 +103,7 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 	window_class.lpfnWndProc = &WindowProc;
 	window_class.hInstance = (HINSTANCE)program_instance;
 	window_class.hCursor = LoadCursor(0, IDC_ARROW);
-	window_class.lpszClassName = "TGEWindowClass";
+	window_class.lpszClassName = "CustomWindowClass";
 
 	Window window = {};
 	if (RegisterClassExA(&window_class))
@@ -118,8 +119,12 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
 		
-		window.window_handle = CreateWindowA("TGEWindowClass", window_name, window_flags, 
+		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags, 
 											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
+		if(window.window_handle == INVALID_HANDLE_VALUE)
+		{
+			logging::print_error("Could not create window.");
+		}
 
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;
@@ -128,7 +133,16 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		device.hwndTarget = window.window_handle;
 		RegisterRawInputDevices(&device, 1, sizeof(device));
 	}
+	else
+	{
+		logging::print_error("Could not register window class.");
+	}
 	return window;
+}
+
+bool platform::is_window_valid(Window *window)
+{
+	return window->window_handle != INVALID_HANDLE_VALUE;
 }
 
 void platform::show_cursor()

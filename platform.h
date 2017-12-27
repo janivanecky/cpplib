@@ -66,6 +66,8 @@ struct Event
 namespace platform
 {
 	Window get_window(char *window_name, uint32_t window_width, uint32_t window_height);
+	bool is_window_valid(Window *window);
+
 	bool get_event(Event *event);
 
 	void show_cursor();

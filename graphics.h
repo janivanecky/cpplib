@@ -187,6 +187,14 @@ namespace graphics
 
 	void show_live_objects();
 
+	bool is_ready(Texture *texture);
+	bool is_ready(RenderTarget *render_target);
+	bool is_ready(Mesh *mesh);
+	bool is_ready(ConstantBuffer *buffer);
+	bool is_ready(TextureSampler *sampler);
+	bool is_ready(VertexShader *shader);
+	bool is_ready(PixelShader *shader);
+
 	void release();
 	void release(SwapChain *swap_chain);
 	void release(RenderTarget *buffer);
