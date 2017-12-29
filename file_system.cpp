@@ -2,73 +2,81 @@
 #include "logging.h"
 #include <windows.h>
 
-namespace file_system
+File file_system::read_file(char *path)
 {
-    File read_file(char *path)
+    File file = {};
+
+    // Open handle to a file
+    HANDLE file_handle = CreateFileA(path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
     {
-        File file = {};
+        logging::print_error("Unable to open read handle to file %s.", path);
+        return file;
+    } 
 
-        HANDLE file_handle = CreateFileA(path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (file_handle == INVALID_HANDLE_VALUE)
-        {
-            logging::print_error("Unable to open read handle to file %s.", path);
-            return file;
-        } 
+    // Get file attributes, these are necessary to know how much data to allocate for reading
+    WIN32_FILE_ATTRIBUTE_DATA file_attributes;
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes))
+    {
+        logging::print_error("Unable to get attributes of file %s.", path);
+        CloseHandle(file_handle);
+        return file;
+    }
+    
+    // Allocate memory for reading the file contents
+    uint32_t file_size = file_attributes.nFileSizeLow;
+    HANDLE heap = GetProcessHeap();
+    file.data = HeapAlloc(heap, HEAP_ZERO_MEMORY, file_size);
 
-        WIN32_FILE_ATTRIBUTE_DATA file_attributes;
-        if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes))
-        {
-            logging::print_error("Unable to get attributes of file %s.", path);
-            CloseHandle(file_handle);
-            return file;
-        }
-
-        uint32_t file_size = file_attributes.nFileSizeLow;
-        HANDLE heap = GetProcessHeap();
-        file.data = HeapAlloc(heap, HEAP_ZERO_MEMORY, file_size);
-        DWORD bytes_read_from_file = 0;
-        if (ReadFile(file_handle, file.data, file_size, &bytes_read_from_file, NULL) &&
-            bytes_read_from_file == file_size)
-        {
-            file.size = bytes_read_from_file;
-        }
-        else
-        {
-            logging::print_error("Unable to read opened file %s.", path);
-            HeapFree(heap, 0, file.data);
-            CloseHandle(file_handle);
-            return file;
-        }
-
+    // Read the file into allocated memory
+    DWORD bytes_read_from_file = 0;
+    if (ReadFile(file_handle, file.data, file_size, &bytes_read_from_file, NULL) &&
+        bytes_read_from_file == file_size)
+    {
+        file.size = bytes_read_from_file;
+    }
+    else
+    {
+        // In case of read error, deallocate memory and close handle
+        logging::print_error("Unable to read opened file %s.", path);
+        HeapFree(heap, 0, file.data);
         CloseHandle(file_handle);
         return file;
     }
 
-    void release_file(File file)
+    // Succesfull file reading, close the handle and return the data
+    CloseHandle(file_handle);
+    return file;
+}
+
+void file_system::release_file(File file)
+{
+    // Release allocated memory from the heap
+    HANDLE heap = GetProcessHeap();
+    HeapFree(heap, 0, file.data);
+}
+
+uint32_t file_system::write_file(char *path, void *data, uint32_t size)
+{
+    // Open handle to a file
+    HANDLE file_handle = 0;
+    file_handle = CreateFileA(path, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS,
+                            FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file_handle == INVALID_HANDLE_VALUE)
     {
-        HANDLE heap = GetProcessHeap();
-        HeapFree(heap, 0, file.data);
+        logging::print_error("Unable to open write handle to file %s.", path);
+        return 0;
     }
 
-    uint32_t write_file(char *path, void *data, uint32_t size)
+    // Write to a file
+    DWORD bytes_written = 0;
+    if(!WriteFile(file_handle, data, size, &bytes_written, NULL))
     {
-        HANDLE file_handle = 0;
-        file_handle = CreateFileA(path, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS,
-                                FILE_ATTRIBUTE_NORMAL, NULL);
-        if (file_handle == INVALID_HANDLE_VALUE)
-        {
-            logging::print_error("Unable to open write handle to file %s.", path);
-            return 0;
-        }
-
-        DWORD bytes_written = 0;
-        if(!WriteFile(file_handle, data, size, &bytes_written, NULL))
-        {
-            logging::print_error("Unable to write to file %s.", path);
-            return 0;
-        }
-        
-        CloseHandle(file_handle);
-        return bytes_written;
+        logging::print_error("Unable to write to file %s.", path);
+        return 0;
     }
+    
+    // Wrote sucessfully, close the handle
+    CloseHandle(file_handle);
+    return bytes_written;
 }

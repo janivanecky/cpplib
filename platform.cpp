@@ -190,14 +190,6 @@ void timer::start(Timer *timer)
 	timer->start = platform::get_ticks();
 }
 
-float timer::reset(Timer *timer)
-{
-	Ticks current = platform::get_ticks();
-	float dt = platform::get_dt_from_tick_difference(timer->start, current, timer->frequency);
-	timer->start = current;
-	return dt;
-}
-
 float timer::end(Timer *timer)
 {
 	Ticks current = platform::get_ticks();

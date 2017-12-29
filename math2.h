@@ -2,7 +2,7 @@
 #pragma once
 #include <stdint.h>
 
-//  NOTE: Later split into separate files for Vectors/Matrices
+// TODO: Later split into separate files for Vectors/Matrices
 
 struct Vector2
 {

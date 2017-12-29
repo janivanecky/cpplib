@@ -1,5 +1,6 @@
 #include "input.h"
 
+// Input state variables
 bool mouse_lbutton_pressed   = false;
 bool mouse_lbutton_down      = false;
 Vector2 mouse_position_       = Vector2(-1,-1);
@@ -9,6 +10,11 @@ static bool key_down_[100];
 static bool key_pressed_[100];
 
 bool ui_active_ = false;
+
+////////////////////////////
+/// PUBLIC API
+////////////////////////////
+
 
 void input::set_ui_active()
 {
@@ -65,6 +71,7 @@ void input::set_mouse_left_button_up()
 
 void input::set_mouse_position(Vector2 position)
 {
+    // Don't update delta on the first frame (initial position (-1, -1))
     if(mouse_position_.x > 0.0f && mouse_position_.y > 0.0f)
     {
         mouse_delta_position_ = position - mouse_position_;

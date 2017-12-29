@@ -4,11 +4,17 @@
 #include <d3dcompiler.h>
 #include <assert.h>
 
+// Global variables, only one of those for the whole application!
+
+// Just so we don't have to reference graphics_context with &, we're doing this "trick"
 static GraphicsContext graphics_context_;
 GraphicsContext *graphics_context = &graphics_context_;
+
+// The same as above
 static SwapChain swap_chain_;
 static SwapChain *swap_chain = &swap_chain_;
 
+// We're simplifying blending to just two options - alpha blending and opaque (solid) blending
 static BlendState alpha_blend_state;
 static BlendState solid_blend_state;
 
@@ -17,13 +23,19 @@ static BlendState *blend_states[] = {
 	&solid_blend_state
 };
 
+// Let's store current blend type, useful when we want to restore original blending state in the end of the function
 static BlendType current_blend_type;
 
+/////////////////////////////////////////////////////
+/// Private API
+/////////////////////////////////////////////////////
 
+// Create blend state with specified blend type
 BlendState get_blend_state(BlendType blend_type)
 {
 	BlendState blend_state = {};
 
+	// For solid blend state, blend_state_desc is zeroed.
 	D3D11_BLEND_DESC blend_state_desc = {};
 	if (blend_type == ALPHA)
 	{
@@ -43,14 +55,18 @@ BlendState get_blend_state(BlendType blend_type)
 	return blend_state;
 }	
 
+/////////////////////////////////////////////////////
+/// Public API
+/////////////////////////////////////////////////////
+
 void graphics::init(LUID *adapter_luid)
 {
-
 	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
 #ifdef DEBUG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
+	// Create IDXGIFactory, needed for probing avaliable devices/adapters
 	IDXGIFactory *idxgi_factory;
 	HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
 	if (FAILED(hr))
@@ -58,7 +74,10 @@ void graphics::init(LUID *adapter_luid)
 		logging::print_error("Failed to create IDXGI factory.");
 	}
 
+	// Get adapter to use for creating D3D11Device
 	IDXGIAdapter *adapter = NULL;
+
+	// In case adapter LUID was specified, go through available adapters and pick the one with specified LUID
 	if (adapter_luid)
 	{
 		IDXGIAdapter *temp_adapter = NULL;
@@ -76,21 +95,22 @@ void graphics::init(LUID *adapter_luid)
 	}
 	idxgi_factory->Release();
 
+	// Create D3D11Device and D3D11DeviceContext
 	D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
 	D3D_FEATURE_LEVEL supported_feature_level;
 
 	auto driver_type = adapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
 	hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create D3D11 Device.");
-	}
+	if (FAILED(hr)) logging::print_error("Failed to create D3D11 Device.");
+
+	// Release adapter handle if not NULL
 	if (adapter)
 	{
 		adapter->Release();
 	}
 	
 	// TODO: More flexible rasterizer state setting (per draw/render pass?)
+	// Initialize rasterizer state, let's follow RH coordinate system like sane people
 	ID3D11RasterizerState *rasterizer_state;
 	D3D11_RASTERIZER_DESC rasterizer_desc = {};
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
@@ -147,6 +167,7 @@ void graphics::init_swap_chain(Window *window)
 
 RenderTarget graphics::get_render_target_window()
 {
+	// NOTE: buffer.sr_view is not filled and remains NULL - window render target cannot be used as a texture in shader
 	RenderTarget buffer = {};
 
 	HRESULT hr = swap_chain->swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void **)&buffer.texture);
@@ -170,7 +191,6 @@ RenderTarget graphics::get_render_target_window()
 	{
 		logging::print_error("Failed to create swap chain render target.");
 	}
-
 
 	buffer.width = swap_chain_desc.BufferDesc.Width;
 	buffer.height = swap_chain_desc.BufferDesc.Height;
@@ -537,6 +557,7 @@ void graphics::draw_mesh(Mesh *mesh)
 ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 {
 	ConstantBuffer buffer = {};
+	buffer.size = size;
 
 	D3D11_BUFFER_DESC constant_buffer_desc = {};
 	constant_buffer_desc.ByteWidth = size;
@@ -545,8 +566,6 @@ ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
-	
-	buffer.size = size;
 
 	return buffer;
 }
@@ -618,15 +637,15 @@ VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, Vertex
 
 VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader_size, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count)
 {
-	VertexShader shader = {};
+	memory::push_temp_state();
 
+	VertexShader shader = {};
 	HRESULT hr = graphics_context->device->CreateVertexShader(shader_byte_code, shader_size, NULL, &shader.vertex_shader);
 	if (FAILED(hr))
 	{
 		logging::print_error("Failed to create vertex shader.");
 	}
 
-	memory::push_temp_state();
 	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = memory::alloc_temp<D3D11_INPUT_ELEMENT_DESC>(vertex_input_count);
 	for (uint32_t i = 0; i < vertex_input_count; ++i)
 	{
@@ -643,7 +662,6 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 	}
 
 	memory::pop_temp_state();
-
 	return shader;
 }
 
@@ -655,7 +673,8 @@ void graphics::set_vertex_shader(VertexShader *shader)
 
 PixelShader graphics::get_pixel_shader(CompiledShader *compiled_shader)
 {
-	PixelShader pixel_shader = graphics::get_pixel_shader(compiled_shader->blob->GetBufferPointer(), (uint32_t)compiled_shader->blob->GetBufferSize());
+	PixelShader pixel_shader = graphics::get_pixel_shader(compiled_shader->blob->GetBufferPointer(),
+														  (uint32_t)compiled_shader->blob->GetBufferSize());
 	return pixel_shader;
 }
 
@@ -684,7 +703,8 @@ void graphics::set_pixel_shader(PixelShader *shader)
 
 GeometryShader graphics::get_geometry_shader(CompiledShader *compiled_shader)
 {
-	GeometryShader geometry_shader = graphics::get_geometry_shader(compiled_shader->blob->GetBufferPointer(), (uint32_t) compiled_shader->blob->GetBufferSize());
+	GeometryShader geometry_shader = graphics::get_geometry_shader(compiled_shader->blob->GetBufferPointer(),
+																   (uint32_t) compiled_shader->blob->GetBufferSize());
 	return geometry_shader;
 }
 
@@ -723,6 +743,8 @@ void graphics::show_live_objects()
 	debug_device->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 }
 
+// is_ready functions
+
 bool graphics::is_ready(Texture *texture)
 {
 	return texture->texture && texture->sr_view;
@@ -757,6 +779,13 @@ bool graphics::is_ready(PixelShader *shader)
 {
 	return shader->pixel_shader;
 }
+
+bool graphics::is_ready(CompiledShader *shader)
+{
+	return shader->blob;
+}
+
+// release functions
 
 #define RELEASE_DX_RESOURCE(resource) if(resource) resource->Release(); resource = NULL;
 
@@ -941,29 +970,33 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 	return vertex_input_count;
 }
 
-// TODO: Should this handle incorrect shaders? As in resources.cpp
 VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length)
 {
 	memory::push_temp_state();
 
+	// Compile shader
+    CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
+	assert(graphics::is_ready(&vertex_shader_compiled));
+
+	// Get VertexInpuDescs
     uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
 	VertexInputDesc *vertex_input_descs = memory::alloc_temp<VertexInputDesc>(vertex_input_count);
 	graphics::get_vertex_input_desc_from_shader(code, code_length, vertex_input_descs);
 
-    CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
+	// Get VertexShader object
     VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, 2);
     graphics::release(&vertex_shader_compiled);
 
 	memory::pop_temp_state();
-
 	return vertex_shader;
 }
 
 
-// TODO: Should this handle incorrect shaders? As in resources.cpp
 PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length)
 {
 	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length);
+	assert(graphics::is_ready(&pixel_shader_compiled));
+	
     PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_compiled);
     graphics::release(&pixel_shader_compiled);
 
