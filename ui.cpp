@@ -22,6 +22,8 @@ static Mesh quad_mesh;
 
 static Font font_ui;
 
+static bool is_input_rensposive_ = true;
+
 char vertex_shader_font_string[] = 
 "struct VertexInput"
 "{"
@@ -444,7 +446,7 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
     Vector2 box_bg_pos = item_pos;
 
     // Check for mouse input
-    if(input::ui_active())
+    if(ui::is_input_responsive())
     {
         // Check if mouse over
         Vector2 mouse_position = input::mouse_position();
@@ -525,7 +527,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     Vector2 slider_size = Vector2(height * 0.5f, height);
 
     // Check for mouse input
-    if(input::ui_active())
+    if(ui::is_input_responsive())
     {
         Vector2 mouse_position = input::mouse_position();
         if(is_in_rect(mouse_position, slider_pos, slider_size))
@@ -602,6 +604,16 @@ void ui::end()
     array::reset(&rect_items_bg);
     array::reset(&rect_items);
     array::reset(&text_items);
+}
+
+void ui::set_input_responsive(bool is_responsive)
+{
+    is_input_rensposive_ = is_responsive;
+}
+
+bool ui::is_input_responsive()
+{
+    return is_input_rensposive_;
 }
 
 void ui::release()

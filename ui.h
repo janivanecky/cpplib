@@ -30,4 +30,8 @@ namespace ui
     float add_slider(Panel *panel, char *label, float pos, float min, float max);
 
     void release();
+
+    // These functions enable turning UI on/off as a listener for inputs
+    void set_input_responsive(bool is_responsive);
+    bool is_input_responsive();
 }

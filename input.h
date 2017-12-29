@@ -12,11 +12,6 @@ namespace input
     // e.g. - pressed event, mouse delta position....
     void reset();
 
-    // These functions enable turning UI on/off as a listener for inputs
-    void set_ui_active();
-    void set_ui_inactive();
-    bool ui_active();
-
     // Return if left mouse button has been pressed this frame (now down, previous frame up)
     bool mouse_left_button_pressed();
 

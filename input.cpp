@@ -15,22 +15,6 @@ bool ui_active_ = false;
 /// PUBLIC API
 ////////////////////////////
 
-
-void input::set_ui_active()
-{
-    ui_active_ = true;
-}
-
-void input::set_ui_inactive()
-{
-    ui_active_ = false;
-}
-
-bool input::ui_active()
-{
-    return ui_active_;
-}
-
 void input::reset()
 {
     mouse_lbutton_pressed = false;
