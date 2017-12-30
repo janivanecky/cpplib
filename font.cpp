@@ -16,7 +16,7 @@ void font::init()
     }
 }
 
-Font font::get(uint8_t *data, uint32_t data_size, uint32_t size, uint32_t texture_size)
+Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size)
 {
     Font font = {};
     
@@ -156,7 +156,7 @@ float font::get_kerning(Font *font, char c1, char c2)
     int32_t left_glyph_index = FT_Get_Char_Index(font->face, c1);
     int32_t right_glyph_index = FT_Get_Char_Index(font->face, c2);
     FT_Get_Kerning(font->face, left_glyph_index, right_glyph_index, FT_KERNING_DEFAULT, &kerning);
-    return kerning.x;
+    return (float)kerning.x;
 #endif
 }
 

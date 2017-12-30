@@ -42,7 +42,7 @@ namespace font
         - size: height of the font in pixels
         - texture_size: size of a side of texture that stores font bitmap, in pixels
     */
-    Font get(uint8_t *data, uint32_t data_size, uint32_t size, uint32_t texture_size);
+    Font get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size);
 
     // Initialize font rasterization code (FreeType2)
     void init();
