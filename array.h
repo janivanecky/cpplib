@@ -11,7 +11,13 @@ struct Array
     T *data;
     uint32_t count;
     uint32_t size;
+
+    T& operator[](uint32_t index)
+    {
+        return (this->data[index]);
+    }
 };
+
 
 // `array` namespace handles operations on Array.
 namespace array

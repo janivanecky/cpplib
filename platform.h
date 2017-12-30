@@ -58,7 +58,8 @@ struct MouseMoveData
 enum KeyCode
 {
 	ESC = 0,
-	F10 = 1,
+	F1,
+	F10,
 };
 
 struct KeyPressedData

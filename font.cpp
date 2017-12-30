@@ -29,10 +29,12 @@ Font font::get(uint8_t *data, float size, uint32_t texture_size)
     
     // Get information about each ASCII character
     int32_t x = 0, y = 0;
+    int32_t letter_width, letter_height;
+    letter_width = letter_height = 32;
     for (unsigned char c = 32; c < 128; ++c)
     {
         // Rasterize letter and insert into allocated buffer
-        stbtt_MakeCodepointBitmapSubpixel(&font.font_info, &font_buffer[texture_size * y + x], 32, 32, texture_size, font_scale, font_scale, 0, 0, c);
+        stbtt_MakeCodepointBitmapSubpixel(&font.font_info, &font_buffer[texture_size * y + x], letter_width, letter_height, texture_size, font_scale, font_scale, 0, 0, c);
 
         // Get position of the letter in the rasterized bitmap
         int32_t x0,x1,y0,y1;
@@ -46,11 +48,11 @@ Font font::get(uint8_t *data, float size, uint32_t texture_size)
         font.glyphs[c - 32] = {x, y, x1 - x0, y1 - y0, (int32_t) (lsb * font_scale), (int32_t)(ascent * font_scale) + y0, (int32_t)(advance * font_scale)};
 
         // Move in the texture/buffer
-        x += 32;
+        x += letter_width;
         if(x >= (int32_t)texture_size)
         {
             x = 0;
-            y += 32;
+            y += letter_height;
         }
     }
     

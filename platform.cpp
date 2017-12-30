@@ -51,6 +51,11 @@ bool platform::get_event(Event *event)
 			{
 				data->code = KeyCode::ESC;
 			}
+			else if(raw_kb.VKey == VK_F1)
+			{
+				data->code = KeyCode::F1;
+				
+			}
 			else if(raw_kb.VKey == VK_F10)
 			{
 				data->code = KeyCode::F10;

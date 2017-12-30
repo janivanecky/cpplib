@@ -34,4 +34,8 @@ namespace ui
     // These functions enable turning UI on/off as a listener for inputs
     void set_input_responsive(bool is_responsive);
     bool is_input_responsive();
+
+    // Getters for values on which UI operates
+    float get_screen_width();
+    Font *get_font();
 }

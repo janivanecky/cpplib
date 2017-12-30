@@ -178,17 +178,17 @@ uint16_t quad_indices[] = {
     2, 1, 0
 };
 
-static float SCREEN_WIDTH = -1, SCREEN_HEIGHT = -1;
+static float screen_width = -1, screen_height = -1;
 
 const float FONT_TEXTURE_SIZE = 512.0f;
 
-#define ASSERT_SCREEN_SIZE assert(SCREEN_WIDTH > 0 && SCREEN_HEIGHT > 0)
+#define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
 
-void ui::init(float screen_width, float screen_height)
+void ui::init(float screen_width_ui, float screen_height_ui)
 {
     // Set screen size
-    SCREEN_WIDTH = screen_width;
-    SCREEN_HEIGHT = screen_height;
+    screen_width = screen_width_ui;
+    screen_height = screen_height_ui;
     
     // Create constant buffers
     buffer_model = graphics::get_constant_buffer(sizeof(Matrix4x4));
@@ -223,7 +223,7 @@ void ui::init(float screen_width, float screen_height)
     // Init font
     File font_file = file_system::read_file("consola.ttf");
     assert(font_file.data);
-    font_ui = font::get((uint8_t *)font_file.data, 24, (uint32_t)FONT_TEXTURE_SIZE);
+    font_ui = font::get((uint8_t *)font_file.data, 16, (uint32_t)FONT_TEXTURE_SIZE);
     assert(graphics::is_ready(&font_ui.texture));
     file_system::release_file(font_file);
 
@@ -257,7 +257,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
 
     // Update constant buffer values
     Matrix4x4 pv_matrices[2] = {
-        math::get_orthographics_projection_dx_rh(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, -1, 1),
+        math::get_orthographics_projection_dx_rh(0, screen_width, 0, screen_height, -1, 1),
         math::get_identity()
     };
     graphics::update_constant_buffer(&buffer_pv, pv_matrices);
@@ -283,7 +283,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
 
         // Set up model matrix
         // TODO: solve y axis downwards in an elegant way
-        Matrix4x4 model_matrix = math::get_translation(final_x, SCREEN_HEIGHT - final_y, 0) * math::get_scale((float)glyph.bitmap_width, (float)glyph.bitmap_height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
+        Matrix4x4 model_matrix = math::get_translation(final_x, screen_height - final_y, 0) * math::get_scale((float)glyph.bitmap_width, (float)glyph.bitmap_height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
         graphics::update_constant_buffer(&buffer_model, &model_matrix);
 
         graphics::draw_mesh(&quad_mesh);
@@ -322,10 +322,10 @@ void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
 
     // Get constant buffer values
     Matrix4x4 pv_matrices[2] = {
-        math::get_orthographics_projection_dx_rh(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, -1, 1),
+        math::get_orthographics_projection_dx_rh(0, screen_width, 0, screen_height, -1, 1),
         math::get_identity()
     };
-    Matrix4x4 model_matrix = math::get_translation(x, SCREEN_HEIGHT - y, 0) * math::get_scale(width, height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
+    Matrix4x4 model_matrix = math::get_translation(x, screen_height - y, 0) * math::get_scale(width, height, 1.0f) * math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) * math::get_scale(0.5f);
 
     // Update constant buffers
     graphics::update_constant_buffer(&buffer_pv, pv_matrices);
@@ -615,6 +615,17 @@ bool ui::is_input_responsive()
 {
     return is_input_rensposive_;
 }
+
+float ui::get_screen_width()
+{
+    return screen_width;
+}
+
+Font *ui::get_font()
+{
+    return &font_ui;
+}
+
 
 void ui::release()
 {
