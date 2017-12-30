@@ -82,7 +82,7 @@ char pixel_shader_font_string[] =
 "{"
 "	float alpha = tex.Sample(texSampler, input.texcoord).r;"
 "	float4 output = float4(color.xyz, color.w * alpha);"
-"	return output;"
+"	return pow(output, 1.0f / 2.2f);"
 "}";
 
 char vertex_shader_rect_string[] =
@@ -129,7 +129,7 @@ char pixel_shader_rect_string[] =
 ""
 "float4 main(PixelInput input) : SV_TARGET"
 "{"
-"	return color;"
+"	return pow(color, 1.0f / 2.2f);"
 "}";
 
 struct TextItem
@@ -180,7 +180,7 @@ uint16_t quad_indices[] = {
 
 static float screen_width = -1, screen_height = -1;
 
-const float FONT_TEXTURE_SIZE = 512.0f;
+const float FONT_TEXTURE_SIZE = 2048.0f;
 
 #define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
 
@@ -223,7 +223,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     // Init font
     File font_file = file_system::read_file("consola.ttf");
     assert(font_file.data);
-    font_ui = font::get((uint8_t *)font_file.data, 16, (uint32_t)FONT_TEXTURE_SIZE);
+    font_ui = font::get((uint8_t *)font_file.data, font_file.size, 20, (uint32_t)FONT_TEXTURE_SIZE);
     assert(graphics::is_ready(&font_ui.texture));
     file_system::release_file(font_file);
 

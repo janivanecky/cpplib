@@ -480,7 +480,7 @@ TextureSampler graphics::get_texture_sampler(SampleMode mode)
 
 	D3D11_TEXTURE_ADDRESS_MODE address_mode = m2m[mode];
 	D3D11_SAMPLER_DESC sampler_desc = {};
-	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 	sampler_desc.AddressU = address_mode;
 	sampler_desc.AddressV = address_mode;
 	sampler_desc.AddressW = address_mode;
