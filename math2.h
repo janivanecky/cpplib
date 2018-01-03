@@ -184,6 +184,11 @@ struct Vector4
 			float b;
 			float a;
 		};
+		struct
+		{
+			Vector3 xyz;
+			float w;
+		};
 	};
 
 	float& operator[](int index)
@@ -367,6 +372,7 @@ namespace math
 	Vector4 normalize(Vector4);
 
 	Vector3 rotate(Vector3 v, Quaternion q);
+	Vector3 rotate(Vector3 v, float angle, Vector3 axis);
 
 	Matrix4x4 get_identity();
 	Matrix4x4 get_translation(Vector3 v);
