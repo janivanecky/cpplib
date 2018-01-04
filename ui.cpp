@@ -181,6 +181,7 @@ uint16_t quad_indices[] = {
 static float screen_width = -1, screen_height = -1;
 
 const float FONT_TEXTURE_SIZE = 2048.0f;
+const int32_t FONT_HEIGHT = 16;
 
 #define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
 
@@ -223,7 +224,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     // Init font
     File font_file = file_system::read_file("consola.ttf");
     assert(font_file.data);
-    font_ui = font::get((uint8_t *)font_file.data, font_file.size, 20, (uint32_t)FONT_TEXTURE_SIZE);
+    font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);
     assert(graphics::is_ready(&font_ui.texture));
     file_system::release_file(font_file);
 
@@ -351,9 +352,9 @@ static int32_t active_id = -1;
 static int32_t hot_id = -1;
 
 static Vector4 color_background = Vector4(0.2f, 0.2f, 0.2f, .7f);
-static Vector4 color_foreground = Vector4(0.2f, 0.8f, 0.2f, 1.0f);
-static Vector4 color_title = Vector4(1, 0, 0, 1);
-static Vector4 color_label = Vector4(1, 0, 0, 1);
+static Vector4 color_foreground = Vector4(0.02f, 0.02f, 0.02f, 1.0f);
+static Vector4 color_title = Vector4(0, 0, 0, 1);
+static Vector4 color_label = Vector4(0, 0, 0, 1);
 
 Panel ui::start_panel(char *name, Vector2 pos, float width)
 {
@@ -489,7 +490,7 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
     array::add(&rect_items, toggle_bg);
 
     // Active part of toggle box
-    if (active)
+    if (!active)
     {
         Vector2 box_fg_size = Vector2(height * box_middle_to_total, height * box_middle_to_total);
         Vector2 box_fg_pos = box_bg_pos + (box_bg_size - box_fg_size) / 2.0f;
