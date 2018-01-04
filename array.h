@@ -68,4 +68,13 @@ namespace array
 
         array->data[array->count++] = item;
     }
+
+    // Completely release the array, freeing all the memory
+    template <typename T>
+    void release(Array<T> *array)
+    {
+        memory::free_heap(array->data);
+        array->size = 0;
+        array->count = 0;
+    }
 }

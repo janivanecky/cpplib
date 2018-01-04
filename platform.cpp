@@ -39,28 +39,26 @@ bool platform::get_event(Event *event)
 		if (raw->header.dwType == RIM_TYPEKEYBOARD)
 		{
 			const RAWKEYBOARD& raw_kb = raw->data.keyboard;
-			if (raw_kb.Flags & RI_KEY_BREAK)
-			{
+			if (raw_kb.Flags & RI_KEY_BREAK) 
+			{ 
 				event->type = KEY_UP;
 			}
 			else
 			{
 				event->type = KEY_DOWN;
 			}
-			if (raw_kb.VKey == VK_ESCAPE)
-			{
-				data->code = KeyCode::ESC;
-			}
-			else if(raw_kb.VKey == VK_F1)
-			{
-				data->code = KeyCode::F1;
-				
-			}
-			else if(raw_kb.VKey == VK_F10)
-			{
-				data->code = KeyCode::F10;
-				
-			}
+
+			if (raw_kb.VKey == VK_ESCAPE) data->code = KeyCode::ESC;
+			else if(raw_kb.VKey == VK_F1) data->code = KeyCode::F1;
+			else if(raw_kb.VKey == VK_F2) data->code = KeyCode::F2;
+			else if(raw_kb.VKey == VK_F3) data->code = KeyCode::F3;
+			else if(raw_kb.VKey == VK_F4) data->code = KeyCode::F4;
+			else if(raw_kb.VKey == VK_F5) data->code = KeyCode::F5;
+			else if(raw_kb.VKey == VK_F6) data->code = KeyCode::F6;
+			else if(raw_kb.VKey == VK_F7) data->code = KeyCode::F7;
+			else if(raw_kb.VKey == VK_F8) data->code = KeyCode::F8;
+			else if(raw_kb.VKey == VK_F9) data->code = KeyCode::F9;
+			else if(raw_kb.VKey == VK_F10) data->code = KeyCode::F10;
 		}
 	} break;
 	case WM_QUIT:
