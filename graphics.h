@@ -62,6 +62,7 @@ struct Mesh
 	ID3D11Buffer *index_buffer;
 	uint32_t vertex_stride;
 	uint32_t vertex_offset;
+	uint32_t vertex_count;
 	uint32_t index_count;
 	DXGI_FORMAT index_format;
 	D3D11_PRIMITIVE_TOPOLOGY topology;
@@ -236,7 +237,8 @@ namespace graphics
 	void set_texture_sampler(TextureSampler *sampler, uint32_t slot);
 
 	// Get Mesh based on mesh data
-	Mesh get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size);
+	Mesh get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count,
+				  uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Draw a Mesh
 	void draw_mesh(Mesh *mesh);

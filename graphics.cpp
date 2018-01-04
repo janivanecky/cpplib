@@ -502,9 +502,9 @@ void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot)
 }
 
 
-Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size)
+Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology)
 {
-	Mesh mesh;
+	Mesh mesh = {};
 	
 	D3D11_BUFFER_DESC vertex_buffer_desc = {};
 	vertex_buffer_desc.ByteWidth = vertex_count * vertex_stride;
@@ -521,26 +521,30 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 		logging::print_error("Failed to create vertex buffer.");
 	}
 
-	D3D11_BUFFER_DESC indxe_buffer_desc = {};
-	indxe_buffer_desc.ByteWidth = index_count * index_byte_size;
-	indxe_buffer_desc.Usage = D3D11_USAGE_IMMUTABLE;
-	indxe_buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA index_buffer_data = {};
-	index_buffer_data.pSysMem = indices;
-	index_buffer_data.SysMemPitch = index_byte_size;
-
-	hr = graphics_context->device->CreateBuffer(&indxe_buffer_desc, &index_buffer_data, &mesh.index_buffer);
-	if (FAILED(hr))
+	if (indices && index_count > 0)
 	{
-		logging::print_error("Failed to create index buffer.");
+		D3D11_BUFFER_DESC index_buffer_desc = {};
+		index_buffer_desc.ByteWidth = index_count * index_byte_size;
+		index_buffer_desc.Usage = D3D11_USAGE_IMMUTABLE;
+		index_buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA index_buffer_data = {};
+		index_buffer_data.pSysMem = indices;
+		index_buffer_data.SysMemPitch = index_byte_size;
+
+		hr = graphics_context->device->CreateBuffer(&index_buffer_desc, &index_buffer_data, &mesh.index_buffer);
+		if (FAILED(hr))
+		{
+			logging::print_error("Failed to create index buffer.");
+		}
 	}
 
 	mesh.vertex_stride = vertex_stride;
 	mesh.vertex_offset = 0;
+	mesh.vertex_count = vertex_count;
 	mesh.index_count = index_count;
 	mesh.index_format = index_byte_size == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
-	mesh.topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+	mesh.topology = topology;
 
 	return mesh;
 }
@@ -548,10 +552,17 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 void graphics::draw_mesh(Mesh *mesh)
 {
 	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
-	graphics_context->context->IASetIndexBuffer(mesh->index_buffer, mesh->index_format, 0);
 
 	graphics_context->context->IASetPrimitiveTopology(mesh->topology);
-	graphics_context->context->DrawIndexed(mesh->index_count, 0, 0);
+	if(mesh->index_buffer)
+	{
+		graphics_context->context->IASetIndexBuffer(mesh->index_buffer, mesh->index_format, 0);
+		graphics_context->context->DrawIndexed(mesh->index_count, 0, 0);
+	}
+	else
+	{
+		graphics_context->context->Draw(mesh->vertex_count, 0);
+	}
 }
 
 ConstantBuffer graphics::get_constant_buffer(uint32_t size)
