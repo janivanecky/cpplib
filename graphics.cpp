@@ -744,7 +744,7 @@ void graphics::set_geometry_shader(GeometryShader *shader)
 
 void graphics::swap_frames()
 {
-	swap_chain->swap_chain->Present(0, 0);
+	swap_chain->swap_chain->Present(1, 0);
 }
 
 void graphics::show_live_objects()

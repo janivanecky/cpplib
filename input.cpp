@@ -99,5 +99,17 @@ void input::register_event(Event *event)
             input::set_mouse_left_button_up();
         }
         break;
+        case KEY_DOWN:
+        {
+            KeyPressedData *key_data = (KeyPressedData *)event->data;
+            input::set_key_down(key_data->code);
+        }
+        case KEY_UP:
+        {
+            KeyPressedData *key_data = (KeyPressedData *)event->data;
+            input::set_key_up(key_data->code);
+        }
+        break;
     }
+    
 }
