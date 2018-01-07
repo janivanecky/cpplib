@@ -23,6 +23,7 @@ static Mesh quad_mesh;
 static Font font_ui;
 
 static bool is_input_rensposive_ = true;
+static bool is_registering_input_ = false;
 
 char vertex_shader_font_string[] = 
 "struct VertexInput"
@@ -435,8 +436,9 @@ void set_active(int32_t item_id)
     }
 }
 
-bool ui::add_toggle(Panel *panel, char *label, bool active)
+bool ui::add_toggle(Panel *panel, char *label, bool *active)
 {
+    bool changed = false;
     const float box_middle_to_total = 0.6f;
     
     float height = font::get_row_height(&font_ui);
@@ -464,7 +466,8 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
         // If toggle is hot, check for mouse press
         if (is_hot(toggle_id) && input::mouse_left_button_pressed())
         {
-            active = !active;
+            *active = !(*active);
+            changed = true;
 
             // In case some other element was active, now it shouldn't be
             active_id = -1;
@@ -490,7 +493,7 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
     array::add(&rect_items, toggle_bg);
 
     // Active part of toggle box
-    if (!active)
+    if (!*active)
     {
         Vector2 box_fg_size = Vector2(height * box_middle_to_total, height * box_middle_to_total);
         Vector2 box_fg_pos = box_bg_pos + (box_bg_size - box_fg_size) / 2.0f;
@@ -505,11 +508,12 @@ bool ui::add_toggle(Panel *panel, char *label, bool active)
 
     // Move current panel item position
     panel->item_pos.y += height + inner_padding;
-    return active;
+    return changed;
 }
 
-float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
+bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
 {
+    bool changed = false;
     int32_t slider_id = hash_string(label);
     Vector2 item_pos = panel->pos + panel->item_pos;
     float height = font::get_row_height(&font_ui);
@@ -533,7 +537,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     array::add(&rect_items, slider_bar);
 
     Vector4 slider_color = color_foreground;
-    float slider_x = (pos - min) / max * slider_width + slider_bar_pos.x;
+    float slider_x = (*pos - min) / max * slider_width + slider_bar_pos.x;
     Vector2 slider_pos = Vector2(slider_x, item_pos.y);
     Vector2 slider_size = Vector2(height * 0.5f, height);
 
@@ -549,7 +553,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width + 60.0f, item_pos.y);
     // TODO: non-static
     static char current_label_text[10];
-    sprintf(current_label_text, "%.2f", pos);
+    sprintf(current_label_text, "%.2f", *pos);
     TextItem current_label = {color_label, current_pos, current_label_text};
     array::add(&text_items, current_label);
 
@@ -591,8 +595,14 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     {
         float dx = input::mouse_delta_position().x;
         float x_movement = dx / slider_width;
-        pos += x_movement * (max - min);
-        pos = math::clamp(pos, min, max);
+        *pos += x_movement * (max - min);
+        *pos = math::clamp(*pos, min, max);
+        is_registering_input_ = true;
+        changed = true;
+    }
+    else
+    {
+        is_registering_input_ = false;
     }
 
     // Slider
@@ -605,7 +615,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     array::add(&text_items, toggle_label);
 
     panel->item_pos.y += height + inner_padding;
-    return pos;
+    return changed;
 }
 
 void ui::end()
@@ -641,6 +651,11 @@ void ui::set_input_responsive(bool is_responsive)
 bool ui::is_input_responsive()
 {
     return is_input_rensposive_;
+}
+
+bool ui::is_registering_input()
+{
+    return is_registering_input_;
 }
 
 float ui::get_screen_width()

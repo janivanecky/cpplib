@@ -26,14 +26,16 @@ namespace ui
 
     void end();
     
-    bool add_toggle(Panel *panel, char *label, bool state);
-    float add_slider(Panel *panel, char *label, float pos, float min, float max);
+    bool add_toggle(Panel *panel, char *label, bool *state);
+    bool add_slider(Panel *panel, char *label, float *pos, float min, float max);
 
     void release();
 
     // These functions enable turning UI on/off as a listener for inputs
     void set_input_responsive(bool is_responsive);
     bool is_input_responsive();
+
+    bool is_registering_input();
 
     // Getters for values on which UI operates
     float get_screen_width();
