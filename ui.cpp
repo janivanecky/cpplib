@@ -523,7 +523,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 min_pos = item_pos;
     // TODO: non-static
     static char min_label_text[10];
-    sprintf(min_label_text, "%.2f", min);
+    sprintf_s(min_label_text, 10, "%.2f", min);
     TextItem min_label = {color_label, min_pos, min_label_text};
     array::add(&text_items, min_label);
 
@@ -545,7 +545,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 max_pos = Vector2(slider_bar_pos.x + slider_width, item_pos.y);
     // TODO: non-static
     static char max_label_text[10];
-    sprintf(max_label_text, "%.2f", max);
+    sprintf_s(max_label_text, 10, "%.2f", max);
     TextItem max_label = {color_label, max_pos, max_label_text};
     array::add(&text_items, max_label);
 
@@ -553,7 +553,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width + 60.0f, item_pos.y);
     // TODO: non-static
     static char current_label_text[10];
-    sprintf(current_label_text, "%.2f", *pos);
+    sprintf_s(current_label_text, 10, "%.2f", *pos);
     TextItem current_label = {color_label, current_pos, current_label_text};
     array::add(&text_items, current_label);
 
