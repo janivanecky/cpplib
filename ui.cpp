@@ -515,17 +515,43 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     float height = font::get_row_height(&font_ui);
     float slider_width = 50.0f;
     
+    // Min number
+    Vector2 min_pos = item_pos;
+    // TODO: non-static
+    static char min_label_text[10];
+    sprintf(min_label_text, "%.2f", min);
+    TextItem min_label = {color_label, min_pos, min_label_text};
+    array::add(&text_items, min_label);
+
     // Slider bar
+    float slider_start = 40.0f;
+
     Vector4 slider_bar_color = color_foreground;
-    Vector2 slider_bar_pos = item_pos + Vector2(0.0f, height * 0.25f);
+    Vector2 slider_bar_pos = item_pos + Vector2(slider_start, height * 0.25f);
     Vector2 slider_bar_size = Vector2(slider_width, height * 0.5f);
     RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
     array::add(&rect_items, slider_bar);
 
     Vector4 slider_color = color_foreground;
-    float slider_x = (pos - min) / max * slider_width;
-    Vector2 slider_pos = item_pos + Vector2(slider_x, 0.0f);
+    float slider_x = (pos - min) / max * slider_width + slider_bar_pos.x;
+    Vector2 slider_pos = Vector2(slider_x, item_pos.y);
     Vector2 slider_size = Vector2(height * 0.5f, height);
+
+    // Max number
+    Vector2 max_pos = Vector2(slider_bar_pos.x + slider_width, item_pos.y);
+    // TODO: non-static
+    static char max_label_text[10];
+    sprintf(max_label_text, "%.2f", max);
+    TextItem max_label = {color_label, max_pos, max_label_text};
+    array::add(&text_items, max_label);
+
+    // Max number
+    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width + 60.0f, item_pos.y);
+    // TODO: non-static
+    static char current_label_text[10];
+    sprintf(current_label_text, "%.2f", pos);
+    TextItem current_label = {color_label, current_pos, current_label_text};
+    array::add(&text_items, current_label);
 
     // Check for mouse input
     if(ui::is_input_responsive())
@@ -565,7 +591,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     {
         float dx = input::mouse_delta_position().x;
         float x_movement = dx / slider_width;
-        pos += x_movement;
+        pos += x_movement * (max - min);
         pos = math::clamp(pos, min, max);
     }
 
@@ -574,7 +600,7 @@ float ui::add_slider(Panel *panel, char *label, float pos, float min, float max)
     array::add(&rect_items, slider);
 
     // Toggle label
-    Vector2 text_pos = item_pos + Vector2(inner_padding + slider_bar_size.x, 0);
+    Vector2 text_pos = Vector2(120.0f + slider_bar_size.x + slider_bar_pos.x, item_pos.y);
     TextItem toggle_label = {color_label, text_pos, label};
     array::add(&text_items, toggle_label);
 
