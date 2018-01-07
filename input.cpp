@@ -6,6 +6,8 @@ bool mouse_lbutton_down      = false;
 Vector2 mouse_position_       = Vector2(-1,-1);
 Vector2 mouse_delta_position_ = Vector2(0.0f,0.0f);
 
+float mouse_scroll_delta_ = 0.0f;
+
 static bool key_down_[100];
 static bool key_pressed_[100];
 
@@ -19,6 +21,7 @@ void input::reset()
 {
     mouse_lbutton_pressed = false;
     mouse_delta_position_ = Vector2(0.0f, 0.0f);
+    mouse_scroll_delta_ = 0.0f;
     memset(key_pressed_, 0, sizeof(bool) * 100);
 }   
 
@@ -63,6 +66,16 @@ void input::set_mouse_position(Vector2 position)
     mouse_position_ = position;
 }
 
+void input::set_mouse_scroll_delta(float delta)
+{
+    mouse_scroll_delta_ = delta;
+}
+
+float input::mouse_scroll_delta()
+{
+    return mouse_scroll_delta_;
+}
+
 void input::set_key_down(KeyCode code)
 {
     if(!key_down_[code]) key_pressed_[code] = true;
@@ -99,11 +112,18 @@ void input::register_event(Event *event)
             input::set_mouse_left_button_up();
         }
         break;
+        case MOUSE_WHEEL:
+        {
+		    MouseWheelData *data = (MouseWheelData *)event->data;
+            input::set_mouse_scroll_delta(data->delta);
+        }
+        break;
         case KEY_DOWN:
         {
             KeyPressedData *key_data = (KeyPressedData *)event->data;
             input::set_key_down(key_data->code);
         }
+        break;
         case KEY_UP:
         {
             KeyPressedData *key_data = (KeyPressedData *)event->data;

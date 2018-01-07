@@ -25,6 +25,10 @@ namespace input
     // NOTE: this is zeroed after calling reset()
     Vector2 mouse_delta_position();
 
+    // Get current movement of mouse scroll wheel
+    // NOTE: this is zeroed after calling reset()
+    float mouse_scroll_delta();
+
     // Registered left mouse button as being down
     void set_mouse_left_button_down();
 
@@ -33,6 +37,9 @@ namespace input
     
     // Registered mouse position
     void set_mouse_position(Vector2 position);
+
+    // Register mouse wheel scroll delta
+    void set_mouse_scroll_delta(float delta);
 
     // Registered key with specific KeyCode as being down
     void set_key_down(KeyCode code);
