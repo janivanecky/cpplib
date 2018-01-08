@@ -537,9 +537,9 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     array::add(&rect_items, slider_bar);
 
     Vector4 slider_color = color_foreground;
-    float slider_x = (*pos - min) / max * slider_width + slider_bar_pos.x;
-    Vector2 slider_pos = Vector2(slider_x, item_pos.y);
     Vector2 slider_size = Vector2(height * 0.5f, height);
+    float slider_x = (*pos - min) / max * slider_width + slider_bar_pos.x;
+    Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
     Vector2 max_pos = Vector2(slider_bar_pos.x + slider_width, item_pos.y);
@@ -570,7 +570,10 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
             unset_hot(slider_id);
         }
 
-        if(is_hot(slider_id) && !is_active(slider_id) && input::mouse_left_button_down())
+        Vector2 overall_slider_size = Vector2(slider_bar_size.x, slider_size.y);
+        Vector2 overall_slider_pos = Vector2(slider_bar_pos.x, slider_pos.y);
+
+        if((is_hot(slider_id) || is_in_rect(mouse_position, overall_slider_pos, overall_slider_size)) && !is_active(slider_id) && input::mouse_left_button_down())
         {
             set_active(slider_id);
         }
@@ -593,10 +596,12 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
 
     if(is_active(slider_id))
     {
-        float dx = input::mouse_delta_position().x;
-        float x_movement = dx / slider_width;
-        *pos += x_movement * (max - min);
-        *pos = math::clamp(*pos, min, max);
+        float mouse_x = input::mouse_position().x;
+        float mouse_x_rel = (mouse_x - slider_bar_pos.x) / slider_bar_size.x;
+        mouse_x_rel = math::clamp(mouse_x_rel, 0.0f, 1.0f);
+        
+        *pos = mouse_x_rel * (max - min);
+
         is_registering_input_ = true;
         changed = true;
     }
