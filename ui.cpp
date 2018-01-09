@@ -348,14 +348,14 @@ void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color)
 
 const float vertical_padding = 15.0f;
 const float horizontal_padding = 15.0f;
-const float inner_padding = 5.0f;
+const float inner_padding = 10.0f;
 static int32_t active_id = -1;
 static int32_t hot_id = -1;
 
-static Vector4 color_background = Vector4(0.2f, 0.2f, 0.2f, .7f);
-static Vector4 color_foreground = Vector4(0.02f, 0.02f, 0.02f, 1.0f);
-static Vector4 color_title = Vector4(0, 0, 0, 1);
-static Vector4 color_label = Vector4(0, 0, 0, 1);
+static Vector4 color_background = Vector4(0.f, 0.f, 0.f, 1.0f);
+static Vector4 color_foreground = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+static Vector4 color_title = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+static Vector4 color_label = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 Panel ui::start_panel(char *name, Vector2 pos, float width)
 {
@@ -517,44 +517,28 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     int32_t slider_id = hash_string(label);
     Vector2 item_pos = panel->pos + panel->item_pos;
     float height = font::get_row_height(&font_ui);
-    float slider_width = 50.0f;
+    float slider_width = 200.0f;
     
-    // Min number
-    Vector2 min_pos = item_pos;
-    // TODO: non-static
-    static char min_label_text[10];
-    sprintf_s(min_label_text, 10, "%.2f", min);
-    TextItem min_label = {color_label, min_pos, min_label_text};
-    array::add(&text_items, min_label);
-
     // Slider bar
-    float slider_start = 40.0f;
+    float slider_start = 0.0f;
 
-    Vector4 slider_bar_color = color_foreground;
-    Vector2 slider_bar_pos = item_pos + Vector2(slider_start, height * 0.25f);
-    Vector2 slider_bar_size = Vector2(slider_width, height * 0.5f);
+    Vector4 slider_bar_color = color_foreground * 0.5f;
+    Vector2 slider_bar_pos = item_pos + Vector2(slider_start, 0.0f);
+    Vector2 slider_bar_size = Vector2(slider_width, height);
     RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
     array::add(&rect_items, slider_bar);
 
     Vector4 slider_color = color_foreground;
     Vector2 slider_size = Vector2(height * 0.5f, height);
-    float slider_x = (*pos - min) / max * slider_width + slider_bar_pos.x;
+    float slider_x = (*pos - min) / max * (slider_width - slider_size.x) + slider_bar_pos.x + slider_size.x * 0.5f;
     Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
-    Vector2 max_pos = Vector2(slider_bar_pos.x + slider_width, item_pos.y);
-    // TODO: non-static
-    static char max_label_text[10];
-    sprintf_s(max_label_text, 10, "%.2f", max);
-    TextItem max_label = {color_label, max_pos, max_label_text};
-    array::add(&text_items, max_label);
-
-    // Max number
-    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width + 60.0f, item_pos.y);
+    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width / 2.0f, item_pos.y);
     // TODO: non-static
     static char current_label_text[10];
     sprintf_s(current_label_text, 10, "%.2f", *pos);
-    TextItem current_label = {color_label, current_pos, current_label_text};
+    TextItem current_label = {color_background, current_pos, current_label_text};
     array::add(&text_items, current_label);
 
     // Check for mouse input
@@ -597,7 +581,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     if(is_active(slider_id))
     {
         float mouse_x = input::mouse_position().x;
-        float mouse_x_rel = (mouse_x - slider_bar_pos.x) / slider_bar_size.x;
+        float mouse_x_rel = (mouse_x - slider_bar_pos.x - slider_size.x * 0.5f) / (slider_bar_size.x - slider_size.x);
         mouse_x_rel = math::clamp(mouse_x_rel, 0.0f, 1.0f);
         
         *pos = mouse_x_rel * (max - min);
@@ -615,7 +599,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     array::add(&rect_items, slider);
 
     // Toggle label
-    Vector2 text_pos = Vector2(120.0f + slider_bar_size.x + slider_bar_pos.x, item_pos.y);
+    Vector2 text_pos = Vector2(slider_bar_size.x + slider_bar_pos.x + inner_padding, item_pos.y);
     TextItem toggle_label = {color_label, text_pos, label};
     array::add(&text_items, toggle_label);
 
