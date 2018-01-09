@@ -84,10 +84,11 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
 
     int32_t row_height = face->size->metrics.height / 64;
     int32_t ascender = face->size->metrics.ascender / 64;
+    int32_t descender = face->size->metrics.descender / 64;
     int32_t x = 0, y = 0;
 
     font.row_height = (float)row_height;
-    font.top_pad = 0.0f;
+    font.top_pad = (row_height - (ascender - descender)) / 2.0f;
     font.scale = 1.0f;
     font.face = face;
  
@@ -158,6 +159,28 @@ float font::get_kerning(Font *font, char c1, char c2)
     FT_Get_Kerning(font->face, left_glyph_index, right_glyph_index, FT_KERNING_DEFAULT, &kerning);
     return (float)kerning.x;
 #endif
+}
+
+float font::get_string_width(char *string, Font *font)
+{
+    float width = 0;
+    while(*string)
+    {
+        // Get a glyph for the current character
+        char c = *string;
+        Glyph glyph = font->glyphs[c - 32];
+
+        // Increment width by character's advance. This should be more precise than taking it's bitmap's width.
+        width += glyph.advance;
+        
+        // Take kerning into consideration
+        if (*(string + 1)) width += font::get_kerning(font, c, *(string + 1));
+
+        // Next letter
+        string++;
+    }
+
+    return width;
 }
 
 float font::get_row_height(Font *font)

@@ -138,6 +138,7 @@ struct TextItem
     Vector4 color;
     Vector2 pos;
     char *text;
+    Vector2 origin = Vector2(0,0);
 };
 
 struct RectItem
@@ -235,7 +236,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     array::init(&rect_items_bg, 100);
 }
 
-void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
+void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin)
 {
     ASSERT_SCREEN_SIZE;
 
@@ -264,6 +265,14 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
     };
     graphics::update_constant_buffer(&buffer_pv, pv_matrices);
     graphics::update_constant_buffer(&buffer_color, &color);
+
+    // Get final text dimensions
+    float text_width = font::get_string_width(text, font);
+    float text_height = font::get_row_height(font);
+
+    // Adjust starting point based on the origin
+    x = math::floor(x - origin.x * text_width);
+    y = math::floor(y - origin.y * text_height);
 
     y += font->top_pad;
     while(*text)
@@ -300,9 +309,9 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color)
     graphics::set_blend_state(old_blend_state);
 };
 
-void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color)
+void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin)
 {
-    ui::draw_text(text, font, pos.x, pos.y, color);
+    ui::draw_text(text, font, pos.x, pos.y, color, origin);
 }
 
 void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
@@ -522,7 +531,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     // Slider bar
     float slider_start = 0.0f;
 
-    Vector4 slider_bar_color = color_foreground * 0.5f;
+    Vector4 slider_bar_color = color_foreground * 0.3f;
     Vector2 slider_bar_pos = item_pos + Vector2(slider_start, 0.0f);
     Vector2 slider_bar_size = Vector2(slider_width, height);
     RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
@@ -534,11 +543,11 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
-    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_width / 2.0f, item_pos.y);
+    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_bar_size.x / 2.0f, item_pos.y + slider_bar_size.y / 2.0f);
     // TODO: non-static
     static char current_label_text[10];
     sprintf_s(current_label_text, 10, "%.2f", *pos);
-    TextItem current_label = {color_background, current_pos, current_label_text};
+    TextItem current_label = {color_background, current_pos, current_label_text, Vector2(0.5f, 0.3f)};
     array::add(&text_items, current_label);
 
     // Check for mouse input
@@ -624,7 +633,7 @@ void ui::end()
     for(uint32_t i = 0; i < text_items.count; ++i)
     {
         TextItem *item = &text_items.data[i];
-        ui::draw_text(item->text, &font_ui, item->pos, item->color);
+        ui::draw_text(item->text, &font_ui, item->pos, item->color, item->origin);
     }
 
     array::reset(&rect_items_bg);

@@ -49,6 +49,9 @@ namespace font
 
     // Return height of a single row for a Font
     float get_row_height(Font *font);
+    
+    // Return width of a string
+    float get_string_width(char *string, Font *font);
 
     // Get kerning between two letters of a Font
     float get_kerning(Font *font, char c1, char c2);

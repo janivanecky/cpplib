@@ -15,8 +15,10 @@ struct Panel
 namespace ui
 {
     void init(float screen_width, float screen_height);
-    void draw_text(char *text, Font *font, float x, float y, Vector4 color);
-    void draw_text(char *text, Font *font, Vector2 pos, Vector4 color);
+    
+    void draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
+    void draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin = Vector2(0,0));
+
     void draw_rect(float x, float y, float width, float height, Vector4 color);
     void draw_rect(Vector2 pos, float width, float height, Vector4 color);
     
