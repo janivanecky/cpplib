@@ -416,6 +416,7 @@ void unset_active(int32_t item_id)
     if(active_id == item_id)
     {
         active_id = -1;
+        is_registering_input_ = false;
     }
 }
 
@@ -442,6 +443,7 @@ void set_active(int32_t item_id)
     if(active_id == -1)
     {
         active_id = item_id;
+        is_registering_input_ = true;
     }
 }
 
@@ -478,8 +480,11 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active)
             *active = !(*active);
             changed = true;
 
-            // In case some other element was active, now it shouldn't be
-            active_id = -1;
+            set_active(toggle_id);
+        }
+        else if(is_active(toggle_id) && !input::mouse_left_button_down())
+        {
+            unset_active(toggle_id);
         }
     }
     else
@@ -595,12 +600,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
         
         *pos = mouse_x_rel * (max - min);
 
-        is_registering_input_ = true;
         changed = true;
-    }
-    else
-    {
-        is_registering_input_ = false;
     }
 
     // Slider
