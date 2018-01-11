@@ -361,6 +361,9 @@ namespace math
 	Vector4 nlerp(Vector4 v1, Vector4 v2, float x);
 
 	Quaternion conjugate(Quaternion q);
+
+	float deg2rad(float deg);
+	float rad2deg(float rad);
 		
 	float fmod(float x, float m);
 	int32_t mod(int32_t x, int32_t m);

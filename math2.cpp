@@ -87,6 +87,18 @@ float math::floor(float x)
 	return floorf(x);
 }
 
+float math::deg2rad(float deg)
+{
+	float rad = deg * math::PI / 180.0f;
+	return rad;
+}
+
+float math::rad2deg(float rad)
+{
+	float deg = rad * 180.0f / math::PI;
+	return deg;
+}
+
 Vector3 math::lerp(Vector3 v1, Vector3 v2, float x)
 {
 	Vector3 result = {};
