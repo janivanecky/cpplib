@@ -156,14 +156,15 @@ Vector3 math::rotate(Vector3 v, Quaternion q)
 	return result;
 }
 
-// TODO: do without matrix
 Vector3 math::rotate(Vector3 v, float angle, Vector3 axis)
 {
-	Matrix4x4 rotation = math::get_rotation(angle, axis);
-	Vector4 v_temp = Vector4(v, 0.0f);
-	Vector4 result = rotation * v_temp;
+	float cos = math::cos(angle / 2.0f);
+	float sin = math::sin(angle / 2.0f);
+	axis = axis * sin;
+	Quaternion q = Quaternion(axis.x, axis.y, axis.z, cos);
+	Vector3 result = math::rotate(v, q);
 
-	return result.xyz;
+	return result;
 }
 
 Vector3 math::cross(Vector3 a, Vector3 b)
