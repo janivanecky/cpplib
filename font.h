@@ -1,12 +1,7 @@
 #pragma once
 #include "graphics.h"
-#include "stb_truetype.h"
 #include "ft2build.h"
 #include FT_FREETYPE_H
-
-/*
-Uses stb_truetype library for rasterizing .ttf/.otf files.
-*/
 
 // TODO: do floats
 // Glyph specifies information aobut a single letter at a single scale
@@ -26,7 +21,6 @@ struct Font
     float top_pad;
     float scale;
     Texture texture;
-    stbtt_fontinfo font_info;
     FT_Face face;
 };
 
