@@ -22,6 +22,8 @@ static Mesh quad_mesh;
 
 static Font font_ui;
 
+static File font_file;
+
 static bool is_input_rensposive_ = true;
 static bool is_registering_input_ = false;
 
@@ -224,11 +226,10 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     assert(graphics::is_ready(&texture_sampler));
 
     // Init font
-    File font_file = file_system::read_file("consola.ttf");
+    font_file = file_system::read_file("consola.ttf");
     assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);
     assert(graphics::is_ready(&font_ui.texture));
-    file_system::release_file(font_file);
 
     // Init rendering arrays
     array::init(&text_items, 100);
@@ -693,4 +694,5 @@ void ui::release()
     graphics::release(&pixel_shader_rect);
 
     font::release(&font_ui);
+    file_system::release_file(font_file);
 }
