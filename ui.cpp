@@ -184,7 +184,7 @@ uint16_t quad_indices[] = {
 
 static float screen_width = -1, screen_height = -1;
 
-const float FONT_TEXTURE_SIZE = 2048.0f;
+const float FONT_TEXTURE_SIZE = 128.0f;
 const int32_t FONT_HEIGHT = 16;
 
 #define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
@@ -194,7 +194,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     // Set screen size
     screen_width = screen_width_ui;
     screen_height = screen_height_ui;
-    
+
     // Create constant buffers
     buffer_model = graphics::get_constant_buffer(sizeof(Matrix4x4));
     buffer_pv = graphics::get_constant_buffer(sizeof(Matrix4x4) * 2);
@@ -226,7 +226,8 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     assert(graphics::is_ready(&texture_sampler));
 
     // Init font
-    font_file = file_system::read_file("consola.ttf");
+    font_file = file_system::read_file("UbuntuMono-R.ttf");
+    
     assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);
     assert(graphics::is_ready(&font_ui.texture));
@@ -555,11 +556,11 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
-    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_bar_size.x / 2.0f, item_pos.y + slider_bar_size.y / 2.0f);
+    Vector2 current_pos = Vector2(slider_bar_pos.x + slider_bar_size.x / 2.0f, item_pos.y);
     TextItem current_label = {};
     current_label.color = color_background;
     current_label.pos = current_pos; 
-    current_label.origin = Vector2(0.5f, 0.3f);
+    current_label.origin = Vector2(0.5f, 0.0f);
     sprintf_s(current_label.text, ARRAYSIZE(current_label.text), "%.2f", *pos);
     array::add(&text_items, current_label);
 
