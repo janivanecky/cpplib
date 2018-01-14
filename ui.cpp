@@ -184,7 +184,7 @@ uint16_t quad_indices[] = {
 
 static float screen_width = -1, screen_height = -1;
 
-const float FONT_TEXTURE_SIZE = 128.0f;
+const float FONT_TEXTURE_SIZE = 256.0f;
 const int32_t FONT_HEIGHT = 16;
 
 #define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
@@ -226,7 +226,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     assert(graphics::is_ready(&texture_sampler));
 
     // Init font
-    font_file = file_system::read_file("UbuntuMono-R.ttf");
+    font_file = file_system::read_file("ShareTechMono-Regular.ttf");
     
     assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);

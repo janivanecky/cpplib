@@ -43,25 +43,23 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     int32_t x = 0, y = 0;
 
     font.row_height = (float)row_height;
-    font.top_pad = (row_height - (ascender - descender)) / 2.0f;
+    font.top_pad = (float)(row_height - (ascender - descender));
     font.scale = 1.0f;
     font.face = face;
  
     for (unsigned char c = 32; c < 128; ++c)
     {
         // Load character c
-        error = FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT);
+        error = FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT);
         if(error)
         {
             logging::print_error("Error loading character %c!", c);
         }
 
         // Get glyph specific metrics
-        int x_offset = face->glyph->metrics.horiBearingX / 64;
-        int y_offset = ascender - face->glyph->metrics.horiBearingY / 64;
-        int width = face->glyph->metrics.width / 64;
-        int height = face->glyph->metrics.height / 64;
-        int advance = face->glyph->metrics.horiAdvance / 64;
+        int x_offset = face->glyph->bitmap_left;
+        int y_offset = ascender - face->glyph->bitmap_top;
+        int advance = face->glyph->advance.x >> 6;
 
         // Get bitmap parameters
         int bitmap_width = face->glyph->bitmap.width, bitmap_height = face->glyph->bitmap.rows;
@@ -87,7 +85,6 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
 
         // Move in the bitmap
         x += bitmap_width;
-        // Counts
     }
 
     // Initialize D3D texture for the Font
