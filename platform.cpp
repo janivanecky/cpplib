@@ -68,10 +68,19 @@ bool platform::get_event(Event *event)
 	break;
 	case WM_LBUTTONUP:
 	{
+		// See below in WM_LBUTTONDOWN for what this does.
+		HWND window = GetActiveWindow();
+		ReleaseCapture();
+		
 		event->type = MOUSE_LBUTTON_UP;
 	} break;
 	case WM_LBUTTONDOWN:
 	{
+		// This deals with situation when you press the button, go outside the window and release.
+		// Without this, you wouldn't register BUTTON_UP message.
+		HWND window = GetActiveWindow();
+		SetCapture(window);
+
 		event->type = MOUSE_LBUTTON_DOWN;
 	} break;
 	case WM_MOUSEMOVE:
@@ -111,7 +120,6 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 	if (RegisterClassExA(&window_class))
 	{
 		//SetProcessDPIAware();
-		
 		window.window_width = window_width;
 		window.window_height = window_height;
 		
