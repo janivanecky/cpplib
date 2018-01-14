@@ -85,7 +85,7 @@ char pixel_shader_font_string[] =
 "{"
 "	float alpha = tex.Sample(texSampler, input.texcoord).r;"
 "	float4 output = float4(color.xyz, color.w * alpha);"
-"	return pow(output, 1.0f / 2.2f);"
+"	return output;"
 "}";
 
 char vertex_shader_rect_string[] =
@@ -132,7 +132,7 @@ char pixel_shader_rect_string[] =
 ""
 "float4 main(PixelInput input) : SV_TARGET"
 "{"
-"	return pow(color, 1.0f / 2.2f);"
+"	return color;"
 "}";
 
 struct TextItem
@@ -363,10 +363,15 @@ const float inner_padding = 10.0f;
 static int32_t active_id = -1;
 static int32_t hot_id = -1;
 
-static Vector4 color_background = Vector4(0.f, 0.f, 0.f, 1.0f);
-static Vector4 color_foreground = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-static Vector4 color_title = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-static Vector4 color_label = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+#define COLOR(r,g,b,a) Vector4((r) / 255.0f, (g) / 255.0f, (b) / 255.0f, (a) / 255.0f)
+// This means that the color has been NOT gamma corrected - it was seen displayed incorrectly.
+#define COLOR_LINEAR(r,g,b,a) Vector4(math::pow((r) / 255.0f, 2.2f), math::pow((g) / 255.0f, 2.2f), math::pow((b) / 255.0f, 2.2f), math::pow((a) / 255.0f, 2.2f))
+static Vector4 color_background = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
+//static Vector4 color_foreground = Vector4(1.0f, 1.0f, 1.0f, 0.6f);
+static Vector4 color_foreground = COLOR_LINEAR(28, 224, 180, 255);//Vector4(1.0f, 1.0f, 1.0f, 0.6f);
+static Vector4 color_title = COLOR_LINEAR(28, 224, 180, 255);//Vector4(1.0f, 1.0f, 1.0f, 0.6f);
+static Vector4 color_label = Vector4(1.0f, 1.0f, 1.0f, 0.6f);
 
 Panel ui::start_panel(char *name, Vector2 pos, float width)
 {
@@ -544,21 +549,21 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     // Slider bar
     float slider_start = 0.0f;
 
-    Vector4 slider_bar_color = color_foreground * 0.3f;
+    Vector4 slider_bar_color = color_background * 2.0f;
     Vector2 slider_bar_pos = item_pos + Vector2(slider_start, 0.0f);
     Vector2 slider_bar_size = Vector2(slider_width, height);
     RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
     array::add(&rect_items, slider_bar);
 
     Vector4 slider_color = color_foreground;
-    Vector2 slider_size = Vector2(height * 0.5f, height);
+    Vector2 slider_size = Vector2(height, height);
     float slider_x = (*pos - min) / max * (slider_width - slider_size.x) + slider_bar_pos.x + slider_size.x * 0.5f;
     Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
     Vector2 current_pos = Vector2(slider_bar_pos.x + slider_bar_size.x / 2.0f, item_pos.y);
     TextItem current_label = {};
-    current_label.color = color_background;
+    current_label.color = color_label;
     current_label.pos = current_pos; 
     current_label.origin = Vector2(0.5f, 0.0f);
     sprintf_s(current_label.text, ARRAYSIZE(current_label.text), "%.2f", *pos);
