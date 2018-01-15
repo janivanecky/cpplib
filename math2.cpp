@@ -152,7 +152,7 @@ Vector3 math::rotate(Vector3 v, Quaternion q)
 {
 	Vector3 qv = Vector3(q.x, q.y, q.z);
 	float s = q.w;
-	Vector3 result = v + 2 * s * (math::cross(qv, v)) + 2 * math::cross(qv, math::cross(qv, v));
+	Vector3 result = 2 * math::dot(qv, v) * qv + (s * s - math::dot(qv, qv)) * v + 2 * s * math::cross(qv, v);
 	return result;
 }
 
