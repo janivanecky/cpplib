@@ -124,15 +124,17 @@ struct TextureSampler
 	ID3D11SamplerState *sampler;
 };
 
+#undef OPAQUE
 enum BlendType
 {
 	ALPHA = 0,
-	SOLID = 1
+	OPAQUE = 1
 };
 
-struct BlendState
+enum RasterType
 {
-	ID3D11BlendState *state;
+	SOLID = 0,
+	WIREFRAME = 1
 };
 
 struct Viewport
@@ -168,7 +170,6 @@ namespace graphics
 
 	// Clear RenderTarget to a specified color
 	void clear_render_target(RenderTarget *buffer, float r, float g, float b, float a);
-
 
 	// Get Depth Buffer with specified width and height
 	DepthBuffer get_depth_buffer(uint32_t width, uint32_t height);
@@ -229,6 +230,12 @@ namespace graphics
 
 	// Get current blending state
 	BlendType get_blend_state();
+
+	// Set rasterizer state
+	void set_rasterizer_state(RasterType type);
+
+	// Get current rasterizer state
+	RasterType get_rasterizer_state();
 
 	// Get TextureSampler with specific mode
 	TextureSampler get_texture_sampler(SampleMode mode = CLAMP);
@@ -323,7 +330,6 @@ namespace graphics
 	void release(VertexShader *shader);
 	void release(PixelShader *shader);
 	void release(GeometryShader *shader);
-	void release(BlendState *state);
 	void release(CompiledShader *shader);
 
 	////////////////////////////////////////////////

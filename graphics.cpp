@@ -15,45 +15,15 @@ static SwapChain swap_chain_;
 static SwapChain *swap_chain = &swap_chain_;
 
 // We're simplifying blending to just two options - alpha blending and opaque (solid) blending
-static BlendState alpha_blend_state;
-static BlendState solid_blend_state;
-
-static BlendState *blend_states[] = {
-	&alpha_blend_state,
-	&solid_blend_state
-};
+static ID3D11BlendState *blend_states[2];
 
 // Let's store current blend type, useful when we want to restore original blending state in the end of the function
 static BlendType current_blend_type;
 
-/////////////////////////////////////////////////////
-/// Private API
-/////////////////////////////////////////////////////
+static ID3D11RasterizerState *raster_states[2];
 
-// Create blend state with specified blend type
-BlendState get_blend_state(BlendType blend_type)
-{
-	BlendState blend_state = {};
-
-	// For solid blend state, blend_state_desc is zeroed.
-	D3D11_BLEND_DESC blend_state_desc = {};
-	if (blend_type == ALPHA)
-	{
-		blend_state_desc.RenderTarget[0].BlendEnable 		   = TRUE;
-		blend_state_desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
-		blend_state_desc.RenderTarget[0].DestBlend 			   = D3D11_BLEND_INV_SRC_ALPHA;
-		blend_state_desc.RenderTarget[0].BlendOp	 		   = D3D11_BLEND_OP_ADD;
-		blend_state_desc.RenderTarget[0].SrcBlendAlpha	 	   = D3D11_BLEND_ONE;
-		blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_ZERO;
-		blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
-	}
-	blend_state_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-	HRESULT hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_state.state);
-	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
-
-	return blend_state;
-}	
+// Do the same for RasterType as for BlendType
+static RasterType current_raster_type;
 
 /////////////////////////////////////////////////////
 /// Public API
@@ -108,28 +78,57 @@ void graphics::init(LUID *adapter_luid)
 	{
 		adapter->Release();
 	}
-	
-	// TODO: More flexible rasterizer state setting (per draw/render pass?)
-	// Initialize rasterizer state, let's follow RH coordinate system like sane people
-	ID3D11RasterizerState *rasterizer_state;
-	D3D11_RASTERIZER_DESC rasterizer_desc = {};
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	rasterizer_desc.FrontCounterClockwise = TRUE;
 
-	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc, &rasterizer_state);
+	// Initialize blending states
+	// For solid blend state, blend_state_desc is zeroed.
+	D3D11_BLEND_DESC blend_state_desc = {};
+	blend_state_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_states[BlendType::OPAQUE]);
+	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
+
+	// Initialize alpha blend state
+	blend_state_desc.RenderTarget[0].BlendEnable 		   = TRUE;
+	blend_state_desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_SRC_ALPHA;
+	blend_state_desc.RenderTarget[0].DestBlend 			   = D3D11_BLEND_INV_SRC_ALPHA;
+	blend_state_desc.RenderTarget[0].BlendOp	 		   = D3D11_BLEND_OP_ADD;
+	blend_state_desc.RenderTarget[0].SrcBlendAlpha	 	   = D3D11_BLEND_ONE;
+	blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_ZERO;
+	blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
+
+	hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_states[BlendType::ALPHA]);
+	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
+	
+	current_blend_type = BlendType::OPAQUE;
+
+	// Initialize rasterizer states
+	// Initialize solid rasterizer state, let's follow RH coordinate system like sane people
+	D3D11_RASTERIZER_DESC rasterizer_desc_solid = {};
+	rasterizer_desc_solid.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc_solid.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc_solid.FrontCounterClockwise = TRUE;
+
+	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_solid, &raster_states[RasterType::SOLID]);
 	if (FAILED(hr))
 	{
 		logging::print_error("Failed to create Rasterizer state");
 	}
 
-	graphics_context->context->RSSetState(rasterizer_state);
-	rasterizer_state->Release();
+	// Initialize wireframe rasterizer state, let's follow RH coordinate system like sane people
+	D3D11_RASTERIZER_DESC rasterizer_desc_wireframe = {};
+	rasterizer_desc_wireframe.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc_wireframe.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc_wireframe.FrontCounterClockwise = TRUE;
 
-	// Initialize blending states
-	alpha_blend_state = get_blend_state(BlendType::ALPHA);
-	solid_blend_state = get_blend_state(BlendType::SOLID);
-	current_blend_type = BlendType::SOLID;
+	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_wireframe, &raster_states[RasterType::WIREFRAME]);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create Rasterizer state");
+	}
+
+	current_raster_type = RasterType::SOLID;
+	graphics_context->context->RSSetState(raster_states[current_raster_type]);
+
 }
 
 void graphics::init_swap_chain(Window *window)
@@ -459,12 +458,23 @@ void graphics::set_blend_state(BlendType type)
 {
 	current_blend_type = type;
 	float blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	graphics_context->context->OMSetBlendState(blend_states[current_blend_type]->state, blend_factor, 0xffffffff);
+	graphics_context->context->OMSetBlendState(blend_states[current_blend_type], blend_factor, 0xffffffff);
 }
 
 BlendType graphics::get_blend_state()
 {
 	return current_blend_type;
+}
+
+void graphics::set_rasterizer_state(RasterType type)
+{
+	current_raster_type = type;
+	graphics_context->context->RSSetState(raster_states[current_raster_type]);
+}
+
+RasterType graphics::get_rasterizer_state()
+{
+	return current_raster_type;
 }
 
 D3D11_TEXTURE_ADDRESS_MODE m2m[3] =
@@ -805,8 +815,10 @@ void graphics::release()
 	RELEASE_DX_RESOURCE(swap_chain->swap_chain);
 	RELEASE_DX_RESOURCE(graphics_context->context);
 	RELEASE_DX_RESOURCE(graphics_context->device);
-	RELEASE_DX_RESOURCE(alpha_blend_state.state);
-	RELEASE_DX_RESOURCE(solid_blend_state.state);
+	RELEASE_DX_RESOURCE(blend_states[BlendType::OPAQUE]);
+	RELEASE_DX_RESOURCE(blend_states[BlendType::ALPHA]);
+	RELEASE_DX_RESOURCE(raster_states[RasterType::SOLID]);
+	RELEASE_DX_RESOURCE(raster_states[RasterType::WIREFRAME]);
 }
 
 void graphics::release(RenderTarget *buffer)
@@ -859,11 +871,6 @@ void graphics::release(ConstantBuffer *buffer)
 void graphics::release(TextureSampler *sampler)
 {
 	RELEASE_DX_RESOURCE(sampler->sampler);
-}
-
-void graphics::release(BlendState *state)
-{
-	RELEASE_DX_RESOURCE(state->state);
 }
 
 void graphics::release(CompiledShader *shader)
