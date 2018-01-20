@@ -776,6 +776,11 @@ bool graphics::is_ready(RenderTarget *render_target)
 	return render_target->rt_view && render_target->texture;
 }
 
+bool graphics::is_ready(DepthBuffer *depth_buffer)
+{
+	return depth_buffer->ds_view && depth_buffer->sr_view && depth_buffer->texture;
+}
+
 bool graphics::is_ready(Mesh *mesh)
 {
 	return mesh->vertex_buffer && mesh->index_buffer;

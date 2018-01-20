@@ -310,6 +310,7 @@ namespace graphics
 	// Functions that check whether specific `graphics` object is ready for use
 	bool is_ready(Texture *texture);
 	bool is_ready(RenderTarget *render_target);
+	bool is_ready(DepthBuffer *depth_buffer);
 	bool is_ready(Mesh *mesh);
 	bool is_ready(ConstantBuffer *buffer);
 	bool is_ready(TextureSampler *sampler);
