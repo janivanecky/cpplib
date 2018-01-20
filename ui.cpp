@@ -549,7 +549,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     Vector2 item_pos = panel->pos + panel->item_pos;
     float height = font::get_row_height(&font_ui);
     float slider_width = 200.0f;
-    
+
     // Slider bar
     float slider_start = 0.0f;
 
@@ -561,7 +561,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
 
     Vector4 slider_color = color_foreground;
     Vector2 slider_size = Vector2(height, height);
-    float slider_x = (*pos - min) / max * (slider_width - slider_size.x) + slider_bar_pos.x + slider_size.x * 0.5f;
+    float slider_x = (*pos - min) / (max - min) * (slider_width - slider_size.x) + slider_bar_pos.x + slider_size.x * 0.5f;
     Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
 
     // Max number
@@ -616,7 +616,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
         float mouse_x_rel = (mouse_x - slider_bar_pos.x - slider_size.x * 0.5f) / (slider_bar_size.x - slider_size.x);
         mouse_x_rel = math::clamp(mouse_x_rel, 0.0f, 1.0f);
         
-        *pos = mouse_x_rel * (max - min);
+        *pos = mouse_x_rel * (max - min) + min;
 
         changed = true;
     }
