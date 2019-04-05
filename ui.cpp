@@ -166,7 +166,7 @@ int32_t hash_string(char *string)
     return hash_value + 1;
 }
 
-float quad_vertices[] = {
+static float quad_vertices[] = {
     -1.0, 1.0, 0.0, 1.0, // LEFT TOP 1 
     0.0, 0.0,
     1.0, 1.0, 0.0, 1.0, // RIGHT TOP 2
@@ -177,7 +177,7 @@ float quad_vertices[] = {
     1.0, 1.0
 };
 
-uint16_t quad_indices[] = {
+static uint16_t quad_indices[] = {
     2, 3, 1,
     2, 1, 0
 };
@@ -226,7 +226,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     assert(graphics::is_ready(&texture_sampler));
 
     // Init font
-    font_file = file_system::read_file("ShareTechMono-Regular.ttf");
+    font_file = file_system::read_file("renner-book.otf");
     
     assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);
@@ -357,9 +357,9 @@ void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color)
     ui::draw_rect(pos.x, pos.y, width, height, color);
 }
 
-const float vertical_padding = 15.0f;
+const float vertical_padding = 5.0f;
 const float horizontal_padding = 15.0f;
-const float inner_padding = 10.0f;
+const float inner_padding = 5.0f;
 static int32_t active_id = -1;
 static int32_t hot_id = -1;
 
@@ -367,10 +367,9 @@ static int32_t hot_id = -1;
 #define COLOR(r,g,b,a) Vector4((r) / 255.0f, (g) / 255.0f, (b) / 255.0f, (a) / 255.0f)
 // This means that the color has been NOT gamma corrected - it was seen displayed incorrectly.
 #define COLOR_LINEAR(r,g,b,a) Vector4(math::pow((r) / 255.0f, 2.2f), math::pow((g) / 255.0f, 2.2f), math::pow((b) / 255.0f, 2.2f), math::pow((a) / 255.0f, 2.2f))
-static Vector4 color_background = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-//static Vector4 color_foreground = Vector4(1.0f, 1.0f, 1.0f, 0.6f);
-static Vector4 color_foreground = COLOR_LINEAR(28, 224, 180, 255);//Vector4(1.0f, 1.0f, 1.0f, 0.6f);
-static Vector4 color_title = COLOR_LINEAR(28, 224, 180, 255);//Vector4(1.0f, 1.0f, 1.0f, 0.6f);
+static Vector4 color_background = Vector4(0.1f, 0.1f, 0.1f, .8f);
+static Vector4 color_foreground = Vector4(0.8f, 0.8f, 0.8f, 0.6f);
+static Vector4 color_title = COLOR_LINEAR(28, 224, 180, 255);
 static Vector4 color_label = Vector4(1.0f, 1.0f, 1.0f, 0.6f);
 
 Panel ui::start_panel(char *name, Vector2 pos, float width)
@@ -380,7 +379,7 @@ Panel ui::start_panel(char *name, Vector2 pos, float width)
     panel.pos = pos;
     panel.width = width;
     panel.item_pos.x = horizontal_padding;
-    panel.item_pos.y = font::get_row_height(&font_ui) + vertical_padding * 2.0f;
+    panel.item_pos.y = font::get_row_height(&font_ui) + vertical_padding * 2.0f + inner_padding;
     panel.name = name;
     
     return panel;
@@ -397,7 +396,7 @@ void ui::end_panel(Panel *panel)
     RectItem panel_bg = {color_background, panel->pos, Vector2(panel->width, panel_height)};
     array::add(&rect_items_bg, panel_bg);
 
-    float title_bar_height = font::get_row_height(&font_ui) + inner_padding * 2;
+    float title_bar_height = font::get_row_height(&font_ui) + vertical_padding * 2;
     RectItem title_bar = {color_foreground, panel->pos, Vector2(panel->width, title_bar_height)};
     array::add(&rect_items_bg, title_bar);
 
@@ -548,7 +547,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     int32_t slider_id = hash_string(label);
     Vector2 item_pos = panel->pos + panel->item_pos;
     float height = font::get_row_height(&font_ui);
-    float slider_width = 200.0f;
+    float slider_width = 225.0f;
 
     // Slider bar
     float slider_start = 0.0f;
