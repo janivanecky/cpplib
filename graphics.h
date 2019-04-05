@@ -51,6 +51,7 @@ struct Texture
 {
 	ID3D11Texture2D *texture;
 	ID3D11ShaderResourceView *sr_view;
+	ID3D11UnorderedAccessView *ua_view;
 	uint32_t width;
 	uint32_t height;
 };
@@ -80,6 +81,11 @@ struct GeometryShader
 	ID3D11GeometryShader *geometry_shader;
 };
 
+struct ComputeShader
+{
+	ID3D11ComputeShader *compute_shader;
+};
+
 struct PixelShader
 {
 	ID3D11PixelShader *pixel_shader;
@@ -88,6 +94,14 @@ struct PixelShader
 struct ConstantBuffer
 {
 	ID3D11Buffer *buffer;
+	uint32_t size;
+};
+
+// TODO: Maybe unify with ConstantBuffer?
+struct StructuredBuffer
+{
+	ID3D11Buffer *buffer;
+	ID3D11UnorderedAccessView *ua_view;
 	uint32_t size;
 };
 
@@ -222,6 +236,12 @@ namespace graphics
 	// Set texture to accessible from shaders
 	void set_texture(Texture *texture, uint32_t slot);
 
+	// Set texture to be accessible from compute shaders
+	void set_texture_compute(Texture *texture, uint32_t slot);
+
+	// Clear specific compute texture slot.
+	void unset_texture_compute(uint32_t slot);
+
 	// Clear specific texture slot
 	void unset_texture(uint32_t slot);
 
@@ -253,11 +273,20 @@ namespace graphics
 	// Get ConstantBuffer with specific size
 	ConstantBuffer get_constant_buffer(uint32_t size);
 
+	// Get StructuredBuffer
+	StructuredBuffer get_structured_buffer(int element_stride, int num_elements);
+
 	// Update ConstantBuffer with data
 	void update_constant_buffer(ConstantBuffer *buffer, void *data);
 
 	// Set ConstantBuffer to a slot
 	void set_constant_buffer(ConstantBuffer *buffer, uint32_t slot);
+
+	// Update StructuredBuffer with data
+	void update_structured_buffer(StructuredBuffer *buffer, void *data);
+
+	// Set StructuredBuffer to a slot
+	void set_structured_buffer(StructuredBuffer *buffer, uint32_t slot);
 
 	// Compile a vertex shader from a source code
 	CompiledShader compile_vertex_shader(void *source, uint32_t source_size);
@@ -267,6 +296,9 @@ namespace graphics
 	
 	// Compile a geometry shader from a source code
 	CompiledShader compile_geometry_shader(void *source, uint32_t source_size);
+
+	// Compile a compute shader from a source code
+	CompiledShader compile_compute_shader(void *source, uint32_t source_size);
 
 	// Get VertexShader from a CompiledShader and number of VertexInputDescs
 	VertexShader get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count);
@@ -301,6 +333,21 @@ namespace graphics
 	// Bind GeoemtryShader to a pipeline
 	void set_geometry_shader(GeometryShader *shader);
 
+	// Get ComputeShader from a CompiledShader
+	ComputeShader get_compute_shader(CompiledShader *compiled_shader);
+
+	// Get ComputeShader from compute shader byte code
+	ComputeShader get_compute_shader(void *shader_byte_code, uint32_t shader_size);
+
+	// Unbind compute shader from a pipeline
+	void set_compute_shader();
+
+	// Bind ComputeShader to a pipeline
+	void set_compute_shader(ComputeShader *shader);
+
+	// Run compute shader
+	void run_compute(int group_x, int group_y, int group_z);
+
 	// Swap buffers between frames
 	void swap_frames();
 
@@ -316,6 +363,7 @@ namespace graphics
 	bool is_ready(TextureSampler *sampler);
 	bool is_ready(VertexShader *shader);
 	bool is_ready(PixelShader *shader);
+	bool is_ready(ComputeShader *shader);
 	bool is_ready(CompiledShader *shader);
 
 	// Functions that release specific `graphics` objects. `release()` releases
@@ -328,9 +376,11 @@ namespace graphics
 	void release(TextureSampler *sampler);
 	void release(Mesh *mesh);
 	void release(ConstantBuffer *buffer);
+	void release(StructuredBuffer *buffer);
 	void release(VertexShader *shader);
 	void release(PixelShader *shader);
 	void release(GeometryShader *shader);
+	void release(ComputeShader *shader);
 	void release(CompiledShader *shader);
 
 	////////////////////////////////////////////////
@@ -348,4 +398,7 @@ namespace graphics
 	
 	// Helper functions that return PixelShader directly from a pixel shader code
 	PixelShader get_pixel_shader_from_code(char *code, uint32_t code_length);
+
+	// Helper functions that return ComputeShader directly from a compute shader code
+	ComputeShader get_compute_shader_from_code(char *code, uint32_t code_length);
 }

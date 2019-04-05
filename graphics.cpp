@@ -402,14 +402,16 @@ Texture graphics::get_texture(void *data, uint32_t width, uint32_t height, DXGI_
 	texture_desc.Format = format;
 	texture_desc.SampleDesc.Count = 1;
 	texture_desc.SampleDesc.Quality = 0;
-	texture_desc.Usage = D3D11_USAGE_IMMUTABLE;
-	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	// TODO: Maybe not the best Usage flag.
+	texture_desc.Usage = D3D11_USAGE_DEFAULT;
+	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 
 	D3D11_SUBRESOURCE_DATA texture_data = {};
 	texture_data.pSysMem = data;
 	texture_data.SysMemPitch = width * pixel_byte_count;
 
-	HRESULT hr = graphics_context->device->CreateTexture2D(&texture_desc, &texture_data, &texture.texture);
+	D3D11_SUBRESOURCE_DATA *texture_data_ptr = data ? &texture_data : NULL;
+	HRESULT hr = graphics_context->device->CreateTexture2D(&texture_desc, texture_data_ptr, &texture.texture);
 	if (FAILED(hr))
 	{
 		logging::print_error("Failed to create 2D texture.");
@@ -425,6 +427,17 @@ Texture graphics::get_texture(void *data, uint32_t width, uint32_t height, DXGI_
 	if (FAILED(hr))
 	{
 		logging::print_error("Failed to create shader resource view.");
+	}
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	unordered_access_desc.Format = format;
+	unordered_access_desc.Texture2D.MipSlice = 0;
+
+	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create unordered access view.");
 	}
 
 	texture.width = width;
@@ -452,6 +465,19 @@ void graphics::unset_texture(uint32_t slot)
 {
 	ID3D11ShaderResourceView *null[] = { NULL };
 	graphics_context->context->PSSetShaderResources(slot, 1, null);
+}
+
+void graphics::set_texture_compute(Texture *texture, uint32_t slot)
+{
+	UINT init_counts = 0;
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &texture->ua_view, &init_counts);
+}
+
+void graphics::unset_texture_compute(uint32_t slot)
+{
+	UINT init_counts = 0;
+	ID3D11UnorderedAccessView *null[] = { NULL };
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, null, &init_counts);
 }
 
 void graphics::set_blend_state(BlendType type)
@@ -591,6 +617,37 @@ ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 	return buffer;
 }
 
+StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_elements)
+{
+	StructuredBuffer buffer = {};
+	buffer.size = element_stride * num_elements;
+
+	D3D11_BUFFER_DESC constant_buffer_desc = {};
+	constant_buffer_desc.ByteWidth = element_stride * num_elements;
+	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+	constant_buffer_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;		
+	constant_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	constant_buffer_desc.StructureByteStride = element_stride;
+
+	graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	unordered_access_desc.Format = DXGI_FORMAT_UNKNOWN;
+	unordered_access_desc.Buffer.FirstElement = 0;
+	unordered_access_desc.Buffer.Flags = 0;
+	unordered_access_desc.Buffer.NumElements = num_elements;
+
+	HRESULT hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create unordered access view.");
+	}
+
+	return buffer;
+}
+
 void graphics::update_constant_buffer(ConstantBuffer *buffer, void *data)
 {
 	D3D11_MAPPED_SUBRESOURCE mapped_buffer;
@@ -599,11 +656,23 @@ void graphics::update_constant_buffer(ConstantBuffer *buffer, void *data)
 	graphics_context->context->Unmap(buffer->buffer, 0);
 }
 
+void graphics::update_structured_buffer(StructuredBuffer *buffer, void *data)
+{
+	graphics_context->context->UpdateSubresource(buffer->buffer, 0, NULL, data, 0, 0);
+}
+
 void graphics::set_constant_buffer(ConstantBuffer *buffer, uint32_t slot)
 {
 	graphics_context->context->PSSetConstantBuffers(slot, 1, &buffer->buffer);
 	graphics_context->context->GSSetConstantBuffers(slot, 1, &buffer->buffer);
 	graphics_context->context->VSSetConstantBuffers(slot, 1, &buffer->buffer);
+	graphics_context->context->CSSetConstantBuffers(slot, 1, &buffer->buffer);
+}
+
+void graphics::set_structured_buffer(StructuredBuffer *buffer, uint32_t slot)
+{
+	UINT init_counts = 0;
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
 
 CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
@@ -646,6 +715,12 @@ CompiledShader graphics::compile_geometry_shader(void *source, uint32_t source_s
 {
 	CompiledShader geometry_shader = compile_shader(source, source_size, "gs_5_0");
 	return geometry_shader;
+}
+
+CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_size)
+{
+	CompiledShader compute_shader = compile_shader(source, source_size, "cs_5_0");
+	return compute_shader;
 }
 
 VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count) 
@@ -752,6 +827,42 @@ void graphics::set_geometry_shader(GeometryShader *shader)
 	graphics_context->context->GSSetShader(shader->geometry_shader, NULL, 0);
 }
 
+ComputeShader graphics::get_compute_shader(CompiledShader *compiled_shader)
+{
+	ComputeShader compute_shader = graphics::get_compute_shader(compiled_shader->blob->GetBufferPointer(),
+																(uint32_t) compiled_shader->blob->GetBufferSize());
+	return compute_shader;
+}
+
+ComputeShader graphics::get_compute_shader(void *shader_byte_code, uint32_t shader_size)
+{
+	ComputeShader shader = {};
+
+	HRESULT hr = graphics_context->device->CreateComputeShader(shader_byte_code, shader_size, NULL, &shader.compute_shader);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create compute shader.");
+	}
+
+	return shader;
+}
+
+void graphics::set_compute_shader()
+{
+	graphics_context->context->CSSetShader(NULL, NULL, 0);
+}
+
+void graphics::set_compute_shader(ComputeShader *shader)
+{
+	graphics_context->context->CSSetShader(shader->compute_shader, NULL, 0);
+}
+
+void graphics::run_compute(int group_x, int group_y, int group_z)
+{
+	graphics_context->context->Dispatch(group_x, group_y, group_z);
+}
+
+
 void graphics::swap_frames()
 {
 	swap_chain->swap_chain->Present(1, 0);
@@ -806,6 +917,11 @@ bool graphics::is_ready(PixelShader *shader)
 	return shader->pixel_shader;
 }
 
+bool graphics::is_ready(ComputeShader *shader)
+{
+	return shader->compute_shader;
+}
+
 bool graphics::is_ready(CompiledShader *shader)
 {
 	return shader->blob;
@@ -842,8 +958,9 @@ void graphics::release(DepthBuffer *buffer)
 
 void graphics::release(Texture *texture)
 {
-	RELEASE_DX_RESOURCE(texture->texture);
 	RELEASE_DX_RESOURCE(texture->sr_view);
+	RELEASE_DX_RESOURCE(texture->ua_view);
+	RELEASE_DX_RESOURCE(texture->texture);
 }
 
 void graphics::release(Mesh *mesh)
@@ -868,9 +985,20 @@ void graphics::release(PixelShader *shader)
 	RELEASE_DX_RESOURCE(shader->pixel_shader);
 }
 
+void graphics::release(ComputeShader *shader)
+{
+	RELEASE_DX_RESOURCE(shader->compute_shader);
+}
+
 void graphics::release(ConstantBuffer *buffer)
 {
 	RELEASE_DX_RESOURCE(buffer->buffer);
+}
+
+void graphics::release(StructuredBuffer *buffer)
+{
+	RELEASE_DX_RESOURCE(buffer->buffer);
+	RELEASE_DX_RESOURCE(buffer->ua_view);
 }
 
 void graphics::release(TextureSampler *sampler)
@@ -1024,4 +1152,15 @@ PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_lengt
     graphics::release(&pixel_shader_compiled);
 
 	return pixel_shader;
+}
+
+ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length)
+{
+	CompiledShader compute_shader_compiled = graphics::compile_compute_shader(code, code_length);
+	assert(graphics::is_ready(&compute_shader_compiled));
+	
+    ComputeShader compute_shader = graphics::get_compute_shader(&compute_shader_compiled);
+    graphics::release(&compute_shader_compiled);
+
+	return compute_shader;
 }
