@@ -47,13 +47,23 @@ struct DepthBuffer
 	uint32_t height;
 };
 
-struct Texture
+struct Texture2D
 {
 	ID3D11Texture2D *texture;
 	ID3D11ShaderResourceView *sr_view;
 	ID3D11UnorderedAccessView *ua_view;
 	uint32_t width;
 	uint32_t height;
+};
+
+struct Texture3D
+{
+	ID3D11Texture3D *texture;
+	ID3D11ShaderResourceView *sr_view;
+	ID3D11UnorderedAccessView *ua_view;
+	uint32_t width;
+	uint32_t height;
+	uint32_t depth;
 };
 
 // Mesh references GPU-side memory with vertices and indices
@@ -225,7 +235,7 @@ namespace graphics
 	//  - height: bitmap height
 	//  - format: DXGI format
 	//  - pixel_byte_count: number of bytes per pixel. Used to compute memory pitch.
-	Texture get_texture(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4);
+	Texture2D get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4);
 
 	// Set RenderTarget as a texture accessible from shaders
 	void set_texture(RenderTarget *buffer, uint32_t slot);
@@ -234,16 +244,32 @@ namespace graphics
 	void set_texture(DepthBuffer *buffer, uint32_t slot);
 
 	// Set texture to accessible from shaders
-	void set_texture(Texture *texture, uint32_t slot);
+	void set_texture(Texture2D *texture, uint32_t slot);
 
 	// Set texture to be accessible from compute shaders
-	void set_texture_compute(Texture *texture, uint32_t slot);
+	void set_texture_compute(Texture2D *texture, uint32_t slot);
 
 	// Clear specific compute texture slot.
 	void unset_texture_compute(uint32_t slot);
 
 	// Clear specific texture slot
 	void unset_texture(uint32_t slot);
+
+	// Get Texture3D with specified width, height and format.
+	// Args:
+	//  - data: bitmap data
+	//  - width: bitmap width
+	//  - height: bitmap height
+	//  - depth: bitmap depth
+	//  - format: DXGI format
+	//  - pixel_byte_count: number of bytes per pixel. Used to compute memory pitch.
+	Texture3D get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4);
+
+	// Set texture to accessible from shaders
+	void set_texture(Texture3D *texture, uint32_t slot);
+
+	// Set texture to be accessible from compute shaders
+	void set_texture_compute(Texture3D *texture, uint32_t slot);
 
 	// Set blending state
 	void set_blend_state(BlendType type);
@@ -355,7 +381,8 @@ namespace graphics
 	void show_live_objects();
 
 	// Functions that check whether specific `graphics` object is ready for use
-	bool is_ready(Texture *texture);
+	bool is_ready(Texture2D *texture);
+	bool is_ready(Texture3D *texture);
 	bool is_ready(RenderTarget *render_target);
 	bool is_ready(DepthBuffer *depth_buffer);
 	bool is_ready(Mesh *mesh);
@@ -372,7 +399,8 @@ namespace graphics
 	void release(SwapChain *swap_chain);
 	void release(RenderTarget *buffer);
 	void release(DepthBuffer *buffer);
-	void release(Texture *texture);
+	void release(Texture2D *texture);
+	void release(Texture3D *texture);
 	void release(TextureSampler *sampler);
 	void release(Mesh *mesh);
 	void release(ConstantBuffer *buffer);

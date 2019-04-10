@@ -333,7 +333,10 @@ namespace math
 	const float PIHALF = 1.57079633f;
 	const float PI     = 3.14159265f;
 	const float PI2    = 6.28318530f;
-
+#undef max
+#undef min
+	float max(float a, float b);
+	float min(float a, float b);
 	float abs(float x);
 	float sin(float x);
 	float cos(float x);

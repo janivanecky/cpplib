@@ -6,6 +6,14 @@ Vector3::Vector3(Vector4 v) :
 {
 }
 
+float math::max(float a, float b) {
+	return a >= b ? a : b;
+}
+
+float math::min(float a, float b) {
+	return a <= b ? a : b;
+}
+
 float math::abs(float x)
 {
 	return fabsf(x);

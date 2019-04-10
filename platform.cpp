@@ -59,6 +59,7 @@ bool platform::get_event(Event *event)
 			else if(raw_kb.VKey == VK_F8) data->code = KeyCode::F8;
 			else if(raw_kb.VKey == VK_F9) data->code = KeyCode::F9;
 			else if(raw_kb.VKey == VK_F10) data->code = KeyCode::F10;
+			else data->code = KeyCode::OTHER;
 		}
 	} break;
 	case WM_QUIT:

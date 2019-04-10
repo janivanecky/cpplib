@@ -105,7 +105,7 @@ void graphics::init(LUID *adapter_luid)
 	// Initialize solid rasterizer state, let's follow RH coordinate system like sane people
 	D3D11_RASTERIZER_DESC rasterizer_desc_solid = {};
 	rasterizer_desc_solid.FillMode = D3D11_FILL_SOLID;
-	rasterizer_desc_solid.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc_solid.CullMode = D3D11_CULL_NONE;
 	rasterizer_desc_solid.FrontCounterClockwise = TRUE;
 
 	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_solid, &raster_states[RasterType::SOLID]);
@@ -390,9 +390,9 @@ void graphics::set_render_targets_viewport(RenderTarget *buffer)
 	set_render_targets(buffer);
 }
 
-Texture graphics::get_texture(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count)
+Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count)
 {
-	Texture texture;
+	Texture2D texture;
 
 	D3D11_TEXTURE2D_DESC texture_desc = {};
 	texture_desc.Width = width;
@@ -446,6 +446,63 @@ Texture graphics::get_texture(void *data, uint32_t width, uint32_t height, DXGI_
 	return texture;
 }
 
+Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count)
+{
+	Texture3D texture;
+
+	D3D11_TEXTURE3D_DESC texture_desc = {};
+	texture_desc.Width = width;
+	texture_desc.Height = height;
+	texture_desc.Depth = depth;	
+	texture_desc.MipLevels = 1;
+	texture_desc.Format = format;
+	// TODO: Maybe not the best Usage flag.
+	texture_desc.Usage = D3D11_USAGE_DEFAULT;
+	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+
+	D3D11_SUBRESOURCE_DATA texture_data = {};
+	texture_data.pSysMem = data;
+	texture_data.SysMemPitch = width * height * pixel_byte_count;
+
+	D3D11_SUBRESOURCE_DATA *texture_data_ptr = data ? &texture_data : NULL;
+	HRESULT hr = graphics_context->device->CreateTexture3D(&texture_desc, texture_data_ptr, &texture.texture);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create 3D texture.");
+	}
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
+	shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+	shader_resource_desc.Format = format;
+	shader_resource_desc.Texture3D.MipLevels = 1;
+	shader_resource_desc.Texture3D.MostDetailedMip = 0;
+
+	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create shader resource view.");
+	}
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+	unordered_access_desc.Format = format;
+	unordered_access_desc.Texture3D.MipSlice = 0;
+	unordered_access_desc.Texture3D.FirstWSlice = 0;
+	unordered_access_desc.Texture3D.WSize = depth;
+
+	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
+	if (FAILED(hr))
+	{
+		logging::print_error("Failed to create unordered access view.");
+	}
+
+	texture.width = width;
+	texture.height = height;
+	texture.depth = depth;
+
+	return texture;
+}
+
 void graphics::set_texture(RenderTarget *buffer, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
@@ -456,7 +513,12 @@ void graphics::set_texture(DepthBuffer *buffer, uint32_t slot)
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
 }
 
-void graphics::set_texture(Texture *texture, uint32_t slot)
+void graphics::set_texture(Texture2D *texture, uint32_t slot)
+{
+	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
+}
+
+void graphics::set_texture(Texture3D *texture, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
 }
@@ -467,7 +529,13 @@ void graphics::unset_texture(uint32_t slot)
 	graphics_context->context->PSSetShaderResources(slot, 1, null);
 }
 
-void graphics::set_texture_compute(Texture *texture, uint32_t slot)
+void graphics::set_texture_compute(Texture2D *texture, uint32_t slot)
+{
+	UINT init_counts = 0;
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &texture->ua_view, &init_counts);
+}
+
+void graphics::set_texture_compute(Texture3D *texture, uint32_t slot)
 {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &texture->ua_view, &init_counts);
@@ -679,7 +747,7 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
 {
 	CompiledShader compiled_shader;
 
-	uint32_t flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;
+	uint32_t flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;// | D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #ifdef DEBUG
 	flags |= D3DCOMPILE_DEBUG;
 #endif
@@ -877,7 +945,12 @@ void graphics::show_live_objects()
 
 // is_ready functions
 
-bool graphics::is_ready(Texture *texture)
+bool graphics::is_ready(Texture2D *texture)
+{
+	return texture->texture && texture->sr_view;
+}
+
+bool graphics::is_ready(Texture3D *texture)
 {
 	return texture->texture && texture->sr_view;
 }
@@ -956,7 +1029,14 @@ void graphics::release(DepthBuffer *buffer)
 	RELEASE_DX_RESOURCE(buffer->texture);
 }
 
-void graphics::release(Texture *texture)
+void graphics::release(Texture2D *texture)
+{
+	RELEASE_DX_RESOURCE(texture->sr_view);
+	RELEASE_DX_RESOURCE(texture->ua_view);
+	RELEASE_DX_RESOURCE(texture->texture);
+}
+
+void graphics::release(Texture3D *texture)
 {
 	RELEASE_DX_RESOURCE(texture->sr_view);
 	RELEASE_DX_RESOURCE(texture->ua_view);
@@ -1034,15 +1114,16 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 
 #define SHADER_TYPE_FLOAT4 0
 #define SHADER_TYPE_FLOAT2 1
+#define SHADER_TYPE_FLOAT3 2
 
 	char *types[] =
 	{
-		"float4", "float2", "int4"
+		"float4", "float2", "float3", "int4"
 	};
 
 	DXGI_FORMAT formats[]
 	{
-		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT
+		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT
 	};
 
 	uint32_t i = 0;

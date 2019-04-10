@@ -88,7 +88,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     }
 
     // Initialize D3D texture for the Font
-    font.texture = graphics::get_texture(font_buffer, texture_size, texture_size, DXGI_FORMAT_R8_UNORM, 1);
+    font.texture = graphics::get_texture2D(font_buffer, texture_size, texture_size, DXGI_FORMAT_R8_UNORM, 1);
     if(!graphics::is_ready(&font.texture))
     {
         logging::print_error("Could not create texture for font.");
