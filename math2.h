@@ -58,6 +58,16 @@ struct Vector2
 		return result;
 	}
 
+	Vector2 operator*(float x)
+	{
+		Vector2 result;
+
+		result.x = this->x * x;
+		result.y = this->y * x;
+
+		return result;
+	}
+
 };
 
 struct Vector4;
