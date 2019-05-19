@@ -7,11 +7,13 @@ TODO
 ====================
 - math2.h
 - headers only
-- shouldn't use logging internally
+- use logging only when it provides additional info and CPPLIB_DEBUG_PRINT defined
+
 
 ====================
 DONE
 ====================
 
 19/05/2019
+- Remove logging from platform.cpp
 - Re-run and fixed libs not used in a while

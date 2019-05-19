@@ -1,6 +1,5 @@
 #include <windowsx.h>
 #include "platform.h"
-#include "logging.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -132,10 +131,6 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		
 		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags, 
 											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
-		if(window.window_handle == INVALID_HANDLE_VALUE)
-		{
-			logging::print_error("Could not create window.");
-		}
 
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;
@@ -143,10 +138,6 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		device.dwFlags = RIDEV_NOLEGACY;        // do not generate legacy messages such as WM_KEYDOWN
 		device.hwndTarget = window.window_handle;
 		RegisterRawInputDevices(&device, 1, sizeof(device));
-	}
-	else
-	{
-		logging::print_error("Could not register window class.");
 	}
 	return window;
 }
