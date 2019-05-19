@@ -379,7 +379,8 @@ Panel ui::start_panel(char *name, Vector2 pos, float width)
     panel.pos = pos;
     panel.width = width;
     panel.item_pos.x = horizontal_padding;
-    panel.item_pos.y = font::get_row_height(&font_ui) + vertical_padding * 2.0f + inner_padding;
+    //panel.item_pos.y = font::get_row_height(&font_ui) + vertical_padding * 2.0f + inner_padding;
+    panel.item_pos.y = horizontal_padding;
     panel.name = name;
     
     return panel;
@@ -392,13 +393,14 @@ Panel ui::start_panel(char *name, float x, float y, float width)
 
 void ui::end_panel(Panel *panel)
 {
-    float panel_height = panel->item_pos.y + vertical_padding - inner_padding;
+    //float panel_height = panel->item_pos.y + vertical_padding - inner_padding;
+    float panel_height = panel->item_pos.y + horizontal_padding - inner_padding;
     RectItem panel_bg = {color_background, panel->pos, Vector2(panel->width, panel_height)};
     array::add(&rect_items_bg, panel_bg);
 
-    float title_bar_height = font::get_row_height(&font_ui) + vertical_padding * 2;
-    RectItem title_bar = {color_foreground, panel->pos, Vector2(panel->width, title_bar_height)};
-    array::add(&rect_items_bg, title_bar);
+    //float title_bar_height = font::get_row_height(&font_ui) + vertical_padding * 2;
+    //RectItem title_bar = {color_foreground, panel->pos, Vector2(panel->width, title_bar_height)};
+    //array::add(&rect_items_bg, title_bar);
 
     Vector2 title_pos = panel->pos + Vector2(horizontal_padding, inner_padding);
     TextItem title = {};

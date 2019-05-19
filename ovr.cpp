@@ -1,10 +1,11 @@
 #include "ovr.h"
 #include "logging.h"
 #include "memory.h"
-#include "graphics.h"
 
 static OVRContext ovr_context_;
 static OVRContext *ovr_context = &ovr_context_;
+
+#define max(a, b) ((a) > (b) ? a : b)
 
 bool ovr::init(LUID **adapter)
 {

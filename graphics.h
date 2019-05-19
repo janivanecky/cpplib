@@ -3,7 +3,6 @@
 #include <dxgi.h>
 
 #include "platform.h"
-#include "math.h"
 
 // GraphicsContext wraps handles to D3D device and context
 struct GraphicsContext

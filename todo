@@ -6,7 +6,12 @@ DOING
 TODO
 ====================
 - math2.h
+- headers only
+- shouldn't use logging internally
 
 ====================
 DONE
 ====================
+
+19/05/2019
+- Re-run and fixed libs not used in a while

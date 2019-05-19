@@ -89,7 +89,7 @@ static Table<VertexShader, 16> vertex_shaders = { 0 };
 static Table<PixelShader, 16> pixel_shaders = { 0 };
 static Table<GeometryShader, 8> geometry_shaders = { 0 };
 static Table<Sound, 16> sounds = { 0 };
-static Table<FontData, 16> fonts = { 0 };
+static Table<uint8_t *, 16> fonts = { 0 };
 static Table<AssetInfo, 512> assets = { 0 };
 static Table<bool, 512> asset_load_states = { 0 };
 
@@ -256,9 +256,8 @@ void process_font(AssetInfo font_info, sid id)
 		return;
 	}
 	
-	FontData font_data;
-	font_data.data = memory::alloc_heap<uint8_t>(font_file.size);
-	memcpy(font_data.data, font_file.data, font_file.size);
+	uint8_t *font_data = memory::alloc_heap<uint8_t>(font_file.size);
+	memcpy(font_data, font_file.data, font_file.size);
 
 	table::add(&fonts, id, font_data);
 	file_system::release_file(font_file);
@@ -314,8 +313,8 @@ void release_audio_ogg(AssetInfo ogg_info, sid id)
 
 void release_font(AssetInfo ogg_info, sid id)
 {
-	FontData *font_data = table::get(&fonts, id);
-	memory::free_heap(font_data->data);
+	uint8_t *font_data = *(table::get(&fonts, id));
+	memory::free_heap(font_data);
 	table::remove(&fonts, id);
 }
 
@@ -413,13 +412,13 @@ Sound *resources::get_sound(sid id)
 	return sound;
 }
 
-FontData *resources::get_font_data(sid id)
+uint8_t *resources::get_font_data(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
 	if (!loaded)
 	{
 		logging::print("Requested font not loaded: " SID_TEMPLATE, id);
 	}
-	FontData *font_data = table::get(&fonts, id);
+	uint8_t *font_data = *(table::get(&fonts, id));
 	return font_data;
 }

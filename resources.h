@@ -2,7 +2,6 @@
 #include <stdint.h>
 
 struct Sound;
-struct FontData;
 
 struct VertexShader;
 struct PixelShader;
@@ -55,5 +54,5 @@ namespace resources
 	PixelShader *get_pixel_shader(sid id);
 	GeometryShader *get_geometry_shader(sid id);
 	Sound *get_sound(sid id);
-	FontData *get_font_data(sid id);
+	uint8_t *get_font_data(sid id);
 }
