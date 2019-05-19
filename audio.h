@@ -22,10 +22,10 @@ struct AudioContext
 
 namespace audio
 {
-    void init();
+    bool init();
     
     Sound get_sound_ogg(void *data, uint32_t data_size);
-    void play_sound(Sound *sound);
+    bool play_sound(Sound *sound);
     float get_playback_position(Sound *sound);
     void release(Sound *sound);
 }

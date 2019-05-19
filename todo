@@ -17,3 +17,4 @@ DONE
 - Remove logging from platform.cpp
 - Re-run and fixed libs not used in a while
 - math2.h -> maths.h
+- audio lib returns errors + logging only if CPPLIB_DEBUG_PRINT defined
