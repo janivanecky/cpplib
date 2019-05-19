@@ -2,7 +2,7 @@
 #include "oculus/OVR_CAPI.h"
 #include "oculus/OVR_CAPI_D3D.h"
 #include "graphics.h"
-#include "math2.h"
+#include "maths.h"
 
 struct OVRContext
 {

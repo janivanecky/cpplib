@@ -1,6 +1,6 @@
 #include <cassert>
 #include "array.h"
-#include "math2.h"
+#include "maths.h"
 struct Animation;
 struct Skeleton;
 

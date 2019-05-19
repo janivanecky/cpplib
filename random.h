@@ -1,5 +1,5 @@
 #pragma once
-#include "math2.h"
+#include "maths.h"
 
 namespace random
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "math2.h"
+#include "maths.h"
 #include "platform.h"
 
 // Input namespace handles input state

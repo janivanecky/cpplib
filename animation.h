@@ -1,6 +1,6 @@
 #pragma once
 #include "array.h"
-#include "math2.h"
+#include "maths.h"
 
 struct Bone
 {

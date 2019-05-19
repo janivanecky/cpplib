@@ -1,4 +1,4 @@
-#include "math2.h"
+#include "maths.h"
 #include <math.h>
 
 Vector3::Vector3(Vector4 v) :
