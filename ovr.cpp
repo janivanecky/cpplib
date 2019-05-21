@@ -1,6 +1,11 @@
 #include "ovr.h"
-#include "logging.h"
 #include "memory.h"
+#ifdef CPPLIB_DEBUG_PRINTS
+#include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
 
 static OVRContext ovr_context_;
 static OVRContext *ovr_context = &ovr_context_;
@@ -12,11 +17,16 @@ bool ovr::init(LUID **adapter)
     ovrInitParams ovr_params = {};
     ovr_params.Flags = ovrInit_Debug;
     ovrResult result = ovr_Initialize(&ovr_params);
-    if (OVR_FAILURE(result)) logging::print_error("Error initializing OculusSDK.");
+    if (OVR_FAILURE(result)) {
+        PRINT_DEBUG("Error initializing OculusSDK.");
+        return false;
+    }
 
     ovrGraphicsLuid luid;
     result = ovr_Create(&ovr_context->session, &luid);
-    if (OVR_FAILURE(result)) logging::print_error("Error obtaining Oculus HMD.");
+    if (OVR_FAILURE(result)) {
+        PRINT_DEBUG("Error obtaining Oculus HMD.");
+    }
 
     ovr_context->adapter_luid = *((LUID *)&luid);
     *adapter = &ovr_context->adapter_luid;
@@ -24,7 +34,7 @@ bool ovr::init(LUID **adapter)
     return OVR_VALID_CONTEXT((*ovr_context));
 }
 
-void ovr::init_swap_chain()
+bool ovr::init_swap_chain()
 {
     ovrHmdDesc desc = ovr_GetHmdDesc(ovr_context->session);
     ovrSizei resolution = desc.Resolution;
@@ -49,7 +59,10 @@ void ovr::init_swap_chain()
     swap_chain_desc.BindFlags = ovrTextureBind_DX_RenderTarget;
 
     ovrResult result = ovr_CreateTextureSwapChainDX(ovr_context->session, graphics_context->device, &swap_chain_desc, &ovr_context->swap_chain);
-    if (OVR_FAILURE(result)) logging::print_error("Error creating oculus swap chain.");
+    if (OVR_FAILURE(result)) {
+        PRINT_DEBUG("Error creating oculus swap chain.");
+        return false;
+    }
 
     ovr_GetTextureSwapChainLength(ovr_context->session, ovr_context->swap_chain, &ovr_context->rts_count);
 
@@ -79,7 +92,7 @@ void ovr::init_swap_chain()
     ovr_context->layer.Fov[1]          = eye_render_desc[1].Fov;
     ovr_context->layer.Viewport[0]     = {0, 0,                buffer_size.w / 2, buffer_size.h};
     ovr_context->layer.Viewport[1]     = {buffer_size.w / 2, 0, buffer_size.w / 2, buffer_size.h};
-
+    return true;
 }
 
 Viewport ovr::get_current_viewport(Eye eye)

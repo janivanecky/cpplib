@@ -179,10 +179,10 @@ namespace graphics
 	//
 	// Args:
 	//  - adapter_luid: LUID for the graphics adapter (GPU)
-	void init(LUID *adapter_luid = NULL);
+	bool init(LUID *adapter_luid = NULL);
 
 	// Initialize swap chain for rendering to window
-	void init_swap_chain(Window *window);
+	bool init_swap_chain(Window *window);
 	
 
 	// Get RenderTarget to use for rendering directly to a window passed in to `init_swap_chain`

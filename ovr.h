@@ -30,7 +30,7 @@ typedef uint32_t Hand;
 namespace ovr
 {
     bool init(LUID **adapter_luid);
-    void init_swap_chain();
+    bool init_swap_chain();
     RenderTarget get_current_target_buffer();
     DepthBuffer get_depth_buffer();
 

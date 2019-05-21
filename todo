@@ -6,12 +6,15 @@ DOING
 TODO
 ====================
 - headers only
-- use logging only when it provides additional info and CPPLIB_DEBUG_PRINT defined
+- graphics.cpp - when exiting cause of error, release allocated resources
+- resources.cpp - better error handling
 
 
 ====================
 DONE
 ====================
+20/05/2019
+- use logging only when it provides additional info and CPPLIB_DEBUG_PRINT defined
 
 19/05/2019
 - Remove logging from platform.cpp

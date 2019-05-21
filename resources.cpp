@@ -4,11 +4,18 @@
 #include "audio.h"
 #include "graphics.h"
 #include "parsers.h"
-#include "logging.h"
 #include "font.h"
 
 #include <cstdlib>
 #include <cassert>
+
+#ifdef CPPLIB_DEBUG_PRINTS
+#include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
+
 
 template <typename T, uint32_t N>
 struct Table
@@ -101,8 +108,7 @@ void resources::init(char *adf_file)
 	allocator = memory::get_stack_allocator(MEGABYTES(10));
 
 	File asset_definition_file = file_system::read_file(adf_file);
-	if (asset_definition_file.size > 0)
-	{
+	if (asset_definition_file.size > 0) {
 		asset_db = parsers::get_assets_db_from_adf(asset_definition_file, &allocator);
 		for (uint32_t i = 0; i < asset_db.asset_count; ++i)
 		{
@@ -110,19 +116,16 @@ void resources::init(char *adf_file)
 			table::add(&asset_load_states, asset_db.keys[i], true);
 		}
 		file_system::release_file(asset_definition_file);
-	}
-	else
-	{
-		logging::print_error("Could not load asset definition file!!!");
+	} else {
+		PRINT_DEBUG("Could not load asset definition file!!!");
 	}
 }
 
 AssetInfo *get_info_from_db(sid id)
 {
 	AssetInfo *info = table::get(&assets, id);
-	if (info->type == NONE)
-	{
-		logging::print_error("Resource with id %d not found in ADF.", id);
+	if (info->type == NONE) {
+		PRINT_DEBUG("Resource with id %d not found in ADF.", id);
 	}
 
 	return info;
@@ -132,9 +135,8 @@ void process_mesh(AssetInfo mesh_info, sid id)
 {
 	File mesh_file = file_system::read_file(mesh_info.path);
 
-	if (mesh_file.size == 0)
-	{
-		logging::print("Could not read mesh file %s.", mesh_info.path);
+	if (mesh_file.size == 0) {
+		PRINT_DEBUG("Could not read mesh file %s.", mesh_info.path);
 		mesh_info = *get_info_from_db(HASH("cube", 0x7c9557c5));
 		mesh_file = file_system::read_file(mesh_info.path);
 	}
@@ -154,9 +156,8 @@ void process_mesh(AssetInfo mesh_info, sid id)
 void process_vertex_shader(AssetInfo vertex_shader_info, sid id)
 {
 	File vertex_shader_file = file_system::read_file(vertex_shader_info.path);
-	if (vertex_shader_file.size == 0)
-	{
-		logging::print("Could not read vertex shader file %s.", vertex_shader_info.path);
+	if (vertex_shader_file.size == 0) {
+		PRINT_DEBUG("Could not read vertex shader file %s.", vertex_shader_info.path);
 		return;
 	}
 
@@ -165,19 +166,16 @@ void process_vertex_shader(AssetInfo vertex_shader_info, sid id)
 	VertexInputDesc *vertex_input_descs = memory::alloc_stack<VertexInputDesc>(&allocator, vertex_input_count);
 	graphics::get_vertex_input_desc_from_shader((char *)vertex_shader_file.data, vertex_shader_file.size, vertex_input_descs);
 
-	logging::print("Compiling vertex shader %s.", vertex_shader_info.path);
+	PRINT_DEBUG("Compiling vertex shader %s.", vertex_shader_info.path);
 	CompiledShader vertex_shader_code = graphics::compile_vertex_shader(vertex_shader_file.data, vertex_shader_file.size);
 	file_system::release_file(vertex_shader_file);
 
-	if (vertex_shader_code.blob)
-	{
+	if (vertex_shader_code.blob) {
 		VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_code, vertex_input_descs, vertex_input_count);
 		graphics::release(&vertex_shader_code);
 		table::add(&vertex_shaders, id, vertex_shader);
-	}
-	else
-	{
-		logging::print("Failed to compile shader %s!", vertex_shader_info.path);
+	} else {
+		PRINT_DEBUG("Failed to compile shader %s!", vertex_shader_info.path);
 	}
 
 	memory::load_stack_state(&allocator, allocator_state);
@@ -186,38 +184,33 @@ void process_vertex_shader(AssetInfo vertex_shader_info, sid id)
 void process_pixel_shader(AssetInfo pixel_shader_info, sid id)
 {
 	File pixel_shader_file = file_system::read_file(pixel_shader_info.path);
-	if (pixel_shader_file.size == 0)
-	{
-		logging::print("Could not read pixel shader file %s.", pixel_shader_info.path);
+	if (pixel_shader_file.size == 0) {
+		PRINT_DEBUG("Could not read pixel shader file %s.", pixel_shader_info.path);
 		return;
 	}
 	
-	logging::print("Compiling pixel shader %s.", pixel_shader_info.path);
+	PRINT_DEBUG("Compiling pixel shader %s.", pixel_shader_info.path);
 	CompiledShader pixel_shader_code = graphics::compile_pixel_shader(pixel_shader_file.data, pixel_shader_file.size);
 	file_system::release_file(pixel_shader_file);
 
-	if (pixel_shader_code.blob)
-	{
+	if (pixel_shader_code.blob) {
 		PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_code);
 		graphics::release(&pixel_shader_code);
 		table::add(&pixel_shaders, id, pixel_shader);
-	}
-	else
-	{
-		logging::print("Failed to compile shader %s!", pixel_shader_info.path);
+	} else {
+		PRINT_DEBUG("Failed to compile shader %s!", pixel_shader_info.path);
 	}
 }
 
 void process_geometry_shader(AssetInfo geometry_shader_info, sid id)
 {
 	File geometry_shader_file = file_system::read_file(geometry_shader_info.path);
-	if (geometry_shader_file.size == 0)
-	{
-		logging::print("Could not read geometry shader file %s.", geometry_shader_info.path);
+	if (geometry_shader_file.size == 0) {
+		PRINT_DEBUG("Could not read geometry shader file %s.", geometry_shader_info.path);
 		return;
 	}
 	
-	logging::print("Compiling geometry shader %s.", geometry_shader_info.path);
+	PRINT_DEBUG("Compiling geometry shader %s.", geometry_shader_info.path);
 	CompiledShader geometry_shader_code = graphics::compile_geometry_shader(geometry_shader_file.data, geometry_shader_file.size);
 	file_system::release_file(geometry_shader_file);
 
@@ -226,19 +219,16 @@ void process_geometry_shader(AssetInfo geometry_shader_info, sid id)
 		GeometryShader geometry_shader = graphics::get_geometry_shader(&geometry_shader_code);
 		graphics::release(&geometry_shader_code);
 		table::add(&geometry_shaders, id, geometry_shader);
-	}
-	else
-	{
-		logging::print("Failed to compile shader %s!", geometry_shader_info.path);
+	} else {
+		PRINT_DEBUG("Failed to compile shader %s!", geometry_shader_info.path);
 	}
 }
 
 void process_audio_ogg(AssetInfo ogg_info, sid id)
 {
 	File ogg_file = file_system::read_file(ogg_info.path);
-	if (ogg_file.size == 0)
-	{
-		logging::print("Could not read ogg file %s.", ogg_info.path);
+	if (ogg_file.size == 0) {
+		PRINT_DEBUG("Could not read ogg file %s.", ogg_info.path);
 		return;
 	}
 	
@@ -250,9 +240,8 @@ void process_audio_ogg(AssetInfo ogg_info, sid id)
 void process_font(AssetInfo font_info, sid id)
 {
 	File font_file = file_system::read_file(font_info.path);
-	if (font_file.size == 0)
-	{
-		logging::print("Could not read otf file %s.", font_info.path);
+	if (font_file.size == 0) {
+		PRINT_DEBUG("Could not read otf file %s.", font_info.path);
 		return;
 	}
 	
@@ -355,10 +344,9 @@ Mesh *resources::get_mesh(sid id)
 {
 	// Check if loaded and if not, fallback to cube mesh
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
+	if (!loaded) {
 		id = HASH("cube", 0x7c9557c5);
-		logging::print("Requested mesh not loaded: " SID_TEMPLATE, id);
+		PRINT_DEBUG("Requested mesh not loaded: " SID_TEMPLATE, id);
 	}
 
 	Mesh *mesh = table::get(&meshes, id);
@@ -368,9 +356,8 @@ Mesh *resources::get_mesh(sid id)
 VertexShader *resources::get_vertex_shader(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
-		logging::print("Requested vertex shader not loaded: " SID_TEMPLATE, id);
+	if (!loaded) {
+		PRINT_DEBUG("Requested vertex shader not loaded: " SID_TEMPLATE, id);
 	}
 
 	VertexShader *vertex_shader = table::get(&vertex_shaders, id);
@@ -380,9 +367,8 @@ VertexShader *resources::get_vertex_shader(sid id)
 PixelShader *resources::get_pixel_shader(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
-		logging::print("Requested vertex shader not loaded: " SID_TEMPLATE, id);
+	if (!loaded) {
+		PRINT_DEBUG("Requested vertex shader not loaded: " SID_TEMPLATE, id);
 	}
 
 	PixelShader *pixel_shader = table::get(&pixel_shaders, id);
@@ -392,9 +378,8 @@ PixelShader *resources::get_pixel_shader(sid id)
 GeometryShader *resources::get_geometry_shader(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
-		logging::print("Requested vertex shader not loaded: " SID_TEMPLATE, id);
+	if (!loaded) {
+		PRINT_DEBUG("Requested vertex shader not loaded: " SID_TEMPLATE, id);
 	}
 
 	GeometryShader *geometry_shader = table::get(&geometry_shaders, id);
@@ -404,9 +389,8 @@ GeometryShader *resources::get_geometry_shader(sid id)
 Sound *resources::get_sound(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
-		logging::print("Requested sound not loaded: " SID_TEMPLATE, id);
+	if (!loaded) {
+		PRINT_DEBUG("Requested sound not loaded: " SID_TEMPLATE, id);
 	}
 	Sound *sound = table::get(&sounds, id);
 	return sound;
@@ -415,9 +399,8 @@ Sound *resources::get_sound(sid id)
 uint8_t *resources::get_font_data(sid id)
 {
 	bool loaded = *table::get(&asset_load_states, id);
-	if (!loaded)
-	{
-		logging::print("Requested font not loaded: " SID_TEMPLATE, id);
+	if (!loaded) {
+		PRINT_DEBUG("Requested font not loaded: " SID_TEMPLATE, id);
 	}
 	uint8_t *font_data = *(table::get(&fonts, id));
 	return font_data;

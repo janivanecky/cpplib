@@ -3,11 +3,16 @@
 #include "export.h"
 #include "file_system.h"
 #include "memory.h"
+#ifdef CPPLIB_DEBUG_PRINTS
 #include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
 
 #define print_to_string sprintf_s
 
-void exports::export_to_obj(char *filename, Vector4 *vertices, uint32_t vertex_count, uint32_t vertex_stride, uint16_t *indices, uint32_t index_count)
+bool exports::export_to_obj(char *filename, Vector4 *vertices, uint32_t vertex_count, uint32_t vertex_stride, uint16_t *indices, uint32_t index_count)
 {
     uint32_t number_of_lines = vertex_count * 2 + index_count / 3;
     uint32_t max_line_length = 50; // Should suffice for +-10000
@@ -24,13 +29,13 @@ void exports::export_to_obj(char *filename, Vector4 *vertices, uint32_t vertex_c
         uint32_t bytes_written = print_to_string(file_ptr, size_left, "v %.4f %.4f %.4f %.4f\n", vertex_position.x, vertex_position.y, vertex_position.z, vertex_position.w);
         if (bytes_written > max_line_length)
         {
-            logging::print("export_to_obj: expected maximum output line length was %d, actual was %d. This may or may not cause errors.", max_line_length, bytes_written);
+            PRINT_DEBUG("export_to_obj: expected maximum output line length was %d, actual was %d. This may or may not cause errors.", max_line_length, bytes_written);
         }
         file_ptr += bytes_written;
         size_left -= bytes_written;
         if (size_left <= 0)
         {
-            logging::print_error("Buffer overflow while exporting to OBJ!");
+            PRINT_DEBUG("Buffer overflow while exporting to OBJ!");
         }
     }
     for (uint32_t i = 0; i < vertex_count; ++i)
@@ -41,7 +46,7 @@ void exports::export_to_obj(char *filename, Vector4 *vertices, uint32_t vertex_c
         size_left -= bytes_written;
         if (size_left <= 0)
         {
-            logging::print_error("Buffer overflow while exporting to OBJ!");
+            PRINT_DEBUG("Buffer overflow while exporting to OBJ!");
         }
     }
 
@@ -55,13 +60,15 @@ void exports::export_to_obj(char *filename, Vector4 *vertices, uint32_t vertex_c
         size_left -= bytes_written;
         if (size_left <= 0)
         {
-            logging::print_error("Buffer overflow while exporting to OBJ!");
+            PRINT_DEBUG("Buffer overflow while exporting to OBJ!");
         }
     }
 
     if (!file_system::write_file(filename, file_memory, total_file_size - size_left))
     {
-        logging::print_error("Could not write mesh to %s.", filename);
+        PRINT_DEBUG("Could not write mesh to %s.", filename);
+        return false;
     }
     memory::free_heap(file_memory);
+    return true;
 }

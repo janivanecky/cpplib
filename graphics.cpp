@@ -1,8 +1,13 @@
 #include "graphics.h"
-#include "logging.h"
 #include "memory.h"
 #include <d3dcompiler.h>
 #include <assert.h>
+#ifdef CPPLIB_DEBUG_PRINTS
+#include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
 
 // Global variables, only one of those for the whole application!
 
@@ -29,7 +34,7 @@ static RasterType current_raster_type;
 /// Public API
 /////////////////////////////////////////////////////
 
-void graphics::init(LUID *adapter_luid)
+bool graphics::init(LUID *adapter_luid)
 {
 	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
 #ifdef DEBUG
@@ -41,7 +46,8 @@ void graphics::init(LUID *adapter_luid)
 	HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
 	if (FAILED(hr))
 	{
-		logging::print_error("Failed to create IDXGI factory.");
+		PRINT_DEBUG("Failed to create IDXGI factory.");
+		return false;
 	}
 
 	// Get adapter to use for creating D3D11Device
@@ -71,7 +77,10 @@ void graphics::init(LUID *adapter_luid)
 
 	auto driver_type = adapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
 	hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
-	if (FAILED(hr)) logging::print_error("Failed to create D3D11 Device.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create D3D11 Device.");
+		return false;
+	}
 
 	// Release adapter handle if not NULL
 	if (adapter)
@@ -85,7 +94,10 @@ void graphics::init(LUID *adapter_luid)
 	blend_state_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
 	hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_states[BlendType::OPAQUE]);
-	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create blend state.");
+		return false;
+	}
 
 	// Initialize alpha blend state
 	blend_state_desc.RenderTarget[0].BlendEnable 		   = TRUE;
@@ -97,7 +109,10 @@ void graphics::init(LUID *adapter_luid)
 	blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
 
 	hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_states[BlendType::ALPHA]);
-	if (FAILED(hr)) logging::print_error("Failed to create blend state.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create blend state.");
+		return false;
+	}
 	
 	current_blend_type = BlendType::OPAQUE;
 
@@ -109,9 +124,9 @@ void graphics::init(LUID *adapter_luid)
 	rasterizer_desc_solid.FrontCounterClockwise = TRUE;
 
 	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_solid, &raster_states[RasterType::SOLID]);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create Rasterizer state");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create Rasterizer state");
+		return false;
 	}
 
 	// Initialize wireframe rasterizer state, let's follow RH coordinate system like sane people
@@ -123,15 +138,16 @@ void graphics::init(LUID *adapter_luid)
 	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_wireframe, &raster_states[RasterType::WIREFRAME]);
 	if (FAILED(hr))
 	{
-		logging::print_error("Failed to create Rasterizer state");
+		PRINT_DEBUG("Failed to create Rasterizer state");
+		return false;
 	}
 
 	current_raster_type = RasterType::SOLID;
 	graphics_context->context->RSSetState(raster_states[current_raster_type]);
-
+	return true;
 }
 
-void graphics::init_swap_chain(Window *window)
+bool graphics::init_swap_chain(Window *window)
 {
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
 
@@ -151,17 +167,19 @@ void graphics::init_swap_chain(Window *window)
 
 	IDXGIFactory * idxgi_factory;
 	HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create IDXGI factory.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create IDXGI factory.");
+		return false;
 	}
 
 	hr = idxgi_factory->CreateSwapChain(graphics_context->device, &swap_chain_desc, &swap_chain->swap_chain);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create DXGI swap chain.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create DXGI swap chain.");
+		return false;
 	}
+
 	idxgi_factory->Release();
+	return true;
 }
 
 RenderTarget graphics::get_render_target_window()
@@ -170,25 +188,25 @@ RenderTarget graphics::get_render_target_window()
 	RenderTarget buffer = {};
 
 	HRESULT hr = swap_chain->swap_chain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void **)&buffer.texture);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to get swap chain buffer.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to get swap chain buffer.");
+		return RenderTarget{};
 	}
 
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc;
 	hr = swap_chain->swap_chain->GetDesc(&swap_chain_desc);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to get swap chain description.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to get swap chain description.");
+		return RenderTarget{};
 	}
 
 	D3D11_RENDER_TARGET_VIEW_DESC render_target_desc = {};
 	render_target_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	render_target_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create swap chain render target.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create swap chain render target.");
+		return RenderTarget{};
 	}
 
 	buffer.width = swap_chain_desc.BufferDesc.Width;
@@ -213,9 +231,9 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 
 	HRESULT hr = graphics_context->device->CreateTexture2D(&texture_desc, NULL, &buffer.texture);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create texture for render target buffer.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create texture for render target buffer.");
+		return RenderTarget{};
 	}
 
 	D3D11_RENDER_TARGET_VIEW_DESC render_target_desc = {};
@@ -223,9 +241,9 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	render_target_desc.Format = format;
 
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create render target view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create render target view.");
+		return RenderTarget{};
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
@@ -235,9 +253,9 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	shader_resource_desc.Texture2D.MostDetailedMip = 0;
 
 	hr = graphics_context->device->CreateShaderResourceView(buffer.texture, &shader_resource_desc, &buffer.sr_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create shader resource view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create shader resource view.");
+		return RenderTarget{};
 	}
 
 	buffer.width = width;
@@ -268,9 +286,9 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
 
 	HRESULT hr = graphics_context->device->CreateTexture2D(&texture_desc, NULL, &buffer.texture);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create texture for depth stencil buffer.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create texture for depth stencil buffer.");
+		return DepthBuffer{};
 	}
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_desc = {};
@@ -278,9 +296,9 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	hr = graphics_context->device->CreateDepthStencilView(buffer.texture, &depth_stencil_desc, &buffer.ds_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create depth stencil view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create depth stencil view.");
+		return DepthBuffer{};
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
@@ -290,9 +308,9 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	shader_resource_desc.Texture2D.MostDetailedMip = 0;
 
 	hr = graphics_context->device->CreateShaderResourceView(buffer.texture, &shader_resource_desc, &buffer.sr_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create shader resource view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create shader resource view.");
+		return DepthBuffer{};
 	}
 
 	buffer.width = width;
@@ -412,9 +430,9 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 
 	D3D11_SUBRESOURCE_DATA *texture_data_ptr = data ? &texture_data : NULL;
 	HRESULT hr = graphics_context->device->CreateTexture2D(&texture_desc, texture_data_ptr, &texture.texture);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create 2D texture.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create 2D texture.");
+		return Texture2D{};
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
@@ -424,9 +442,9 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 	shader_resource_desc.Texture2D.MostDetailedMip = 0;
 
 	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create shader resource view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create shader resource view.");
+		return Texture2D{};
 	}
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
@@ -435,9 +453,9 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 	unordered_access_desc.Texture2D.MipSlice = 0;
 
 	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create unordered access view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create unordered access view.");
+		return Texture2D{};
 	}
 
 	texture.width = width;
@@ -466,9 +484,9 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 
 	D3D11_SUBRESOURCE_DATA *texture_data_ptr = data ? &texture_data : NULL;
 	HRESULT hr = graphics_context->device->CreateTexture3D(&texture_desc, texture_data_ptr, &texture.texture);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create 3D texture.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create 3D texture.");
+		return Texture3D{};
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
@@ -478,9 +496,9 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	shader_resource_desc.Texture3D.MostDetailedMip = 0;
 
 	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create shader resource view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create shader resource view.");
+		return Texture3D{};
 	}
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
@@ -491,9 +509,9 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	unordered_access_desc.Texture3D.WSize = depth;
 
 	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create unordered access view.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create unordered access view.");
+		return Texture3D{};
 	}
 
 	texture.width = width;
@@ -592,9 +610,8 @@ TextureSampler graphics::get_texture_sampler(SampleMode mode)
 	sampler_desc.MinLOD = -D3D11_FLOAT32_MAX;
 	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
 	HRESULT hr = graphics_context->device->CreateSamplerState(&sampler_desc, &sampler.sampler);
-	if(FAILED(hr))
-	{
-		logging::print_error("Failed to create sampler state.");
+	if(FAILED(hr)) {
+		return TextureSampler{};
 	}
 
 	return sampler;
@@ -620,9 +637,9 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 	vertex_buffer_data.SysMemPitch = vertex_stride;
 
 	HRESULT hr = graphics_context->device->CreateBuffer(&vertex_buffer_desc, &vertex_buffer_data, &mesh.vertex_buffer);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create vertex buffer.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create vertex buffer.");
+		return Mesh{};
 	}
 
 	if (indices && index_count > 0)
@@ -637,9 +654,9 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 		index_buffer_data.SysMemPitch = index_byte_size;
 
 		hr = graphics_context->device->CreateBuffer(&index_buffer_desc, &index_buffer_data, &mesh.index_buffer);
-		if (FAILED(hr))
-		{
-			logging::print_error("Failed to create index buffer.");
+		if (FAILED(hr)) {
+			PRINT_DEBUG("Failed to create index buffer.");
+			return Mesh{};
 		}
 	}
 
@@ -658,13 +675,10 @@ void graphics::draw_mesh(Mesh *mesh)
 	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
 
 	graphics_context->context->IASetPrimitiveTopology(mesh->topology);
-	if(mesh->index_buffer)
-	{
+	if(mesh->index_buffer) {
 		graphics_context->context->IASetIndexBuffer(mesh->index_buffer, mesh->index_format, 0);
 		graphics_context->context->DrawIndexed(mesh->index_count, 0, 0);
-	}
-	else
-	{
+	} else {
 		graphics_context->context->Draw(mesh->vertex_count, 0);
 	}
 }
@@ -698,7 +712,11 @@ StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_ele
 	constant_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	constant_buffer_desc.StructureByteStride = element_stride;
 
-	graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
+	HRESULT hr = graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create buffer.");
+		return StructuredBuffer{};
+	}
 
 	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
 	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
@@ -707,10 +725,10 @@ StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_ele
 	unordered_access_desc.Buffer.Flags = 0;
 	unordered_access_desc.Buffer.NumElements = num_elements;
 
-	HRESULT hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create unordered access view.");
+	hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create unordered access view.");
+		return StructuredBuffer{};
 	}
 
 	return buffer;
@@ -753,15 +771,13 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
 #endif
 	ID3DBlob *error_msg;
 	HRESULT hr = D3DCompile(source, source_size, NULL, NULL, NULL, "main", target, flags, NULL, &compiled_shader.blob, &error_msg);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to compile shader!");
-	}
-
-	if (error_msg)
-	{
-		logging::print((char *)error_msg->GetBufferPointer());
-		error_msg->Release();
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to compile shader!");
+		if (error_msg) {
+			PRINT_DEBUG((char *)error_msg->GetBufferPointer());
+			error_msg->Release();
+		}
+		return CompiledShader{};
 	}
 
 	return compiled_shader;
@@ -805,9 +821,9 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 
 	VertexShader shader = {};
 	HRESULT hr = graphics_context->device->CreateVertexShader(shader_byte_code, shader_size, NULL, &shader.vertex_shader);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create vertex shader.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create vertex shader.");
+		return VertexShader{};
 	}
 
 	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = memory::alloc_temp<D3D11_INPUT_ELEMENT_DESC>(vertex_input_count);
@@ -820,9 +836,9 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 	}
 
 	hr = graphics_context->device->CreateInputLayout(input_layout_desc, vertex_input_count, shader_byte_code, shader_size, &shader.input_layout);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create input layout.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create input layout.");
+		return VertexShader{};
 	}
 
 	memory::pop_temp_state();
@@ -847,9 +863,9 @@ PixelShader graphics::get_pixel_shader(void *shader_byte_code, uint32_t shader_s
 	PixelShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreatePixelShader(shader_byte_code, shader_size, NULL, &shader.pixel_shader);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create pixel shader.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create pixel shader.");
+		return PixelShader{};
 	}
 	
 	return shader;
@@ -877,9 +893,9 @@ GeometryShader graphics::get_geometry_shader(void *shader_byte_code, uint32_t sh
 	GeometryShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreateGeometryShader(shader_byte_code, shader_size, NULL, &shader.geometry_shader);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create geometry shader.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create geometry shader.");
+		return GeometryShader{};
 	}
 
 	return shader;
@@ -907,9 +923,9 @@ ComputeShader graphics::get_compute_shader(void *shader_byte_code, uint32_t shad
 	ComputeShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreateComputeShader(shader_byte_code, shader_size, NULL, &shader.compute_shader);
-	if (FAILED(hr))
-	{
-		logging::print_error("Failed to create compute shader.");
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create compute shader.");
+		return ComputeShader{};
 	}
 
 	return shader;

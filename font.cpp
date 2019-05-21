@@ -1,17 +1,24 @@
 #include "font.h"
 #include "memory.h"
+
+#ifdef CPPLIB_DEBUG_PRINTS
 #include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
 
 // Globally unique objects
 FT_Library ft_library;
 
-void font::init()
+bool font::init()
 {
     int32_t error = FT_Init_FreeType(&ft_library);
-    if (error)
-    {
-        logging::print_error("Error initializing FreeType library!");
+    if (error) {
+        PRINT_DEBUG("Error initializing FreeType library!");
+        return false;
     }
+    return true;
 }
 
 Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size)
@@ -25,16 +32,17 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     uint8_t *font_buffer = memory::alloc_temp<uint8_t>(texture_size * texture_size);
     FT_Face face;
     int32_t error = FT_New_Memory_Face(ft_library, data, data_size, 0, &face);
-    if (error)
-    {
-        logging::print_error("Error creating font face!");
+    if (error) {
+        PRINT_DEBUG("Error creating font face!");
+        return Font{};
     }
 
     int32_t supersampling = 1;
     error = FT_Set_Pixel_Sizes(face, 0, size);
     if (error)
     {
-        logging::print_error("Error setting pixel size!");
+        PRINT_DEBUG("Error setting pixel size!");
+        return Font{};
     }
 
     int32_t row_height = face->size->metrics.height / 64;
@@ -53,7 +61,8 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
         error = FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT);
         if(error)
         {
-            logging::print_error("Error loading character %c!", c);
+            PRINT_DEBUG("Error loading character %c!", c);
+            return Font{};
         }
 
         // Get glyph specific metrics
@@ -91,7 +100,8 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     font.texture = graphics::get_texture2D(font_buffer, texture_size, texture_size, DXGI_FORMAT_R8_UNORM, 1);
     if(!graphics::is_ready(&font.texture))
     {
-        logging::print_error("Could not create texture for font.");
+        PRINT_DEBUG("Could not create texture for font.");
+        return Font{};
     }
 
     // Restore memory state of the temp allocator

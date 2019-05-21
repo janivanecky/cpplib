@@ -5,9 +5,9 @@
 
 #ifdef CPPLIB_DEBUG_PRINTS
 #include "logging.h"
-#define PRINT_ERROR(message) logging::print_error(message)
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
 #else
-#define PRINT_ERROR(message)
+#define PRINT_DEBUG(message, ...)
 #endif
 
 static AudioContext audio_context_;
@@ -20,12 +20,12 @@ bool audio::init()
     
     HRESULT hr = XAudio2Create(&audio_context->engine, 0, XAUDIO2_DEFAULT_PROCESSOR);
     if (FAILED(hr)) {
-        PRINT_ERROR("Failed to create XAudio2 engine.");
+        PRINT_DEBUG("Failed to create XAudio2 engine.");
         return false;
     }
     hr = audio_context->engine->CreateMasteringVoice(&audio_context->master_voice);
     if (FAILED(hr)) {
-        PRINT_ERROR("Failed to create IXAudio2MasteringVoice.");
+        PRINT_DEBUG("Failed to create IXAudio2MasteringVoice.");
         return false;
     }
 
@@ -62,14 +62,14 @@ Sound audio::get_sound_ogg(void *data, uint32_t data_size)
 
     HRESULT hr = audio_context->engine->CreateSourceVoice(&sound.source_voice, &wfx);
     if(FAILED(hr)) {
-        PRINT_ERROR("Failed to create IXAudio2SourceVoice.");
+        PRINT_DEBUG("Failed to create IXAudio2SourceVoice.");
         return Sound{};
     }
 
     hr = sound.source_voice->SubmitSourceBuffer(&buffer);
     if(FAILED(hr)) {
         sound.source_voice->DestroyVoice();
-        PRINT_ERROR("Failed to submit a source buffer.");
+        PRINT_DEBUG("Failed to submit a source buffer.");
         return Sound{};
     }
     
@@ -80,7 +80,7 @@ bool audio::play_sound(Sound *sound)
 {
     HRESULT hr = sound->source_voice->Start(0);
     if(FAILED(hr)) {
-        PRINT_ERROR("Failed to start a source voice.");
+        PRINT_DEBUG("Failed to start a source voice.");
         return false;
     }
     return true;

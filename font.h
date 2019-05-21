@@ -39,7 +39,7 @@ namespace font
     Font get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size);
 
     // Initialize font rasterization code (FreeType2)
-    void init();
+    bool init();
 
     // Return height of a single row for a Font
     float get_row_height(Font *font);

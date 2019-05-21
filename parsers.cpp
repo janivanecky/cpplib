@@ -1,9 +1,14 @@
 #include <stdio.h>
-#include "logging.h"
 #include "parsers.h"
 #include "memory.h"
-
 #include <assert.h>
+
+#ifdef CPPLIB_DEBUG_PRINTS
+#include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
 
 #define MIN(a, b) (a < b ? a : b)
 // TODO: Restructure parsers as lexer + synth
@@ -163,9 +168,8 @@ MeshData parsers::get_mesh_from_obj(File file, StackAllocator *allocator)
 	}
 
 	assert(position_count > 0);
-	if (position_count == 0)
-	{
-		logging::print_error("No. positions in OBJ file is 0.");
+	if (position_count == 0) {
+		PRINT_DEBUG("No. positions in OBJ file is 0.");
 	}
 
 	uint32_t vertex_stride = 4;
@@ -355,7 +359,7 @@ AssetDatabase parsers::get_assets_db_from_adf(File adf_file, StackAllocator *sta
 		}
 	}
 
-	logging::print("Asset count: %d", asset_count);
+	PRINT_DEBUG("Asset count: %d", asset_count);
 
 	sid *keys = memory::alloc_stack<sid>(stack_allocator, asset_count);
 	AssetInfo *infos = memory::alloc_stack<AssetInfo>(stack_allocator, asset_count);
@@ -375,13 +379,10 @@ AssetDatabase parsers::get_assets_db_from_adf(File adf_file, StackAllocator *sta
 			static uint32_t name_length = 0;
 			if (*c == '\r' || *c == '\n')
 			{
-				if (name_length == 0)
-				{
+				if (name_length == 0) {
 					// OK, just an empty line
-				}
-				else
-				{
-					logging::print_error("Incorrect ADF format! End of line after asset name.");
+				} else {
+					PRINT_DEBUG("Incorrect ADF format! End of line after asset name.");
 				}
 			}
 			else if (*c == ' ' && *(c - 1) == ')')
@@ -391,7 +392,7 @@ AssetDatabase parsers::get_assets_db_from_adf(File adf_file, StackAllocator *sta
 				char name_buffer[ASSET_MAX_NAME_LENGTH];
 				if (name_length > ASSET_MAX_NAME_LENGTH - 1) // Have to account for 0 terminating character
 				{
-					logging::print_error("Name length read from ADF too long!");
+					PRINT_DEBUG("Name length read from ADF too long!");
 					name_length = ASSET_MAX_NAME_LENGTH - 1;
 				}
 				memcpy(name_buffer, name_start, MIN(name_length, ASSET_MAX_NAME_LENGTH - 1));
@@ -409,16 +410,15 @@ AssetDatabase parsers::get_assets_db_from_adf(File adf_file, StackAllocator *sta
 		case PARSING_PATH:
 		{
 			static uint32_t path_length = 0;
-			if (*c == '\r' || *c == '\n')
-			{
-				logging::print_error("Incorrect ADF format! End of line before asset type read.");
+			if (*c == '\r' || *c == '\n') {
+				PRINT_DEBUG("Incorrect ADF format! End of line before asset type read.");
 			}
 			else if (*c == ' ')
 			{
 				char *path_start = c - path_length;
 				if (path_length > ASSET_MAX_PATH_LENGTH - 1) // Have to account for 0 terminating character
 				{
-					logging::print_error("Path read from ADF too long!");
+					PRINT_DEBUG("Path read from ADF too long!");
 					path_length = ASSET_MAX_PATH_LENGTH - 1;
 				}
 				memcpy(infos[asset_counter].path, path_start, path_length);

@@ -1,6 +1,13 @@
 #include "file_system.h"
-#include "logging.h"
 #include <windows.h>
+
+#ifdef CPPLIB_DEBUG_PRINTS
+#include "logging.h"
+#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#else
+#define PRINT_DEBUG(message, ...)
+#endif
+
 
 File file_system::read_file(char *path)
 {
@@ -10,7 +17,7 @@ File file_system::read_file(char *path)
     HANDLE file_handle = CreateFileA(path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        logging::print_error("Unable to open read handle to file %s.", path);
+        PRINT_DEBUG("Unable to open read handle to file %s.", path);
         return file;
     } 
 
@@ -18,9 +25,9 @@ File file_system::read_file(char *path)
     WIN32_FILE_ATTRIBUTE_DATA file_attributes;
     if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes))
     {
-        logging::print_error("Unable to get attributes of file %s.", path);
+        PRINT_DEBUG("Unable to get attributes of file %s.", path);
         CloseHandle(file_handle);
-        return file;
+        return File{};
     }
     
     // Allocate memory for reading the file contents
@@ -38,10 +45,10 @@ File file_system::read_file(char *path)
     else
     {
         // In case of read error, deallocate memory and close handle
-        logging::print_error("Unable to read opened file %s.", path);
+        PRINT_DEBUG("Unable to read opened file %s.", path);
         HeapFree(heap, 0, file.data);
         CloseHandle(file_handle);
-        return file;
+        return File{};
     }
 
     // Succesfull file reading, close the handle and return the data
@@ -64,7 +71,7 @@ uint32_t file_system::write_file(char *path, void *data, uint32_t size)
                             FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_handle == INVALID_HANDLE_VALUE)
     {
-        logging::print_error("Unable to open write handle to file %s.", path);
+        PRINT_DEBUG("Unable to open write handle to file %s.", path);
         return 0;
     }
 
@@ -72,7 +79,7 @@ uint32_t file_system::write_file(char *path, void *data, uint32_t size)
     DWORD bytes_written = 0;
     if(!WriteFile(file_handle, data, size, &bytes_written, NULL))
     {
-        logging::print_error("Unable to write to file %s.", path);
+        PRINT_DEBUG("Unable to write to file %s.", path);
         return 0;
     }
     
