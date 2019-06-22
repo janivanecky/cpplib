@@ -25,6 +25,7 @@ namespace ui
     Panel start_panel(char *name, Vector2 pos, float width);
     Panel start_panel(char *name, float x, float y, float width);
     void end_panel(Panel *panel);
+    Vector4 get_panel_rect(Panel *panel);
 
     void end();
     

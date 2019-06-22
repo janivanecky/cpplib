@@ -391,11 +391,15 @@ Panel ui::start_panel(char *name, float x, float y, float width)
     return ui::start_panel(name, Vector2(x,y), width);
 }
 
+Vector4 ui::get_panel_rect(Panel *panel) {
+    Vector4 result = Vector4(panel->pos.x, panel->pos.y, panel->width, panel->item_pos.y + horizontal_padding - inner_padding);
+    return result;
+}
+
 void ui::end_panel(Panel *panel)
 {
-    //float panel_height = panel->item_pos.y + vertical_padding - inner_padding;
-    float panel_height = panel->item_pos.y + horizontal_padding - inner_padding;
-    RectItem panel_bg = {color_background, panel->pos, Vector2(panel->width, panel_height)};
+    Vector4 panel_rect = get_panel_rect(panel);
+    RectItem panel_bg = {color_background, Vector2(panel_rect.x, panel_rect.y), Vector2(panel_rect.z, panel_rect.w)};
     array::add(&rect_items_bg, panel_bg);
 
     //float title_bar_height = font::get_row_height(&font_ui) + vertical_padding * 2;
