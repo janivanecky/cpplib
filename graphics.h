@@ -241,7 +241,7 @@ namespace graphics
 	//  - height: bitmap height
 	//  - format: DXGI format
 	//  - pixel_byte_count: number of bytes per pixel. Used to compute memory pitch.
-	Texture2D get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4);
+	Texture2D get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4, bool staging=false);
 
 	// Set RenderTarget as a texture accessible from shaders
 	void set_texture(RenderTarget *buffer, uint32_t slot);

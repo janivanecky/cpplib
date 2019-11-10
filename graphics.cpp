@@ -408,7 +408,7 @@ void graphics::set_render_targets_viewport(RenderTarget *buffer)
 	set_render_targets(buffer);
 }
 
-Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count)
+Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging)
 {
 	Texture2D texture;
 
@@ -421,8 +421,9 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 	texture_desc.SampleDesc.Count = 1;
 	texture_desc.SampleDesc.Quality = 0;
 	// TODO: Maybe not the best Usage flag.
-	texture_desc.Usage = D3D11_USAGE_DEFAULT;
-	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	texture_desc.Usage = staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
+	texture_desc.BindFlags = staging ? 0 : D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	texture_desc.CPUAccessFlags = staging ? D3D11_CPU_ACCESS_READ : 0;
 
 	D3D11_SUBRESOURCE_DATA texture_data = {};
 	texture_data.pSysMem = data;
@@ -435,27 +436,29 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 		return Texture2D{};
 	}
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
-	shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	shader_resource_desc.Format = format;
-	shader_resource_desc.Texture2D.MipLevels = 1;
-	shader_resource_desc.Texture2D.MostDetailedMip = 0;
+	if (!staging) {
+		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
+		shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		shader_resource_desc.Format = format;
+		shader_resource_desc.Texture2D.MipLevels = 1;
+		shader_resource_desc.Texture2D.MostDetailedMip = 0;
 
-	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
-	if (FAILED(hr)) {
-		PRINT_DEBUG("Failed to create shader resource view.");
-		return Texture2D{};
-	}
+		hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
+		if (FAILED(hr)) {
+			PRINT_DEBUG("Failed to create shader resource view.");
+			return Texture2D{};
+		}
 
-	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
-	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-	unordered_access_desc.Format = format;
-	unordered_access_desc.Texture2D.MipSlice = 0;
+		D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+		unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+		unordered_access_desc.Format = format;
+		unordered_access_desc.Texture2D.MipSlice = 0;
 
-	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
-	if (FAILED(hr)) {
-		PRINT_DEBUG("Failed to create unordered access view.");
-		return Texture2D{};
+		hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
+		if (FAILED(hr)) {
+			PRINT_DEBUG("Failed to create unordered access view.");
+			return Texture2D{};
+		}
 	}
 
 	texture.width = width;
@@ -480,7 +483,8 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 
 	D3D11_SUBRESOURCE_DATA texture_data = {};
 	texture_data.pSysMem = data;
-	texture_data.SysMemPitch = width * height * pixel_byte_count;
+	texture_data.SysMemPitch = width * pixel_byte_count;
+	texture_data.SysMemSlicePitch = width * height * pixel_byte_count;
 
 	D3D11_SUBRESOURCE_DATA *texture_data_ptr = data ? &texture_data : NULL;
 	HRESULT hr = graphics_context->device->CreateTexture3D(&texture_desc, texture_data_ptr, &texture.texture);
