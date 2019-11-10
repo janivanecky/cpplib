@@ -670,6 +670,19 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 	return mesh;
 }
 
+Mesh graphics::get_mesh(ByteAddressBuffer buffer, uint32_t vertex_count, uint32_t vertex_stride, D3D11_PRIMITIVE_TOPOLOGY topology) {
+	Mesh mesh = {};
+	
+	mesh.vertex_buffer = buffer.buffer;
+	mesh.vertex_stride = vertex_stride;
+	mesh.vertex_offset = 0;
+	mesh.vertex_count = vertex_count;
+	mesh.topology = topology;
+
+	return mesh;
+}
+
+
 void graphics::draw_mesh(Mesh *mesh)
 {
 	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
@@ -695,6 +708,39 @@ ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
+
+	return buffer;
+}
+
+ByteAddressBuffer graphics::get_byte_address_buffer(int size)
+{
+	ByteAddressBuffer buffer = {};
+	buffer.size = size;
+
+	D3D11_BUFFER_DESC byte_address_buffer_desc = {};
+	byte_address_buffer_desc.ByteWidth = 4 * size;
+	byte_address_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
+	byte_address_buffer_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_VERTEX_BUFFER ;
+	byte_address_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+
+	HRESULT hr = graphics_context->device->CreateBuffer(&byte_address_buffer_desc, NULL, &buffer.buffer);
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create buffer.");
+		return ByteAddressBuffer{};
+	}
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	unordered_access_desc.Format = DXGI_FORMAT_R32_TYPELESS;
+	unordered_access_desc.Buffer.FirstElement = 0;
+	unordered_access_desc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
+	unordered_access_desc.Buffer.NumElements = size;
+
+	hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
+	if (FAILED(hr)) {
+		PRINT_DEBUG("Failed to create unordered access view.");
+		return ByteAddressBuffer{};
+	}
 
 	return buffer;
 }
@@ -756,6 +802,12 @@ void graphics::set_constant_buffer(ConstantBuffer *buffer, uint32_t slot)
 }
 
 void graphics::set_structured_buffer(StructuredBuffer *buffer, uint32_t slot)
+{
+	UINT init_counts = 0;
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
+}
+
+void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
 {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
@@ -1092,6 +1144,12 @@ void graphics::release(ConstantBuffer *buffer)
 }
 
 void graphics::release(StructuredBuffer *buffer)
+{
+	RELEASE_DX_RESOURCE(buffer->buffer);
+	RELEASE_DX_RESOURCE(buffer->ua_view);
+}
+
+void graphics::release(ByteAddressBuffer *buffer)
 {
 	RELEASE_DX_RESOURCE(buffer->buffer);
 	RELEASE_DX_RESOURCE(buffer->ua_view);

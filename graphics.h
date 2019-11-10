@@ -114,6 +114,13 @@ struct StructuredBuffer
 	uint32_t size;
 };
 
+struct ByteAddressBuffer
+{
+	ID3D11Buffer *buffer;
+	ID3D11UnorderedAccessView *ua_view;
+	uint32_t size;
+};
+
 // VertexInputDesc represents a single input to a vertex shader.
 // Needs semantic name and a format:
 // Example: 
@@ -292,6 +299,9 @@ namespace graphics
 	Mesh get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count,
 				  uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	// Get Mesh from ByteAddressBuffer
+	Mesh get_mesh(ByteAddressBuffer buffer, uint32_t vertex_count, uint32_t vertex_stride, D3D11_PRIMITIVE_TOPOLOGY topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	// Draw a Mesh
 	void draw_mesh(Mesh *mesh);
 
@@ -300,6 +310,9 @@ namespace graphics
 
 	// Get StructuredBuffer
 	StructuredBuffer get_structured_buffer(int element_stride, int num_elements);
+
+	// Get ByteAddressBuffer
+	ByteAddressBuffer get_byte_address_buffer(int size);
 
 	// Update ConstantBuffer with data
 	void update_constant_buffer(ConstantBuffer *buffer, void *data);
@@ -312,6 +325,9 @@ namespace graphics
 
 	// Set StructuredBuffer to a slot
 	void set_structured_buffer(StructuredBuffer *buffer, uint32_t slot);
+
+	// Set ByteAddressBuffer to a slot
+	void set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot);
 
 	// Compile a vertex shader from a source code
 	CompiledShader compile_vertex_shader(void *source, uint32_t source_size);
@@ -404,6 +420,7 @@ namespace graphics
 	void release(Mesh *mesh);
 	void release(ConstantBuffer *buffer);
 	void release(StructuredBuffer *buffer);
+	void release(ByteAddressBuffer *buffer);
 	void release(VertexShader *shader);
 	void release(PixelShader *shader);
 	void release(GeometryShader *shader);
