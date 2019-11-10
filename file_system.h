@@ -19,5 +19,8 @@ namespace file_system
 
     // Write data to file at path
     uint32_t write_file(char *path, void *data, uint32_t size);
+
+    // Create empty directory
+    void mkdir(char *path);
 }
 

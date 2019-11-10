@@ -87,3 +87,10 @@ uint32_t file_system::write_file(char *path, void *data, uint32_t size)
     CloseHandle(file_handle);
     return bytes_written;
 }
+
+void file_system::mkdir(char *path) {
+    int result = CreateDirectoryA(path, NULL);
+    if(result == 0) {
+        PRINT_DEBUG("Unable to create directory %s.", path);
+    }
+}
