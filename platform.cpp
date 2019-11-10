@@ -124,13 +124,15 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		window.window_height = window_height;
 		
 		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
+		window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
 		AdjustWindowRect(&window_rect, window_flags, FALSE);
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
 		
 		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags, 
-											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
+//											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
+											 0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
 
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;
@@ -155,6 +157,12 @@ void platform::show_cursor()
 void platform::hide_cursor()
 {
 	while(ShowCursor(FALSE) >= 0);
+}
+
+SYSTEMTIME platform::get_datetime() {
+	SYSTEMTIME time;
+	GetLocalTime(&time);
+	return time;
 }
 
 Ticks platform::get_ticks()

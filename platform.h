@@ -115,6 +115,9 @@ namespace platform
 
 	// Compute time difference between two Ticks (number of ticks) and a tick update frequency
 	float get_dt_from_tick_difference(Ticks t1, Ticks t2, Ticks frequency);
+
+	// Return SYSTEMTIME representing current date and time
+	SYSTEMTIME get_datetime();
 }
 
 /////////////////////////////////////////
