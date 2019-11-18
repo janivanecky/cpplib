@@ -30,6 +30,7 @@ namespace ui
     void end();
     
     bool add_toggle(Panel *panel, char *label, bool *state);
+    bool add_toggle(Panel *panel, char *label, int *state);
     bool add_slider(Panel *panel, char *label, float *pos, float min, float max);
 
     void release();

@@ -466,6 +466,13 @@ void set_active(int32_t item_id)
     }
 }
 
+bool ui::add_toggle(Panel *panel, char *label, int *active) {
+    bool a = *active;
+    bool changed = add_toggle(panel, label, &a);
+    *active = a;
+    return changed;    
+}
+
 bool ui::add_toggle(Panel *panel, char *label, bool *active)
 {
     bool changed = false;
