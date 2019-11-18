@@ -236,6 +236,17 @@ struct Vector4
 		return result;
 	}
 
+	Vector4 operator-(Vector4 v)
+	{
+		Vector4 result;
+
+		result.x = this->x - v.x;
+		result.y = this->y - v.y;
+		result.z = this->z - v.z;
+		result.w = this->w - v.w;
+
+		return result;
+	}
 
 	Vector4 operator*(float x)
 	{
@@ -255,6 +266,16 @@ struct Vector4
 		this->y = this->y * x;
 		this->z = this->z * x;
 		this->w = this->w * x;
+
+		return *this;
+	}
+
+	Vector4& operator+=(Vector4 v)
+	{
+		this->x += v.x;
+		this->y += v.y;
+		this->z += v.z;
+		this->w += v.w;
 
 		return *this;
 	}
