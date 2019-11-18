@@ -182,7 +182,7 @@ bool graphics::init_swap_chain(Window *window)
 	return true;
 }
 
-RenderTarget graphics::get_render_target_window()
+RenderTarget graphics::get_render_target_window(bool srgb)
 {
 	// NOTE: buffer.sr_view is not filled and remains NULL - window render target cannot be used as a texture in shader
 	RenderTarget buffer = {};
@@ -202,7 +202,7 @@ RenderTarget graphics::get_render_target_window()
 
 	D3D11_RENDER_TARGET_VIEW_DESC render_target_desc = {};
 	render_target_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	render_target_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	render_target_desc.Format = srgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create swap chain render target.");

@@ -193,7 +193,7 @@ namespace graphics
 	
 
 	// Get RenderTarget to use for rendering directly to a window passed in to `init_swap_chain`
-	RenderTarget get_render_target_window();
+	RenderTarget get_render_target_window(bool srgb=true);
 
 	// Get RenderTarget with specified width, height and format
 	RenderTarget get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
