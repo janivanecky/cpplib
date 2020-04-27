@@ -68,6 +68,7 @@ enum KeyCode
 	F8,
 	F9,
 	F10,
+	ALT,
 	OTHER,
 };
 
