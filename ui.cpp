@@ -189,8 +189,7 @@ const int32_t FONT_HEIGHT = 16;
 
 #define ASSERT_SCREEN_SIZE assert(screen_width > 0 && screen_height > 0)
 
-void ui::init(float screen_width_ui, float screen_height_ui)
-{
+void ui::init(float screen_width_ui, float screen_height_ui) {
     // Set screen size
     screen_width = screen_width_ui;
     screen_height = screen_height_ui;
@@ -238,8 +237,7 @@ void ui::init(float screen_width_ui, float screen_height_ui)
     array::init(&rect_items_bg, 100);
 }
 
-void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin)
-{
+void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin) {
     ASSERT_SCREEN_SIZE;
 
     // Set font shaders
@@ -311,13 +309,11 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vect
     graphics::set_blend_state(old_blend_state);
 };
 
-void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin)
-{
+void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin) {
     ui::draw_text(text, font, pos.x, pos.y, color, origin);
 }
 
-void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
-{
+void ui::draw_rect(float x, float y, float width, float height, Vector4 color) {
     ASSERT_SCREEN_SIZE;
 
     // Set rect shaders
@@ -352,8 +348,7 @@ void ui::draw_rect(float x, float y, float width, float height, Vector4 color)
     graphics::set_blend_state(old_blend_state);
 }
 
-void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color)
-{
+void ui::draw_rect(Vector2 pos, float width, float height, Vector4 color) {
     ui::draw_rect(pos.x, pos.y, width, height, color);
 }
 
@@ -367,13 +362,14 @@ static int32_t hot_id = -1;
 #define COLOR(r,g,b,a) Vector4((r) / 255.0f, (g) / 255.0f, (b) / 255.0f, (a) / 255.0f)
 // This means that the color has been NOT gamma corrected - it was seen displayed incorrectly.
 #define COLOR_LINEAR(r,g,b,a) Vector4(math::pow((r) / 255.0f, 2.2f), math::pow((g) / 255.0f, 2.2f), math::pow((b) / 255.0f, 2.2f), math::pow((a) / 255.0f, 2.2f))
-static Vector4 color_background = Vector4(0.1f, 0.1f, 0.1f, .8f);
+static Vector4 color_background = Vector4(0.1f, 0.1f, 0.1f, .0f);
 static Vector4 color_foreground = Vector4(0.8f, 0.8f, 0.8f, 0.6f);
+//static Vector4 color_foreground = Vector4(0.0f, 0.2f, 0.1f, 0.8f);
 static Vector4 color_title = COLOR_LINEAR(28, 224, 180, 255);
-static Vector4 color_label = Vector4(1.0f, 1.0f, 1.0f, 0.6f);
+static Vector4 color_label = Vector4(1.0f,1.0f,1.0f,0.8f);
+//static Vector4 color_label = Vector4(0.0f,1.0f,0.5f,0.8f);
 
-Panel ui::start_panel(char *name, Vector2 pos, float width)
-{
+Panel ui::start_panel(char *name, Vector2 pos, float width) {
     Panel panel = {};
 
     panel.pos = pos;
@@ -386,8 +382,7 @@ Panel ui::start_panel(char *name, Vector2 pos, float width)
     return panel;
 }
 
-Panel ui::start_panel(char *name, float x, float y, float width)
-{
+Panel ui::start_panel(char *name, float x, float y, float width) {
     return ui::start_panel(name, Vector2(x,y), width);
 }
 
@@ -396,8 +391,7 @@ Vector4 ui::get_panel_rect(Panel *panel) {
     return result;
 }
 
-void ui::end_panel(Panel *panel)
-{
+void ui::end_panel(Panel *panel) {
     Vector4 panel_rect = get_panel_rect(panel);
     RectItem panel_bg = {color_background, Vector2(panel_rect.x, panel_rect.y), Vector2(panel_rect.z, panel_rect.w)};
     array::add(&rect_items_bg, panel_bg);
@@ -414,53 +408,43 @@ void ui::end_panel(Panel *panel)
     array::add(&text_items, title);
 }
 
-bool is_in_rect(Vector2 position, Vector2 rect_position, Vector2 rect_size)
-{
+bool is_in_rect(Vector2 position, Vector2 rect_position, Vector2 rect_size) {
     if (position.x >= rect_position.x && position.x <= rect_position.x + rect_size.x &&
         position.y >= rect_position.y && position.y <= rect_position.y + rect_size.y)
         return true;
     return false;
 }
 
-void unset_hot(int32_t item_id)
-{
-    if(hot_id == item_id)
-    {
+void unset_hot(int32_t item_id) {
+    if(hot_id == item_id) {
         hot_id = -1;
     }
 }
 
-void unset_active(int32_t item_id)
-{
-    if(active_id == item_id)
-    {
+void unset_active(int32_t item_id) {
+    if(active_id == item_id) {
         active_id = -1;
         is_registering_input_ = false;
     }
 }
 
-bool is_hot(int32_t item_id)
-{
+bool is_hot(int32_t item_id) {
     return item_id == hot_id;
 }
 
-bool is_active(int32_t item_id)
-{
+bool is_active(int32_t item_id) {
     return item_id == active_id;
 }
 
-void set_hot(int32_t item_id)
-{
-    if(hot_id == -1)
-    {
+void set_hot(int32_t item_id) {
+    if(hot_id == -1) {
         hot_id = item_id;
     }
 }
 
 void set_active(int32_t item_id)
 {
-    if(active_id == -1)
-    {
+    if(active_id == -1) {
         active_id = item_id;
         is_registering_input_ = true;
     }
@@ -473,8 +457,7 @@ bool ui::add_toggle(Panel *panel, char *label, int *active) {
     return changed;    
 }
 
-bool ui::add_toggle(Panel *panel, char *label, bool *active)
-{
+bool ui::add_toggle(Panel *panel, char *label, bool *active) {
     bool changed = false;
     const float box_middle_to_total = 0.6f;
     
@@ -486,43 +469,33 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active)
     Vector2 box_bg_pos = item_pos;
 
     // Check for mouse input
-    if(ui::is_input_responsive())
-    {
+    if(ui::is_input_responsive()) {
         // Check if mouse over
         Vector2 mouse_position = input::mouse_position();
-        if(is_in_rect(mouse_position, box_bg_pos, box_bg_size))
-        {
+        if(is_in_rect(mouse_position, box_bg_pos, box_bg_size)) {
             set_hot(toggle_id);
-        }
+        } else {
         // Remove hotness only if this toggle was hot before
-        else
-        {
             unset_hot(toggle_id);
         }
 
         // If toggle is hot, check for mouse press
-        if (is_hot(toggle_id) && input::mouse_left_button_pressed())
-        {
+        if (is_hot(toggle_id) && input::mouse_left_button_pressed()) {
             *active = !(*active);
             changed = true;
 
             set_active(toggle_id);
-        }
-        else if(is_active(toggle_id) && !input::mouse_left_button_down())
-        {
+        } else if(is_active(toggle_id) && !input::mouse_left_button_down()) {
             unset_active(toggle_id);
         }
-    }
-    else
-    {
+    } else {
         unset_hot(toggle_id);
     }
 
     // Toggle box background
     Vector4 color_box = color_foreground;
     Vector4 color_middle = color_background;
-    if (is_hot(toggle_id))
-    {
+    if (is_hot(toggle_id)) {
         color_box *= 0.8f;
         color_middle *= 0.8f;
         color_middle.a = 1.0f;
@@ -533,8 +506,7 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active)
     array::add(&rect_items, toggle_bg);
 
     // Active part of toggle box
-    if (!*active)
-    {
+    if (!*active) {
         Vector2 box_fg_size = Vector2(height * box_middle_to_total, height * box_middle_to_total);
         Vector2 box_fg_pos = box_bg_pos + (box_bg_size - box_fg_size) / 2.0f;
         RectItem toggle_fg = {color_middle, box_fg_pos, box_fg_size};
@@ -554,78 +526,79 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active)
     return changed;
 }
 
-bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
-{
+bool ui::add_slider(Panel *panel, char *label, int *pos, int min, int max) {
+    float pos_f = *pos;
+    bool changed = add_slider(panel, label, &pos_f, min, max);
+    *pos = pos_f;
+    return changed;
+}
+
+bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max) {
     bool changed = false;
     int32_t slider_id = hash_string(label);
     Vector2 item_pos = panel->pos + panel->item_pos;
+
     float height = font::get_row_height(&font_ui);
     float slider_width = 225.0f;
 
     // Slider bar
-    float slider_start = 0.0f;
-
-    Vector4 slider_bar_color = color_background * 2.0f;
-    Vector2 slider_bar_pos = item_pos + Vector2(slider_start, 0.0f);
+    Vector2 slider_bar_pos = item_pos;
     Vector2 slider_bar_size = Vector2(slider_width, height);
-    RectItem slider_bar = { slider_bar_color, slider_bar_pos, slider_bar_size };
-    array::add(&rect_items, slider_bar);
 
-    Vector4 slider_color = color_foreground;
-    Vector2 slider_size = Vector2(height, height);
-    float slider_x = (*pos - min) / (max - min) * (slider_width - slider_size.x) + slider_bar_pos.x + slider_size.x * 0.5f;
-    Vector2 slider_pos = Vector2(slider_x - slider_size.x * 0.5f, item_pos.y);
+    // Check for mouse input
+    if(ui::is_input_responsive()) {
+        Vector2 mouse_position = input::mouse_position();
+        if(is_in_rect(mouse_position, slider_bar_pos, slider_bar_size)) {       
+            set_hot(slider_id);
+        } else if(!is_active(slider_id)) {
+            unset_hot(slider_id);
+        }
+
+        if(is_hot(slider_id) && !is_active(slider_id) && input::mouse_left_button_down()) {
+            set_active(slider_id);
+        } else if (is_active(slider_id) && !input::mouse_left_button_down()) {
+            unset_active(slider_id);
+        }
+    } else {
+        unset_hot(slider_id);
+        unset_active(slider_id);
+    }
+
+    float bounds_width = 2.0f;
+    float color_modifier = 0.8f;
+    if(is_hot(slider_id)) {
+        bounds_width *= 2.0f;
+        color_modifier = 1.0f;
+    }
+
+    Vector4 bounds_color = color_label * color_modifier;
+    Vector2 min_bound_pos = item_pos + Vector2(-bounds_width, 0.0f);
+    Vector2 min_bound_size = Vector2(bounds_width, height);
+    RectItem min_bound = { bounds_color, min_bound_pos, min_bound_size };
+    array::add(&rect_items, min_bound);
+
+    Vector2 max_bound_pos = item_pos + Vector2(slider_bar_size.x, 0.0f);
+    Vector2 max_bound_size = Vector2(bounds_width, height);
+    RectItem max_bound = { bounds_color, max_bound_pos, max_bound_size };
+    array::add(&rect_items, max_bound);
+
+    Vector4 slider_color = color_foreground * color_modifier;
+    Vector2 slider_size = Vector2((*pos - min) / (max - min) * slider_width, height);
+    Vector2 slider_pos = slider_bar_pos;
 
     // Max number
     Vector2 current_pos = Vector2(slider_bar_pos.x + slider_bar_size.x / 2.0f, item_pos.y);
     TextItem current_label = {};
-    current_label.color = color_label;
+    current_label.color = color_label * color_modifier;
     current_label.pos = current_pos; 
     current_label.origin = Vector2(0.5f, 0.0f);
     sprintf_s(current_label.text, ARRAYSIZE(current_label.text), "%.2f", *pos);
     array::add(&text_items, current_label);
 
-    // Check for mouse input
-    if(ui::is_input_responsive())
-    {
-        Vector2 mouse_position = input::mouse_position();
-        if(is_in_rect(mouse_position, slider_pos, slider_size))
-        {       
-            set_hot(slider_id);
-        }
-        else if(!is_active(slider_id))
-        {
-            unset_hot(slider_id);
-        }
-
-        Vector2 overall_slider_size = Vector2(slider_bar_size.x, slider_size.y);
-        Vector2 overall_slider_pos = Vector2(slider_bar_pos.x, slider_pos.y);
-
-        if((is_hot(slider_id) || is_in_rect(mouse_position, overall_slider_pos, overall_slider_size)) && !is_active(slider_id) && input::mouse_left_button_down())
-        {
-            set_active(slider_id);
-        }
-        else if (is_active(slider_id) && !input::mouse_left_button_down())
-        {
-            unset_active(slider_id);
-        }
-    }
-    else 
-    {
-        unset_hot(slider_id);
-        unset_active(slider_id);
-    }
-
-    if (is_hot(slider_id))
-    {
-        slider_color *= 0.8f;
-        slider_color.w = 1.0f;
-    }
-
-    if(is_active(slider_id))
-    {
+    if(is_active(slider_id)) {
         float mouse_x = input::mouse_position().x;
-        float mouse_x_rel = (mouse_x - slider_bar_pos.x - slider_size.x * 0.5f) / (slider_bar_size.x - slider_size.x);
+        //float mouse_x_rel = (mouse_x - slider_bar_pos.x - slider_size.x * 0.5f) / (slider_bar_size.x - slider_size.x);
+        float mouse_x_rel = (mouse_x - slider_bar_pos.x) / (slider_bar_size.x);
         mouse_x_rel = math::clamp(mouse_x_rel, 0.0f, 1.0f);
         
         *pos = mouse_x_rel * (max - min) + min;
@@ -638,9 +611,9 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     array::add(&rect_items, slider);
 
     // Slider label
-    Vector2 text_pos = Vector2(slider_bar_size.x + slider_bar_pos.x + inner_padding, item_pos.y);
+    Vector2 text_pos = Vector2(slider_bar_size.x + slider_bar_pos.x + inner_padding + 2, item_pos.y);
     TextItem slider_label = {};
-    slider_label.color = color_label;
+    slider_label.color = color_label * color_modifier;
     slider_label.pos = text_pos;
     memcpy(slider_label.text, label, strlen(label) + 1);
     array::add(&text_items, slider_label);
