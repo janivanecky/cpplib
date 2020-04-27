@@ -50,6 +50,9 @@ namespace input
     // Return if key with specific KeyCode was pressed this frame
     bool key_pressed(KeyCode code);
 
+    // Return if key with specific KeyCode is down
+    bool key_down(KeyCode code);
+
     // Process Event, disregards events irrelevant to input
     void register_event(Event *event);
 }

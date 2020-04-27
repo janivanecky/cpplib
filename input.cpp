@@ -92,6 +92,11 @@ bool input::key_pressed(KeyCode code)
     return key_pressed_[code];
 }
 
+bool input::key_down(KeyCode code)
+{
+    return key_down_[code];
+}
+
 void input::register_event(Event *event)
 {
     switch(event->type)
