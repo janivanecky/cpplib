@@ -10,6 +10,12 @@ float random::uniform(float low, float high)
 	return result;
 }
 
+int random::uniform_int(int low, int high)
+{
+	int result = (rand() % (high - low)) + low;
+	return result;
+}
+
 Vector3 random::uniform_unit_hemisphere()
 {
 	float y = random::uniform(0.0f, 1.0f);
