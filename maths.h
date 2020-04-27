@@ -143,6 +143,28 @@ struct Vector3
 		return result;
 	}
 
+	Vector3 operator+(float x)
+	{
+		Vector3 result;
+
+		result.x = this->x + x;
+		result.y = this->y + x;
+		result.z = this->z + x;
+
+		return result;
+	}
+
+	Vector3 operator-(float x)
+	{
+		Vector3 result;
+
+		result.x = this->x - x;
+		result.y = this->y - x;
+		result.z = this->z - x;
+
+		return result;
+	}
+
 	Vector3 operator*(float x)
 	{
 		Vector3 result;
@@ -170,6 +192,15 @@ struct Vector3
 		this->x += v.x;
 		this->y += v.y;
 		this->z += v.z;
+
+		return *this;
+	}
+
+	Vector3& operator-=(Vector3 v)
+	{
+		this->x -= v.x;
+		this->y -= v.y;
+		this->z -= v.z;
 
 		return *this;
 	}
@@ -377,8 +408,11 @@ namespace math
 	float sqrt(float x);
 	float square(float x);
 	float pow(float x, float e);
+	float sign(float x);
+	float length(Vector2 x);
 	float length(Vector3 x);
 	float length(Vector4 x);
+	float length_squared(Vector2 x);
 	float length_squared(Vector3 x);
 	float length_squared(Vector4 x);
 	template<typename T>
@@ -402,6 +436,7 @@ namespace math
 	float fmod(float x, float m);
 	int32_t mod(int32_t x, int32_t m);
 
+	float dot(Vector2 a, Vector2 b);
 	float dot(Vector3 a, Vector3 b);
 	float dot(Vector4 a, Vector4 b);
 	Vector3 cross(Vector3 a, Vector3 b);

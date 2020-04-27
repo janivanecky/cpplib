@@ -59,6 +59,14 @@ float math::pow(float x, float e)
 	return powf(x, e);
 }
 
+float math::sign(float x) {
+	return x < 0 ? -1 : 1;
+}
+
+float math::dot(Vector2 a, Vector2 b)
+{
+	return a.x * b.x + a.y * b.y;
+}
 
 float math::dot(Vector3 a, Vector3 b)
 {
@@ -70,6 +78,11 @@ float math::dot(Vector4 a, Vector4 b)
 	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
+float math::length(Vector2 x)
+{
+	return math::sqrt(math::length_squared(x));
+}
+
 float math::length(Vector3 x)
 {
 	return math::sqrt(math::length_squared(x));
@@ -78,6 +91,11 @@ float math::length(Vector3 x)
 float math::length(Vector4 x)
 {
 	return math::sqrt(math::length_squared(x));
+}
+
+float math::length_squared(Vector2 x)
+{
+	return math::dot(x, x);
 }
 
 float math::length_squared(Vector3 x)
