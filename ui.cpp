@@ -494,11 +494,10 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active) {
 
     // Toggle box background
     Vector4 color_box = color_foreground;
-    Vector4 color_middle = color_background;
+    Vector4 color_middle = color_background * 0.8f;
+    color_middle.a = 1.0f;
     if (is_hot(toggle_id)) {
         color_box *= 0.8f;
-        color_middle *= 0.8f;
-        color_middle.a = 1.0f;
     }
 
     // Draw bg rectangle
