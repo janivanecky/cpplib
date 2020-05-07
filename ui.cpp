@@ -526,9 +526,9 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active) {
 }
 
 bool ui::add_slider(Panel *panel, char *label, int *pos, int min, int max) {
-    float pos_f = *pos;
-    bool changed = add_slider(panel, label, &pos_f, min, max);
-    *pos = pos_f;
+    float pos_f = float(*pos);
+    bool changed = add_slider(panel, label, &pos_f, float(min), float(max));
+    *pos = int(pos_f);
     return changed;
 }
 

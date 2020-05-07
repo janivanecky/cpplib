@@ -60,7 +60,7 @@ float math::pow(float x, float e)
 }
 
 float math::sign(float x) {
-	return x < 0 ? -1 : 1;
+	return x < 0.0f ? -1.0f : 1.0f;
 }
 
 float math::dot(Vector2 a, Vector2 b)
