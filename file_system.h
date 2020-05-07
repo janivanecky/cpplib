@@ -1,5 +1,7 @@
 #pragma once
 #include <stdint.h>
+// TODO: Should not be here, it's just here for FILETIME
+#include <windows.h>
 
 // File encapsulates data loaded from the file and its size.
 struct File
@@ -22,5 +24,7 @@ namespace file_system
 
     // Create empty directory
     void mkdir(char *path);
-}
 
+    // Check the last time file was written to.
+    FILETIME get_last_write_time(char *file_path);
+}

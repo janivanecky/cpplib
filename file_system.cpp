@@ -94,3 +94,12 @@ void file_system::mkdir(char *path) {
         PRINT_DEBUG("Unable to create directory %s.", path);
     }
 }
+
+FILETIME file_system::get_last_write_time(char *file_path) {
+	FILETIME write_time = {};
+	WIN32_FILE_ATTRIBUTE_DATA file_data;
+	if (GetFileAttributesExA(file_path, GetFileExInfoStandard, &file_data)) {
+		write_time = file_data.ftLastWriteTime;
+	}
+	return write_time;
+}
