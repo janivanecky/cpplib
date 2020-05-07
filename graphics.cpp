@@ -1,7 +1,6 @@
 #include "graphics.h"
 #include "memory.h"
 #include <d3dcompiler.h>
-#include <assert.h>
 #ifdef CPPLIB_DEBUG_PRINTS
 #include "logging.h"
 #define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
@@ -1172,7 +1171,7 @@ void graphics::release(CompiledShader *shader)
 /// HIGHER LEVEL API
 ////////////////////////////////////////////////
 
-uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs)
+int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs)
 {
 	const char *struct_name = "VertexInput";
 	char *c = vertex_string;
@@ -1204,7 +1203,7 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 	};
 
 	uint32_t i = 0;
-	uint32_t vertex_input_count = 0;
+	int32_t vertex_input_count = 0;
 
 	while (i < size)
 	{
@@ -1255,7 +1254,9 @@ uint32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32
 		{
 			if ((isspace(*c) || *c == ';') && semantic_name_length > 0)
 			{
-				assert(semantic_name_length < MAX_SEMANTIC_NAME_LENGTH);
+				if(semantic_name_length >= MAX_SEMANTIC_NAME_LENGTH) {
+					return -1;
+				}
 				if (vertex_input_descs)
 				{
 					vertex_input_descs[vertex_input_count].format = formats[type];

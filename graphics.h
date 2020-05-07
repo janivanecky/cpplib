@@ -435,7 +435,7 @@ namespace graphics
 	// If `vertex_input_descs` is not NULL, it's filled with VertexInputDesc values. The function
 	// always returns number of vertex inputs to the shader (which is also a length of `vertex_input_descs`
 	// array).
-	uint32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc *vertex_input_descs);
+	int32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc *vertex_input_descs);
 
 	// Helper functions that return VertexShader directly from a vertex shader code
 	VertexShader get_vertex_shader_from_code(char *code, uint32_t code_length);
