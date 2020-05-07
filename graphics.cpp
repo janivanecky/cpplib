@@ -1323,3 +1323,27 @@ ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_l
 
 	return compute_shader;
 }
+
+Mesh graphics::get_quad_mesh() {
+	float quad_vertices[] = {
+		-1.0f, -1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 1.0f,
+		-1.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 1.0f,
+
+		-1.0f, -1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, -1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f,
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 1.0f,
+	};
+
+	const uint32_t quad_vertices_stride = sizeof(float) * 6;
+	const uint32_t quad_vertices_count = 6;	
+
+	Mesh mesh = graphics::get_mesh(quad_vertices, quad_vertices_count, quad_vertices_stride, NULL, 0, 0);
+	return mesh;
+}

@@ -445,4 +445,7 @@ namespace graphics
 
 	// Helper functions that return ComputeShader directly from a compute shader code
 	ComputeShader get_compute_shader_from_code(char *code, uint32_t code_length);
+
+	// Helper function to get quad Mesh
+	Mesh get_quad_mesh();
 }
