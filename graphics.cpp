@@ -40,22 +40,21 @@ bool graphics::init(LUID *adapter_luid)
 #ifdef DEBUG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
-
-	// Create IDXGIFactory, needed for probing avaliable devices/adapters
-	IDXGIFactory *idxgi_factory;
-	HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
-	if (FAILED(hr))
-	{
-		PRINT_DEBUG("Failed to create IDXGI factory.");
-		return false;
-	}
-
 	// Get adapter to use for creating D3D11Device
 	IDXGIAdapter *adapter = NULL;
 
 	// In case adapter LUID was specified, go through available adapters and pick the one with specified LUID
 	if (adapter_luid)
 	{
+		// Create IDXGIFactory, needed for probing avaliable devices/adapters
+		IDXGIFactory *idxgi_factory;
+		HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
+		if (FAILED(hr))
+		{
+			PRINT_DEBUG("Failed to create IDXGI factory.");
+			return false;
+		}
+
 		IDXGIAdapter *temp_adapter = NULL;
 		for (uint32_t i = 0; idxgi_factory->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i) 
 		{ 
@@ -68,15 +67,15 @@ bool graphics::init(LUID *adapter_luid)
 			}
 			temp_adapter->Release();
 		}
+		idxgi_factory->Release();
 	}
-	idxgi_factory->Release();
 
 	// Create D3D11Device and D3D11DeviceContext
 	D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
 	D3D_FEATURE_LEVEL supported_feature_level;
 
 	auto driver_type = adapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
-	hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
+	HRESULT hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create D3D11 Device.");
 		return false;
@@ -1286,7 +1285,9 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 
 	// Compile shader
     CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
-	assert(graphics::is_ready(&vertex_shader_compiled));
+	if(!graphics::is_ready(&vertex_shader_compiled)) {
+		return VertexShader{};
+	}
 
 	// Get VertexInpuDescs
     uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
@@ -1305,10 +1306,12 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length)
 {
 	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length);
-	assert(graphics::is_ready(&pixel_shader_compiled));
+	if(!graphics::is_ready(&pixel_shader_compiled)) {
+		return PixelShader{};
+	}
 	
-    PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_compiled);
-    graphics::release(&pixel_shader_compiled);
+	PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_compiled);
+	graphics::release(&pixel_shader_compiled);
 
 	return pixel_shader;
 }
@@ -1316,8 +1319,10 @@ PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_lengt
 ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length)
 {
 	CompiledShader compute_shader_compiled = graphics::compile_compute_shader(code, code_length);
-	assert(graphics::is_ready(&compute_shader_compiled));
-	
+	if(!graphics::is_ready(&compute_shader_compiled)) {
+		return ComputeShader{};
+	}
+
     ComputeShader compute_shader = graphics::get_compute_shader(&compute_shader_compiled);
     graphics::release(&compute_shader_compiled);
 
