@@ -16,6 +16,20 @@ int random::uniform_int(int low, int high)
 	return result;
 }
 
+Vector3 random::uniform_unit_sphere() {
+	float azimuth = random::uniform(0, math::PI2);
+	float polar = math::acos(2 * random::uniform() - 1);
+	float r = math::pow(random::uniform(), 1.0f / 3.0f);
+	
+	Vector3 result;
+
+	result.x = r * math::cos(azimuth) * math::sin(polar);
+	result.y = r * math::cos(polar);
+	result.z = r * math::sin(azimuth) * math::sin(polar);
+
+	return result;
+}
+
 Vector3 random::uniform_unit_hemisphere()
 {
 	float y = random::uniform(0.0f, 1.0f);
