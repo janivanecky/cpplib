@@ -819,7 +819,7 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
 {
 	CompiledShader compiled_shader;
 
-	uint32_t flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR;// | D3DCOMPILE_OPTIMIZATION_LEVEL3;
+	uint32_t flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #ifdef DEBUG
 	flags |= D3DCOMPILE_DEBUG;
 #endif
@@ -1310,7 +1310,7 @@ PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_lengt
 	if(!graphics::is_ready(&pixel_shader_compiled)) {
 		return PixelShader{};
 	}
-	
+
 	PixelShader pixel_shader = graphics::get_pixel_shader(&pixel_shader_compiled);
 	graphics::release(&pixel_shader_compiled);
 
