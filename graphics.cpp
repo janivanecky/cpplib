@@ -75,15 +75,15 @@ bool graphics::init(LUID *adapter_luid)
 
 	auto driver_type = adapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
 	HRESULT hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
+	
+	// Release adapter handle if not NULL
+	if (adapter) {
+		adapter->Release();
+	}
+
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create D3D11 Device.");
 		return false;
-	}
-
-	// Release adapter handle if not NULL
-	if (adapter)
-	{
-		adapter->Release();
 	}
 
 	// Initialize blending states
@@ -173,6 +173,7 @@ bool graphics::init_swap_chain(Window *window)
 	hr = idxgi_factory->CreateSwapChain(graphics_context->device, &swap_chain_desc, &swap_chain->swap_chain);
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create DXGI swap chain.");
+		idxgi_factory->Release();
 		return false;
 	}
 
@@ -240,6 +241,9 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.texture->Release();
+
 		PRINT_DEBUG("Failed to create render target view.");
 		return RenderTarget{};
 	}
@@ -252,6 +256,10 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 
 	hr = graphics_context->device->CreateShaderResourceView(buffer.texture, &shader_resource_desc, &buffer.sr_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.texture->Release();
+		buffer.rt_view->Release();
+
 		PRINT_DEBUG("Failed to create shader resource view.");
 		return RenderTarget{};
 	}
@@ -295,6 +303,9 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 
 	hr = graphics_context->device->CreateDepthStencilView(buffer.texture, &depth_stencil_desc, &buffer.ds_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.texture->Release();
+
 		PRINT_DEBUG("Failed to create depth stencil view.");
 		return DepthBuffer{};
 	}
@@ -307,6 +318,10 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 
 	hr = graphics_context->device->CreateShaderResourceView(buffer.texture, &shader_resource_desc, &buffer.sr_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.texture->Release();
+		buffer.ds_view->Release();
+
 		PRINT_DEBUG("Failed to create shader resource view.");
 		return DepthBuffer{};
 	}
@@ -443,6 +458,9 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 
 		hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
 		if (FAILED(hr)) {
+			// Cleanup.
+			texture.texture->Release();
+			
 			PRINT_DEBUG("Failed to create shader resource view.");
 			return Texture2D{};
 		}
@@ -454,6 +472,10 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 
 		hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
 		if (FAILED(hr)) {
+			// Cleanup.
+			texture.texture->Release();
+			texture.sr_view->Release();
+
 			PRINT_DEBUG("Failed to create unordered access view.");
 			return Texture2D{};
 		}
@@ -499,6 +521,9 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 
 	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		texture.texture->Release();
+
 		PRINT_DEBUG("Failed to create shader resource view.");
 		return Texture3D{};
 	}
@@ -512,6 +537,10 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 
 	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		texture.texture->Release();
+		texture.sr_view->Release();
+
 		PRINT_DEBUG("Failed to create unordered access view.");
 		return Texture3D{};
 	}
@@ -657,6 +686,9 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 
 		hr = graphics_context->device->CreateBuffer(&index_buffer_desc, &index_buffer_data, &mesh.index_buffer);
 		if (FAILED(hr)) {
+			// Cleanup.
+			mesh.vertex_buffer->Release();
+
 			PRINT_DEBUG("Failed to create index buffer.");
 			return Mesh{};
 		}
@@ -740,6 +772,9 @@ ByteAddressBuffer graphics::get_byte_address_buffer(int size)
 
 	hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.buffer->Release();
+		
 		PRINT_DEBUG("Failed to create unordered access view.");
 		return ByteAddressBuffer{};
 	}
@@ -775,6 +810,9 @@ StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_ele
 
 	hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
 	if (FAILED(hr)) {
+		// Cleanup.
+		buffer.buffer->Release();
+
 		PRINT_DEBUG("Failed to create unordered access view.");
 		return StructuredBuffer{};
 	}
@@ -871,7 +909,6 @@ VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, Vertex
 
 VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader_size, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count)
 {
-	memory::push_temp_state();
 
 	VertexShader shader = {};
 	HRESULT hr = graphics_context->device->CreateVertexShader(shader_byte_code, shader_size, NULL, &shader.vertex_shader);
@@ -880,6 +917,7 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 		return VertexShader{};
 	}
 
+	memory::push_temp_state();
 	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = memory::alloc_temp<D3D11_INPUT_ELEMENT_DESC>(vertex_input_count);
 	for (uint32_t i = 0; i < vertex_input_count; ++i)
 	{
@@ -891,6 +929,10 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 
 	hr = graphics_context->device->CreateInputLayout(input_layout_desc, vertex_input_count, shader_byte_code, shader_size, &shader.input_layout);
 	if (FAILED(hr)) {
+		// Cleanup.
+		shader.vertex_shader->Release();
+		memory::pop_temp_state();
+
 		PRINT_DEBUG("Failed to create input layout.");
 		return VertexShader{};
 	}
@@ -1282,14 +1324,13 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 
 VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length)
 {
-	memory::push_temp_state();
-
 	// Compile shader
     CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
 	if(!graphics::is_ready(&vertex_shader_compiled)) {
 		return VertexShader{};
 	}
 
+	memory::push_temp_state();
 	// Get VertexInpuDescs
     uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
 	VertexInputDesc *vertex_input_descs = memory::alloc_temp<VertexInputDesc>(vertex_input_count);

@@ -7,7 +7,7 @@ DOING
 TODO
 ====================
 - headers only
-- graphics.cpp - when exiting cause of error, release allocated resources
+- graphics.cpp - init - when minor objects failed to create, should we continue? should we deallocate and quit?
 - resources.cpp - better error handling
 - retrospectively update apps - Physarum/Boids/Turing etc.
 - remove less useful libs - logging/array?
@@ -18,6 +18,7 @@ TODO
 DONE
 ====================
 08/05/2019
+- graphics.cpp - when exiting because of error, release allocated resources
 - logging is just a bunch of macros instead of .h + .cpp
 
 20/05/2019
