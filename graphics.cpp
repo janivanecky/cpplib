@@ -598,13 +598,13 @@ D3D11_TEXTURE_ADDRESS_MODE m2m[3] =
 	D3D11_TEXTURE_ADDRESS_BORDER
 };
 
-TextureSampler graphics::get_texture_sampler(SampleMode mode)
+TextureSampler graphics::get_texture_sampler(SampleMode mode, bool bilinear_filter)
 {
 	TextureSampler sampler;
 
 	D3D11_TEXTURE_ADDRESS_MODE address_mode = m2m[mode];
 	D3D11_SAMPLER_DESC sampler_desc = {};
-	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	sampler_desc.Filter = bilinear_filter ? D3D11_FILTER_MIN_MAG_MIP_LINEAR : D3D11_FILTER_MIN_MAG_MIP_POINT;
 	sampler_desc.AddressU = address_mode;
 	sampler_desc.AddressV = address_mode;
 	sampler_desc.AddressW = address_mode;

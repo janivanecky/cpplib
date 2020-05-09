@@ -290,7 +290,7 @@ namespace graphics
 	RasterType get_rasterizer_state();
 
 	// Get TextureSampler with specific mode
-	TextureSampler get_texture_sampler(SampleMode mode = CLAMP);
+	TextureSampler get_texture_sampler(SampleMode mode = CLAMP, bool bilinear_filter = true);
 
 	// Set TextureSampler to specific slot
 	void set_texture_sampler(TextureSampler *sampler, uint32_t slot);
