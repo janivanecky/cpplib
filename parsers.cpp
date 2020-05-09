@@ -3,9 +3,9 @@
 #include "memory.h"
 #include <assert.h>
 
-#ifdef CPPLIB_DEBUG_PRINTS
+#ifdef DEBUG
 #include "logging.h"
-#define PRINT_DEBUG(message, ...) logging::print_error(message, ##__VA_ARGS__)
+#define PRINT_DEBUG(message, ...) log_error(message, ##__VA_ARGS__)
 #else
 #define PRINT_DEBUG(message, ...)
 #endif

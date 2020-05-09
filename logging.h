@@ -1,18 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <stdio.h>
 
-#define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-
-#define print_error(format, ...) print_error_with_location(format, __FILENAME__, __LINE__, __VA_ARGS__)
-
-namespace logging
-{
-	// General purpose print
-	void print(char *format, ...);
-
-	// Prints error message along with filename and line number.
-	// Example:
-	// "ERROR in file %FILENAME on line %LINE_NUMBER: "
-	// %ERROR_MESSAGE
-	void print_error_with_location(char *format, char *filename, uint32_t line, ...);
-}
+#define log_print(s, ...) {printf(s, __VA_ARGS__); printf("\n");}
+#define log_error(s, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(s, __VA_ARGS__); printf("\n");}
