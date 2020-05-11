@@ -8,15 +8,15 @@ TODO
 ====================
 - headers only
 - graphics.cpp - init - when minor objects failed to create, should we continue? should we deallocate and quit?
-- resources.cpp - better error handling
-- retrospectively update apps - Physarum/Boids/Turing etc.
-- remove less useful libs - logging/array?
 - move "exotic" modules to separate folder
 - fix brace scopes format
 
 ====================
 DONE
 ====================
+10/05/2019
+- add graphics::clear_texture
+
 08/05/2019
 - graphics.cpp - when exiting because of error, release allocated resources
 - logging is just a bunch of macros instead of .h + .cpp

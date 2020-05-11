@@ -243,6 +243,12 @@ namespace graphics
 	//  - pixel_byte_count: number of bytes per pixel. Used to compute memory pitch.
 	Texture2D get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4, bool staging=false);
 
+	// Clear texture with uint values.
+	void clear_texture(Texture2D *texture, uint32_t r = 0, uint32_t g = 0, uint32_t b = 0, uint32_t a = 0);
+
+	// Clear texture with float values. Only valid for textures with float format.
+	void clear_texture(Texture2D *texture, float r = 0, float g = 0, float b = 0, float a = 0);
+
 	// Set RenderTarget as a texture accessible from shaders
 	void set_texture(RenderTarget *buffer, uint32_t slot);
 

@@ -487,6 +487,16 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 	return texture;
 }
 
+void graphics::clear_texture(Texture2D *texture, uint32_t r, uint32_t g, uint32_t b, uint32_t a) {
+	uint32_t clear_tex[4] = {r, g, b, a};
+    graphics_context->context->ClearUnorderedAccessViewUint(texture->ua_view, clear_tex);
+}
+
+void graphics::clear_texture(Texture2D *texture, float r, float g, float b, float a) {
+	float clear_tex[4] = {r, g, b, a};
+    graphics_context->context->ClearUnorderedAccessViewFloat(texture->ua_view, clear_tex);
+}
+
 Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count)
 {
 	Texture3D texture;
