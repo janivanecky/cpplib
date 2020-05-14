@@ -863,20 +863,32 @@ void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
 
-CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
+CompiledShader compile_shader(void *source, uint32_t source_size, char *target, char **macro_defines = NULL, uint32_t macro_defines_count = 0)
 {
 	CompiledShader compiled_shader;
+
+	memory::push_temp_state();
+	char **defines = NULL;
+	if(macro_defines) {
+		// Create NULL-terminated macro defines list.
+		defines = memory::alloc_temp<char *>(macro_defines_count + 2); // We need two additional NULL items.
+		memcpy(defines, macro_defines, sizeof(char *) * macro_defines_count);
+		defines[macro_defines_count] = NULL;
+		defines[macro_defines_count + 1] = NULL;
+	}
 
 	uint32_t flags = D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | D3DCOMPILE_OPTIMIZATION_LEVEL3;
 #ifdef DEBUG
 	flags |= D3DCOMPILE_DEBUG;
 #endif
+	
 	ID3DBlob *error_msg;
-	HRESULT hr = D3DCompile(source, source_size, NULL, NULL, NULL, "main", target, flags, NULL, &compiled_shader.blob, &error_msg);
+	HRESULT hr = D3DCompile(source, source_size, NULL, (D3D_SHADER_MACRO *)defines, NULL, "main", target, flags, NULL, &compiled_shader.blob, &error_msg);
+	memory::pop_temp_state();
 	if (FAILED(hr)) {
-		PRINT_DEBUG("Failed to compile shader!");
+		log_error("Failed to compile shader!");
 		if (error_msg) {
-			PRINT_DEBUG((char *)error_msg->GetBufferPointer());
+			log_print((char *)error_msg->GetBufferPointer());
 			error_msg->Release();
 		}
 		return CompiledShader{};
@@ -885,27 +897,27 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target)
 	return compiled_shader;
 }
 
-CompiledShader graphics::compile_vertex_shader(void *source, uint32_t source_size)
+CompiledShader graphics::compile_vertex_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader vertex_shader = compile_shader(source, source_size, "vs_5_0");
+	CompiledShader vertex_shader = compile_shader(source, source_size, "vs_5_0", macro_defines, macro_defines_count);
 	return vertex_shader;
 }
 
-CompiledShader graphics::compile_pixel_shader(void *source, uint32_t source_size)
+CompiledShader graphics::compile_pixel_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader pixel_shader = compile_shader(source, source_size, "ps_5_0");
+	CompiledShader pixel_shader = compile_shader(source, source_size, "ps_5_0", macro_defines, macro_defines_count);
 	return pixel_shader;
 }
 
-CompiledShader graphics::compile_geometry_shader(void *source, uint32_t source_size)
+CompiledShader graphics::compile_geometry_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader geometry_shader = compile_shader(source, source_size, "gs_5_0");
+	CompiledShader geometry_shader = compile_shader(source, source_size, "gs_5_0", macro_defines, macro_defines_count);
 	return geometry_shader;
 }
 
-CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_size)
+CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader compute_shader = compile_shader(source, source_size, "cs_5_0");
+	CompiledShader compute_shader = compile_shader(source, source_size, "cs_5_0", macro_defines, macro_defines_count);
 	return compute_shader;
 }
 
@@ -1332,10 +1344,10 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 	return vertex_input_count;
 }
 
-VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length)
+VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
 {
 	// Compile shader
-    CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length);
+    CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&vertex_shader_compiled)) {
 		return VertexShader{};
 	}
@@ -1355,9 +1367,9 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 }
 
 
-PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length)
+PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length);
+	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&pixel_shader_compiled)) {
 		return PixelShader{};
 	}
@@ -1368,9 +1380,9 @@ PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_lengt
 	return pixel_shader;
 }
 
-ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length)
+ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
 {
-	CompiledShader compute_shader_compiled = graphics::compile_compute_shader(code, code_length);
+	CompiledShader compute_shader_compiled = graphics::compile_compute_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&compute_shader_compiled)) {
 		return ComputeShader{};
 	}

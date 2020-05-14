@@ -336,16 +336,16 @@ namespace graphics
 	void set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot);
 
 	// Compile a vertex shader from a source code
-	CompiledShader compile_vertex_shader(void *source, uint32_t source_size);
+	CompiledShader compile_vertex_shader(void *source, uint32_t source_size, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 	
 	// Compile a pixel shader from a source code
-	CompiledShader compile_pixel_shader(void *source, uint32_t source_size);
+	CompiledShader compile_pixel_shader(void *source, uint32_t source_size, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 	
 	// Compile a geometry shader from a source code
-	CompiledShader compile_geometry_shader(void *source, uint32_t source_size);
+	CompiledShader compile_geometry_shader(void *source, uint32_t source_size, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 
 	// Compile a compute shader from a source code
-	CompiledShader compile_compute_shader(void *source, uint32_t source_size);
+	CompiledShader compile_compute_shader(void *source, uint32_t source_size, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 
 	// Get VertexShader from a CompiledShader and number of VertexInputDescs
 	VertexShader get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count);
@@ -444,13 +444,13 @@ namespace graphics
 	int32_t get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc *vertex_input_descs);
 
 	// Helper functions that return VertexShader directly from a vertex shader code
-	VertexShader get_vertex_shader_from_code(char *code, uint32_t code_length);
+	VertexShader get_vertex_shader_from_code(char *code, uint32_t code_length, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 	
 	// Helper functions that return PixelShader directly from a pixel shader code
-	PixelShader get_pixel_shader_from_code(char *code, uint32_t code_length);
+	PixelShader get_pixel_shader_from_code(char *code, uint32_t code_length, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 
 	// Helper functions that return ComputeShader directly from a compute shader code
-	ComputeShader get_compute_shader_from_code(char *code, uint32_t code_length);
+	ComputeShader get_compute_shader_from_code(char *code, uint32_t code_length, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 
 	// Helper function to get quad Mesh
 	Mesh get_quad_mesh();
