@@ -671,6 +671,10 @@ Font *ui::get_font()
     return &font_ui;
 }
 
+void ui::set_background_opacity(float opacity) {
+    color_background.w = opacity;
+}
+
 
 void ui::release()
 {
