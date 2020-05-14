@@ -63,13 +63,13 @@ namespace stack
         // Cannot pop if no items in stack
         if(stack->top == 0){
             return StackAllocatorState();
-        } 
-        return stack->data[stack->top--];
+        }
+        return stack->data[--stack->top];
     }
 }
 
-static StackAllocator allocator_temp = memory::get_stack_allocator(MEGABYTES(10));
-static Stack temp_state_stack = stack::get(10);
+StackAllocator allocator_temp = memory::get_stack_allocator(MEGABYTES(10));
+Stack temp_state_stack = stack::get(10);
 
 StackAllocator memory::get_stack_allocator(uint32_t size)
 {
