@@ -139,7 +139,7 @@ struct TextItem
 {
     Vector4 color;
     Vector2 pos;
-    char text[20];
+    char text[40];
     Vector2 origin = Vector2(0,0);
 };
 
