@@ -1,8 +1,8 @@
 #include "graphics.h"
 #include "memory.h"
 #include <d3dcompiler.h>
-#ifdef DEBUG
 #include "logging.h"
+#ifdef DEBUG
 #define PRINT_DEBUG(message, ...) log_error(message, __VA_ARGS__)
 #else
 #define PRINT_DEBUG(message, ...)
