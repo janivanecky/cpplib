@@ -742,6 +742,9 @@ void graphics::draw_mesh(Mesh *mesh)
 
 ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 {
+	// Make sure that size is always multiple of 16.
+	size = size % 16 == 0 ? size : (size / 16 + 1) * 16;
+
 	ConstantBuffer buffer = {};
 	buffer.size = size;
 
