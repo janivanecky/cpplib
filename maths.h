@@ -249,6 +249,12 @@ struct Vector4
 
 	}
 
+	Vector4(Vector2 v, float z, float w):
+		x(v.x), y(v.y), z(z), w(w)
+	{
+
+	}
+
 	Vector4(Vector3 v, float w):
 		x(v.x), y(v.y), z(v.z), w(w)
 	{
