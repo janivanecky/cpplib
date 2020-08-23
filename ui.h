@@ -49,3 +49,7 @@ namespace ui
     float get_screen_width();
     Font *get_font();
 }
+
+#ifdef CPPLIB_UI_IMPL
+#include "ui.cpp"
+#endif

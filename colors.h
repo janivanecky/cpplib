@@ -7,3 +7,8 @@ namespace colors {
 
     Texture2D get_palette_magma();
 }
+
+
+#ifdef CPPLIB_COLORS_IMPL
+#include "colors.cpp"
+#endif

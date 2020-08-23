@@ -28,3 +28,7 @@ namespace file_system
     // Check the last time file was written to.
     FILETIME get_last_write_time(char *file_path);
 }
+
+#ifdef CPPLIB_FILESYSTEM_IMPL
+#include "file_system.cpp"
+#endif

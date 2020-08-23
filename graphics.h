@@ -455,3 +455,7 @@ namespace graphics
 	// Helper function to get quad Mesh
 	Mesh get_quad_mesh();
 }
+
+#ifdef CPPLIB_GRAPHICS_IMPL
+#include "graphics.cpp"
+#endif

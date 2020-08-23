@@ -11,3 +11,7 @@ namespace random
 	Vector3 uniform_unit_sphere();
 	Vector3 uniform_unit_hemisphere();
 }
+
+#ifdef CPPLIB_RANDOM_IMPL
+#include "random.cpp"
+#endif

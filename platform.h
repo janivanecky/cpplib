@@ -146,3 +146,7 @@ namespace timer
 	// Return the time since the start and start measuring time from now
     float checkpoint(Timer *timer);
 }
+
+#ifdef CPPLIB_PLATFORM_IMPL
+#include "platform.cpp"
+#endif

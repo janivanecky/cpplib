@@ -53,3 +53,7 @@ namespace font
     // Release a Font object
     void release(Font *font);
 }
+
+#ifdef CPPLIB_FONT_IMPL
+#include "font.cpp"
+#endif

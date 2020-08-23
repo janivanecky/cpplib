@@ -476,3 +476,7 @@ namespace math
 	float ray_box_intersection(Vector3 ray_origin, Vector3 ray_direction, Vector3 box_position,
 							   Vector3 x_axis, Vector3 y_axis, Vector3 z_axis);
 }
+
+#ifdef CPPLIB_MATHS_IMPL
+#include "maths.cpp"
+#endif

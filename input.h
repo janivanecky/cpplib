@@ -56,3 +56,7 @@ namespace input
     // Process Event, disregards events irrelevant to input
     void register_event(Event *event);
 }
+
+#ifdef CPPLIB_INPUT_IMPL
+#include "input.cpp"
+#endif
