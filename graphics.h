@@ -128,7 +128,7 @@ struct ByteAddressBuffer
 // in vertex shader input translates to VertexInputDesc with
 // .semantic_name = "POSITION" and .format = DXGI_R32G32B32A32_FLOAT
 //
-const uint32_t MAX_SEMANTIC_NAME_LENGTH = 10;
+const uint32_t MAX_SEMANTIC_NAME_LENGTH = 40;
 struct VertexInputDesc
 {
 	char semantic_name[MAX_SEMANTIC_NAME_LENGTH];
