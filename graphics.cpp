@@ -1367,7 +1367,7 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 	graphics::get_vertex_input_desc_from_shader(code, code_length, vertex_input_descs);
 
 	// Get VertexShader object
-    VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, 2);
+    VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, vertex_input_count);
     graphics::release(&vertex_shader_compiled);
 
 	memory::pop_temp_state();
@@ -1404,18 +1404,18 @@ ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_l
 Mesh graphics::get_quad_mesh() {
 	float quad_vertices[] = {
 		-1.0f, -1.0f, 0.0f, 1.0f,
-		0.0f, 0.0f,
-		1.0f, 1.0f, 0.0f, 1.0f,
-		1.0f, 1.0f,
-		-1.0f, 1.0f, 0.0f, 1.0f,
 		0.0f, 1.0f,
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f,
+		-1.0f, 1.0f, 0.0f, 1.0f,
+		0.0f, 0.0f,
 
 		-1.0f, -1.0f, 0.0f, 1.0f,
-		0.0f, 0.0f,
+		0.0f, 1.0f,
 		1.0f, -1.0f, 0.0f, 1.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f, 0.0f, 1.0f,
 		1.0f, 1.0f,
+		1.0f, 1.0f, 0.0f, 1.0f,
+		1.0f, 0.0f,
 	};
 
 	const uint32_t quad_vertices_stride = sizeof(float) * 6;
