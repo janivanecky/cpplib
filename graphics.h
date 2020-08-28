@@ -196,13 +196,13 @@ namespace graphics
 	RenderTarget get_render_target_window(bool srgb=true);
 
 	// Get RenderTarget with specified width, height and format
-	RenderTarget get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM);
+	RenderTarget get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t num_samples = 1);
 
 	// Clear RenderTarget to a specified color
 	void clear_render_target(RenderTarget *buffer, float r, float g, float b, float a);
 
 	// Get Depth Buffer with specified width and height
-	DepthBuffer get_depth_buffer(uint32_t width, uint32_t height);
+	DepthBuffer get_depth_buffer(uint32_t width, uint32_t height, uint32_t num_samples = 1);
 
 	// Clear depth buffer to zeros
 	void clear_depth_buffer(DepthBuffer *buffer);

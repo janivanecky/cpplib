@@ -214,7 +214,7 @@ RenderTarget graphics::get_render_target_window(bool srgb)
 	return buffer;
 }
 
-RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format)
+RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t num_samples)
 {
 	RenderTarget buffer = {};
 
@@ -224,7 +224,7 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	texture_desc.MipLevels = 1;
 	texture_desc.ArraySize = 1;
 	texture_desc.Format = format;
-	texture_desc.SampleDesc.Count = 1;
+	texture_desc.SampleDesc.Count = num_samples;
 	texture_desc.SampleDesc.Quality = 0;
 	texture_desc.Usage = D3D11_USAGE_DEFAULT;
 	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -236,7 +236,7 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	}
 
 	D3D11_RENDER_TARGET_VIEW_DESC render_target_desc = {};
-	render_target_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	render_target_desc.ViewDimension = num_samples > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
 	render_target_desc.Format = format;
 
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
@@ -249,7 +249,7 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
-	shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shader_resource_desc.ViewDimension = num_samples > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
 	shader_resource_desc.Format = format;
 	shader_resource_desc.Texture2D.MipLevels = 1;
 	shader_resource_desc.Texture2D.MostDetailedMip = 0;
@@ -276,7 +276,7 @@ void graphics::clear_render_target(RenderTarget *buffer, float r, float g, float
 	graphics_context->context->ClearRenderTargetView(buffer->rt_view, color);
 }
 
-DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
+DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height, uint32_t num_samples)
 {
 	DepthBuffer buffer = {};
 
@@ -286,7 +286,7 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	texture_desc.MipLevels = 1;
 	texture_desc.ArraySize = 1;
 	texture_desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-	texture_desc.SampleDesc.Count = 1;
+	texture_desc.SampleDesc.Count = num_samples;
 	texture_desc.SampleDesc.Quality = 0;
 	texture_desc.Usage = D3D11_USAGE_DEFAULT;
 	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
@@ -298,7 +298,7 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	}
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC depth_stencil_desc = {};
-	depth_stencil_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depth_stencil_desc.ViewDimension = num_samples > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
 	depth_stencil_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	hr = graphics_context->device->CreateDepthStencilView(buffer.texture, &depth_stencil_desc, &buffer.ds_view);
@@ -311,7 +311,7 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height)
 	}
 
 	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
-	shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shader_resource_desc.ViewDimension = num_samples > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
 	shader_resource_desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	shader_resource_desc.Texture2D.MipLevels = 1;
 	shader_resource_desc.Texture2D.MostDetailedMip = 0;
