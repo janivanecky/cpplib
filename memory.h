@@ -53,3 +53,7 @@ namespace memory
 
     void free_temp();
 }
+
+#ifdef CPPLIB_MEMORY_IMPL
+#include "memory.cpp"
+#endif
