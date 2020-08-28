@@ -53,6 +53,9 @@ namespace input
     // Return if key with specific KeyCode is down
     bool key_down(KeyCode code);
 
+    // Populate buffer with all the characters entered since the reset was called.
+    int characters_entered(char *buffer);
+
     // Process Event, disregards events irrelevant to input
     void register_event(Event *event);
 }

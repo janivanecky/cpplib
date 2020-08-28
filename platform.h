@@ -43,6 +43,7 @@ enum EventType
 	MOUSE_LBUTTON_UP,
 	KEY_DOWN,
 	KEY_UP,
+	CHAR_ENTERED,
 	MOUSE_WHEEL,
 	EXIT
 };
@@ -69,7 +70,15 @@ enum KeyCode
 	F9,
 	F10,
 	ALT,
+	LEFT,
+	RIGHT,
+	SPACE,
 	OTHER,
+	DEL,
+	ENTER,
+	BACKSPACE,
+	HOME,
+	END
 };
 
 struct KeyPressedData

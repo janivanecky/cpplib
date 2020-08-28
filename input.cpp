@@ -11,6 +11,9 @@ float mouse_scroll_delta_ = 0.0f;
 static bool key_down_[100];
 static bool key_pressed_[100];
 
+static int characters_entered_count = 0;
+static char character_buffer[100];
+
 bool ui_active_ = false;
 
 ////////////////////////////
@@ -23,6 +26,7 @@ void input::reset()
     mouse_delta_position_ = Vector2(0.0f, 0.0f);
     mouse_scroll_delta_ = 0.0f;
     memset(key_pressed_, 0, sizeof(bool) * 100);
+    characters_entered_count = 0;
 }   
 
 bool input::mouse_left_button_pressed()
@@ -97,6 +101,13 @@ bool input::key_down(KeyCode code)
     return key_down_[code];
 }
 
+int input::characters_entered(char *buffer) {
+    if(buffer) {
+        memcpy(buffer, character_buffer, characters_entered_count);
+    }
+    return characters_entered_count;
+}
+
 void input::register_event(Event *event)
 {
     switch(event->type)
@@ -135,6 +146,11 @@ void input::register_event(Event *event)
             input::set_key_up(key_data->code);
         }
         break;
+        case CHAR_ENTERED:
+        {
+            // TODO: Maybe provide API for this
+            character_buffer[characters_entered_count++] = event->data[0];
+        }
     }
     
 }

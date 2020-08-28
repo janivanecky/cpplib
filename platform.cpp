@@ -59,9 +59,41 @@ bool platform::get_event(Event *event)
 			else if(raw_kb.VKey == VK_F9) data->code = KeyCode::F9;
 			else if(raw_kb.VKey == VK_F10) data->code = KeyCode::F10;
 			else if(raw_kb.VKey == VK_MENU) data->code = KeyCode::ALT;
+			else if(raw_kb.VKey == VK_SPACE) data->code = KeyCode::SPACE;
+			else if(raw_kb.VKey == VK_LEFT) data->code = KeyCode::LEFT;
+			else if(raw_kb.VKey == VK_RIGHT) data->code = KeyCode::RIGHT;
+			else if(raw_kb.VKey == VK_DELETE) data->code = KeyCode::DEL;
+			else if(raw_kb.VKey == VK_BACK) data->code = KeyCode::BACKSPACE;
+			else if(raw_kb.VKey == VK_HOME) data->code = KeyCode::HOME;
+			else if(raw_kb.VKey == VK_END) data->code = KeyCode::END;
+			else if(raw_kb.VKey == VK_RETURN) data->code = KeyCode::ENTER;
 			else data->code = KeyCode::OTHER;
 		}
 	} break;
+	case WM_CHAR:
+		switch (message.wParam) {
+			case 0x08:
+				// Process a backspace.
+				break;
+			case 0x0A:
+				// Process a linefeed.
+				break;
+			case 0x1B:
+				// Process an escape.
+				break;
+			case 0x09:
+				// Process a tab.
+				break;
+			case 0x0D:
+				// Process a carriage return.
+				break;
+			default:
+				// Process displayable characters.
+				event->type = CHAR_ENTERED;
+				event->data[0] = message.wParam;
+				break;
+		}
+	break;
 	case WM_QUIT:
 	{
 		event->type = EXIT;
@@ -138,7 +170,8 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;
 		device.usUsage = 0x06;
-		device.dwFlags = RIDEV_NOLEGACY;        // do not generate legacy messages such as WM_KEYDOWN
+		// NOTE: This used to have value RIDEV_NOLEGACY, but that prevents WM_CHAR messages from firing.
+		device.dwFlags = 0;
 		device.hwndTarget = window.window_handle;
 		RegisterRawInputDevices(&device, 1, sizeof(device));
 	}
