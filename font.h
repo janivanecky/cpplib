@@ -46,6 +46,7 @@ namespace font
     
     // Return width of a string
     float get_string_width(char *string, Font *font);
+    float get_string_width(char *string, int string_length, Font *font);
 
     // Get kerning between two letters of a Font
     float get_kerning(Font *font, char c1, char c2);

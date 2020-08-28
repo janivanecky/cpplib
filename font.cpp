@@ -141,6 +141,27 @@ float font::get_string_width(char *string, Font *font)
     return width;
 }
 
+float font::get_string_width(char *string, int string_length, Font *font) {
+    float width = 0;
+    for(int i = 0; i < string_length; ++i)
+    {
+        // Get a glyph for the current character
+        char c = *string;
+        Glyph glyph = font->glyphs[c - 32];
+
+        // Increment width by character's advance. This should be more precise than taking it's bitmap's width.
+        width += glyph.advance;
+
+        // Take kerning into consideration
+        if (*(string + 1)) width += font::get_kerning(font, c, *(string + 1));
+
+        // Next letter
+        string++;
+    }
+
+    return width;
+}
+
 float font::get_row_height(Font *font)
 {
     return font->row_height;
