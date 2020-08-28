@@ -21,6 +21,9 @@ namespace ui
 
     void draw_rect(float x, float y, float width, float height, Vector4 color);
     void draw_rect(Vector2 pos, float width, float height, Vector4 color);
+
+    void draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color);
+    void draw_line(Vector2 *points, int point_count, float width, Vector4 color);
     
     Panel start_panel(char *name, Vector2 pos, float width);
     Panel start_panel(char *name, float x, float y, float width);
@@ -33,6 +36,9 @@ namespace ui
     bool add_toggle(Panel *panel, char *label, int *state);
     bool add_slider(Panel *panel, char *label, float *pos, float min, float max);
     bool add_slider(Panel *panel, char *label, int *pos, int min, int max);
+    bool add_combobox(Panel *panel, char *label, char **values, int value_count, int *selected_value, bool *expanded);
+    bool add_function_plot(Panel *panel, char *label, float *x, float *y, int point_count, float *select_x, float select_y);
+    bool add_textbox(Panel *panel, char *label, char *text, int buffer_size, int *cursor_position);
 
     void release();
 
