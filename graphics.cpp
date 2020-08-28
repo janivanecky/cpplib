@@ -565,27 +565,32 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 void graphics::set_texture(RenderTarget *buffer, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
+	graphics_context->context->CSSetShaderResources(slot, 1, &buffer->sr_view);
 }
 
 void graphics::set_texture(DepthBuffer *buffer, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
+	graphics_context->context->CSSetShaderResources(slot, 1, &buffer->sr_view);
 }
 
 void graphics::set_texture(Texture2D *texture, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
+	graphics_context->context->CSSetShaderResources(slot, 1, &texture->sr_view);
 }
 
 void graphics::set_texture(Texture3D *texture, uint32_t slot)
 {
 	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
+	graphics_context->context->CSSetShaderResources(slot, 1, &texture->sr_view);
 }
 
 void graphics::unset_texture(uint32_t slot)
 {
 	ID3D11ShaderResourceView *null[] = { NULL };
 	graphics_context->context->PSSetShaderResources(slot, 1, null);
+	graphics_context->context->CSSetShaderResources(slot, 1, null);
 }
 
 void graphics::set_texture_compute(Texture2D *texture, uint32_t slot)
