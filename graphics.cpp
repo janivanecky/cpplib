@@ -1109,7 +1109,7 @@ bool graphics::is_ready(DepthBuffer *depth_buffer)
 
 bool graphics::is_ready(Mesh *mesh)
 {
-	return mesh->vertex_buffer && mesh->index_buffer;
+	return mesh->vertex_buffer && (!mesh->index_count || mesh->index_buffer);
 }
 
 bool graphics::is_ready(ConstantBuffer *buffer)
