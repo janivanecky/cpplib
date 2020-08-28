@@ -1266,12 +1266,12 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 
 	char *types[] =
 	{
-		"float4", "float2", "float3", "int4"
+		"float4", "float2", "float3", "int4", "uint"
 	};
 
 	DXGI_FORMAT formats[]
 	{
-		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT
+		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT, DXGI_FORMAT_R32_UINT
 	};
 
 	uint32_t i = 0;
