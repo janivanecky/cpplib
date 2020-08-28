@@ -273,6 +273,18 @@ struct Vector4
 		return result;
 	}
 
+	Vector4 operator+(Vector4 v)
+	{
+		Vector4 result;
+
+		result.x = this->x + v.x;
+		result.y = this->y + v.y;
+		result.z = this->z + v.z;
+		result.w = this->w + v.w;
+
+		return result;
+	}
+
 	Vector4 operator-(Vector4 v)
 	{
 		Vector4 result;
