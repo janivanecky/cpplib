@@ -1329,7 +1329,7 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 				if(semantic_name_length >= MAX_SEMANTIC_NAME_LENGTH) {
 					return -1;
 				}
-				if (vertex_input_descs)
+				if (vertex_input_descs && strncmp(c - semantic_name_length, "SV_InstanceID", semantic_name_length) != 0)
 				{
 					vertex_input_descs[vertex_input_count].format = formats[type];
 					memcpy(vertex_input_descs[vertex_input_count].semantic_name, c - semantic_name_length, semantic_name_length);
