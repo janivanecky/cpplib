@@ -1157,16 +1157,17 @@ bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int po
     array::add(&text_items, select_text);
 
     Vector4 grid_color = color_label * color_modifier * 0.5f;
+    float grid_thickness = 2.0f;
     for(int i = 0; i < 5; ++i) {
         Vector2 grid_pos = plot_box_pos + Vector2(0, plot_box_size.y / 4.0f * i);
-        Vector2 grid_size = Vector2(plot_box_size.x, 2.0f);
+        Vector2 grid_size = Vector2(plot_box_size.x, grid_thickness);
         RectItem grid = { grid_color, grid_pos, grid_size };
         array::add(&rect_items, grid);
     }
 
     for(int i = 0; i < 8; ++i) {
-        Vector2 grid_pos = plot_box_pos + Vector2(plot_box_size.x / 7.0f * i, 0);
-        Vector2 grid_size = Vector2(2.0f, plot_box_size.y);
+        Vector2 grid_pos = plot_box_pos + Vector2((plot_box_size.x + grid_thickness) / 7.0f * i - grid_thickness, 0);
+        Vector2 grid_size = Vector2(grid_thickness, plot_box_size.y);
         RectItem grid = { grid_color, grid_pos, grid_size };
         array::add(&rect_items, grid);
     }
