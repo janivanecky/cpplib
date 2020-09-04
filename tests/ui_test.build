@@ -1,0 +1,6 @@
+include_dir(../)
+include_dir(../third_party/freetype/include/)
+build_exe(ui_test.exe, ui_test.cpp)
+libs(kernel32.lib user32.lib D3D11.lib d3dcompiler.lib DXGI.lib ../third_party/freetype/win64/freetype271MT.lib)
+copy(../fonts/*, $BIN)
+copy(../third_party/freetype/win64/freetype271MT.dll, $BIN)

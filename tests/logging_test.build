@@ -1,0 +1,2 @@
+include_dir(../)
+build_exe(logging.exe, logging_test.cpp)
