@@ -128,7 +128,7 @@ float math::rad2deg(float rad)
 Vector3 math::lerp(Vector3 v1, Vector3 v2, float x)
 {
 	Vector3 result = {};
-	
+
 	result.x = v1.x * (1 - x) + v2.x * x;
 	result.y = v1.y * (1 - x) + v2.y * x;
 	result.z = v1.z * (1 - x) + v2.z * x;
@@ -139,7 +139,7 @@ Vector3 math::lerp(Vector3 v1, Vector3 v2, float x)
 Vector4 math::lerp(Vector4 v1, Vector4 v2, float x)
 {
 	Vector4 result = {};
-	
+
 	result.x = v1.x * (1 - x) + v2.x * x;
 	result.y = v1.y * (1 - x) + v2.y * x;
 	result.z = v1.z * (1 - x) + v2.z * x;
@@ -147,7 +147,7 @@ Vector4 math::lerp(Vector4 v1, Vector4 v2, float x)
 
 	return result;
 }
-	
+
 Vector4 math::nlerp(Vector4 v1, Vector4 v2, float x)
 {
 	Vector4 r = math::lerp(v1, v2, x);
@@ -317,7 +317,7 @@ Matrix4x4 math::get_rotation(float angle, Vector3 axis)
 Matrix4x4 math::get_rotation(Quaternion q)
 {
 	q = math::normalize(q);
-	
+
 	Matrix4x4 result = {};
 	result[0] = 1 - 2 * q.y * q.y - 2 * q.z * q.z;
 	result[1] = 2 * q.x * q.y + 2 * q.w * q.z;
@@ -412,7 +412,7 @@ Matrix4x4 math::transpose(Matrix4x4 m)
 	result[14] = m[11];
 	result[15] = m[15];
 
-	return result;	
+	return result;
 }
 
 Matrix4x4 math::invert(Matrix4x4 m)

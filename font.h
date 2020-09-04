@@ -43,7 +43,7 @@ namespace font
 
     // Return height of a single row for a Font
     float get_row_height(Font *font);
-    
+
     // Return width of a string
     float get_string_width(char *string, Font *font);
     float get_string_width(char *string, int string_length, Font *font);

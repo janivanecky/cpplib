@@ -15,7 +15,7 @@ struct Panel
 namespace ui
 {
     void init(float screen_width, float screen_height);
-    
+
     void draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
     void draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin = Vector2(0,0));
 
@@ -24,14 +24,14 @@ namespace ui
 
     void draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color);
     void draw_line(Vector2 *points, int point_count, float width, Vector4 color);
-    
+
     Panel start_panel(char *name, Vector2 pos, float width);
     Panel start_panel(char *name, float x, float y, float width);
     void end_panel(Panel *panel);
     Vector4 get_panel_rect(Panel *panel);
 
     void end();
-    
+
     bool add_toggle(Panel *panel, char *label, bool *state);
     bool add_toggle(Panel *panel, char *label, int *state);
     bool add_slider(Panel *panel, char *label, float *pos, float min, float max);
