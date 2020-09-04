@@ -1294,7 +1294,7 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
     int first_char_shown = math::max(0, *cursor_position - pre_cursor_max_chars);
     int last_char_shown = math::min(strlen(text) + 1, first_char_shown + max_chars_shown);
     if (last_char_shown == strlen(text) + 1) {
-        first_char_shown = strlen(text) + 1 - max_chars_shown;
+        first_char_shown = math::max(0.0f, int(strlen(text)) + 1 - max_chars_shown);
     }
 
     TextItem textbox_label = {};
@@ -1328,10 +1328,12 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
 
     TextItem textbox_text_cursor = {};
     textbox_text_cursor.color = color_label * color_modifier;
-    textbox_text_cursor.color.x = 1.0f - textbox_text_cursor.color.x;
-    textbox_text_cursor.color.y = 1.0f - textbox_text_cursor.color.y;
-    textbox_text_cursor.color.z = 1.0f - textbox_text_cursor.color.z;
-    textbox_text_cursor.color.w = 1.0f - textbox_text_cursor.color.z;
+    if(is_active(textfield_id)) {
+        textbox_text_cursor.color.x = 1.0f - textbox_text_cursor.color.x;
+        textbox_text_cursor.color.y = 1.0f - textbox_text_cursor.color.y;
+        textbox_text_cursor.color.z = 1.0f - textbox_text_cursor.color.z;
+        textbox_text_cursor.color.w = 1.0f - textbox_text_cursor.color.z;
+    }
     textbox_text_cursor.pos = text_pos + Vector2(font::get_string_width(text + first_char_shown, cursor_loc - first_char_shown, &font_ui), 0.0f);
     memcpy(textbox_text_cursor.text, text + cursor_loc, 1);
     textbox_text_cursor.text[1] = 0;
@@ -1348,10 +1350,12 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
     RectItem max_bound = { bounds_color, max_bound_pos, max_bound_size };
     array::add(&rect_items, max_bound);
 
-    Vector2 cursor_pos = textfield_pos + Vector2(font::get_string_width(text + first_char_shown, cursor_loc - first_char_shown, &font_ui), 0.0f);
-    Vector2 cursor_size = Vector2(font::get_string_width("A", 1, &font_ui), height);
-    RectItem cursor = { color_label * color_modifier, cursor_pos, cursor_size };
-    array::add(&rect_items, cursor);
+    if(is_active(textfield_id)) {
+        Vector2 cursor_pos = textfield_pos + Vector2(font::get_string_width(text + first_char_shown, cursor_loc - first_char_shown, &font_ui), 0.0f);
+        Vector2 cursor_size = Vector2(font::get_string_width("A", 1, &font_ui), height);
+        RectItem cursor = { color_label * color_modifier, cursor_pos, cursor_size };
+        array::add(&rect_items, cursor);
+    }
 
     panel->item_pos.y += height + inner_padding;
     return false;
