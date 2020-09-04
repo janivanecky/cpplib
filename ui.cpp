@@ -1290,12 +1290,12 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
         // Ctrl handling
     }
 
-    int max_chars_shown = textfield_size.x / font::get_string_width("A", &font_ui);
+    int max_chars_shown = int(textfield_size.x / font::get_string_width("A", &font_ui));
     int pre_cursor_max_chars = max_chars_shown / 2;
-    int first_char_shown = math::max(0, *cursor_position - pre_cursor_max_chars);
-    int last_char_shown = math::min(strlen(text) + 1, first_char_shown + max_chars_shown);
+    int first_char_shown = int(math::max(0.0f, float(*cursor_position - pre_cursor_max_chars)));
+    int last_char_shown = int(math::min(strlen(text) + 1.0f, float(first_char_shown + max_chars_shown)));
     if (last_char_shown == strlen(text) + 1) {
-        first_char_shown = math::max(0.0f, int(strlen(text)) + 1 - max_chars_shown);
+        first_char_shown = int(math::max(0.0f, float(int(strlen(text)) + 1 - max_chars_shown)));
     }
 
     TextItem textbox_label = {};

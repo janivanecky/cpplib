@@ -28,18 +28,18 @@ bool platform::get_event(Event *event)
 	case WM_INPUT:
 	{
 		KeyPressedData *data = (KeyPressedData *)event->data;
-		
+
 		char buffer[sizeof(RAWINPUT)] = {};
 		UINT size = sizeof(RAWINPUT);
 		GetRawInputData(reinterpret_cast<HRAWINPUT>(message.lParam), RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER));
-		
+
 		// extract keyboard raw input data
 		RAWINPUT* raw = reinterpret_cast< RAWINPUT*>(buffer);
 		if (raw->header.dwType == RIM_TYPEKEYBOARD)
 		{
 			const RAWKEYBOARD& raw_kb = raw->data.keyboard;
-			if (raw_kb.Flags & RI_KEY_BREAK) 
-			{ 
+			if (raw_kb.Flags & RI_KEY_BREAK)
+			{
 				event->type = KEY_UP;
 			}
 			else
@@ -90,7 +90,7 @@ bool platform::get_event(Event *event)
 			default:
 				// Process displayable characters.
 				event->type = CHAR_ENTERED;
-				event->data[0] = message.wParam;
+				event->data[0] = (char)message.wParam;
 				break;
 		}
 	break;
@@ -104,7 +104,7 @@ bool platform::get_event(Event *event)
 		// See below in WM_LBUTTONDOWN for what this does.
 		HWND window = GetActiveWindow();
 		ReleaseCapture();
-		
+
 		event->type = MOUSE_LBUTTON_UP;
 	} break;
 	case WM_LBUTTONDOWN:
@@ -133,14 +133,14 @@ bool platform::get_event(Event *event)
 		TranslateMessage(&message);
 		DispatchMessageA(&message);
 	}
-	
+
 	return true;
 }
 
 Window platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height)
 {
 	HINSTANCE program_instance = GetModuleHandle(0);
-	
+
 	WNDCLASSEXA window_class = {};
 	window_class.cbSize = sizeof(WNDCLASSEXA);
 	window_class.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
@@ -155,15 +155,15 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		//SetProcessDPIAware();
 		window.window_width = window_width;
 		window.window_height = window_height;
-		
+
 		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 		window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
 		AdjustWindowRect(&window_rect, window_flags, FALSE);
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
-		
-		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags, 
+
+		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags,
 //											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
 											 0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
 
@@ -202,7 +202,7 @@ SYSTEMTIME platform::get_datetime() {
 Ticks platform::get_ticks()
 {
 	LARGE_INTEGER ticks;
-	
+
 	QueryPerformanceCounter(&ticks);
 
 	return (Ticks)ticks;
@@ -247,6 +247,6 @@ float timer::checkpoint(Timer *timer)
 	Ticks current = platform::get_ticks();
 	float dt = platform::get_dt_from_tick_difference(timer->start, current, timer->frequency);
 	timer->start = current;
-	
+
 	return dt;
 }
