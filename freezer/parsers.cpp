@@ -4,8 +4,8 @@
 #include <assert.h>
 
 #ifdef DEBUG
-#include "logging.h"
-#define PRINT_DEBUG(message, ...) log_error(message, ##__VA_ARGS__)
+#include<stdio.h>
+#define PRINT_DEBUG(message, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(message, __VA_ARGS__); printf("\n");}
 #else
 #define PRINT_DEBUG(message, ...)
 #endif
@@ -154,7 +154,7 @@ MeshData parsers::get_mesh_from_obj(File file, StackAllocator *allocator)
 			else if (*ptr == 'f')
 			{
 				index_count += 3;
-			} 
+			}
 			state = GO_TO_NEXT_LINE;
 		} break;
 		case GO_TO_NEXT_LINE:

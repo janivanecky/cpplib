@@ -2,8 +2,8 @@
 #include <windows.h>
 
 #ifdef DEBUG
-#include "logging.h"
-#define PRINT_DEBUG(message, ...) log_error(message, ##__VA_ARGS__)
+#include<stdio.h>
+#define PRINT_DEBUG(message, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(message, __VA_ARGS__); printf("\n");}
 #else
 #define PRINT_DEBUG(message, ...)
 #endif
@@ -19,7 +19,7 @@ File file_system::read_file(char *path)
     {
         PRINT_DEBUG("Unable to open read handle to file %s.", path);
         return file;
-    } 
+    }
 
     // Get file attributes, these are necessary to know how much data to allocate for reading
     WIN32_FILE_ATTRIBUTE_DATA file_attributes;
@@ -29,7 +29,7 @@ File file_system::read_file(char *path)
         CloseHandle(file_handle);
         return File{};
     }
-    
+
     // Allocate memory for reading the file contents
     uint32_t file_size = file_attributes.nFileSizeLow;
     HANDLE heap = GetProcessHeap();
@@ -82,7 +82,7 @@ uint32_t file_system::write_file(char *path, void *data, uint32_t size)
         PRINT_DEBUG("Unable to write to file %s.", path);
         return 0;
     }
-    
+
     // Wrote sucessfully, close the handle
     CloseHandle(file_handle);
     return bytes_written;

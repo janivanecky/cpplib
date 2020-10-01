@@ -1,9 +1,9 @@
 #include "graphics.h"
 #include "memory.h"
 #include <d3dcompiler.h>
-#include "logging.h"
 #ifdef DEBUG
-#define PRINT_DEBUG(message, ...) log_error(message, __VA_ARGS__)
+#include<stdio.h>
+#define PRINT_DEBUG(message, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(message, __VA_ARGS__); printf("\n");}
 #else
 #define PRINT_DEBUG(message, ...)
 #endif
@@ -55,8 +55,8 @@ bool graphics::init(LUID *adapter_luid)
 		}
 
 		IDXGIAdapter *temp_adapter = NULL;
-		for (uint32_t i = 0; idxgi_factory->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i) 
-		{ 
+		for (uint32_t i = 0; idxgi_factory->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i)
+		{
 			DXGI_ADAPTER_DESC temp_adapter_desc;
 			temp_adapter->GetDesc(&temp_adapter_desc);
 			if(memcmp(&temp_adapter_desc.AdapterLuid, adapter_luid, sizeof(LUID)) == 0)
@@ -75,7 +75,7 @@ bool graphics::init(LUID *adapter_luid)
 
 	auto driver_type = adapter ? D3D_DRIVER_TYPE_UNKNOWN : D3D_DRIVER_TYPE_HARDWARE;
 	HRESULT hr = D3D11CreateDevice(adapter, driver_type, NULL, flags, &feature_level, 1, D3D11_SDK_VERSION, &graphics_context->device, &supported_feature_level, &graphics_context->context);
-	
+
 	// Release adapter handle if not NULL
 	if (adapter) {
 		adapter->Release();
@@ -111,7 +111,7 @@ bool graphics::init(LUID *adapter_luid)
 		PRINT_DEBUG("Failed to create blend state.");
 		return false;
 	}
-	
+
 	current_blend_type = BlendType::OPAQUE;
 
 	// Initialize rasterizer states
@@ -460,7 +460,7 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 		if (FAILED(hr)) {
 			// Cleanup.
 			texture.texture->Release();
-			
+
 			PRINT_DEBUG("Failed to create shader resource view.");
 			return Texture2D{};
 		}
@@ -504,7 +504,7 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	D3D11_TEXTURE3D_DESC texture_desc = {};
 	texture_desc.Width = width;
 	texture_desc.Height = height;
-	texture_desc.Depth = depth;	
+	texture_desc.Depth = depth;
 	texture_desc.MipLevels = 1;
 	texture_desc.Format = format;
 	// TODO: Maybe not the best Usage flag.
@@ -663,7 +663,7 @@ TextureSampler graphics::get_texture_sampler(SampleMode mode, bool bilinear_filt
 	return sampler;
 }
 
-void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot) 
+void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot)
 {
 	graphics_context->context->PSSetSamplers(slot, 1, &sampler->sampler);
 }
@@ -672,7 +672,7 @@ void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot)
 Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology)
 {
 	Mesh mesh = {};
-	
+
 	D3D11_BUFFER_DESC vertex_buffer_desc = {};
 	vertex_buffer_desc.ByteWidth = vertex_count * vertex_stride;
 	vertex_buffer_desc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -721,7 +721,7 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 
 Mesh graphics::get_mesh(ByteAddressBuffer buffer, uint32_t vertex_count, uint32_t vertex_stride, D3D11_PRIMITIVE_TOPOLOGY topology) {
 	Mesh mesh = {};
-	
+
 	mesh.vertex_buffer = buffer.buffer;
 	mesh.vertex_stride = vertex_stride;
 	mesh.vertex_offset = 0;
@@ -792,7 +792,7 @@ ByteAddressBuffer graphics::get_byte_address_buffer(int size)
 	if (FAILED(hr)) {
 		// Cleanup.
 		buffer.buffer->Release();
-		
+
 		PRINT_DEBUG("Failed to create unordered access view.");
 		return ByteAddressBuffer{};
 	}
@@ -809,7 +809,7 @@ StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_ele
 	constant_buffer_desc.ByteWidth = element_stride * num_elements;
 	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
 	constant_buffer_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
-	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;		
+	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	constant_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	constant_buffer_desc.StructureByteStride = element_stride;
 
@@ -889,14 +889,14 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target, 
 #ifdef DEBUG
 	flags |= D3DCOMPILE_DEBUG;
 #endif
-	
+
 	ID3DBlob *error_msg;
 	HRESULT hr = D3DCompile(source, source_size, NULL, (D3D_SHADER_MACRO *)defines, NULL, "main", target, flags, NULL, &compiled_shader.blob, &error_msg);
 	memory::pop_temp_state();
 	if (FAILED(hr)) {
-		log_error("Failed to compile shader!");
+		PRINT_DEBUG("Failed to compile shader!");
 		if (error_msg) {
-			log_print((char *)error_msg->GetBufferPointer());
+			PRINT_DEBUG((char *)error_msg->GetBufferPointer());
 			error_msg->Release();
 		}
 		return CompiledShader{};
@@ -929,7 +929,7 @@ CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_si
 	return compute_shader;
 }
 
-VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count) 
+VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count)
 {
 	VertexShader vertex_shader = graphics::get_vertex_shader(compiled_shader->blob->GetBufferPointer(),
 															 (uint32_t)compiled_shader->blob->GetBufferSize(),
@@ -993,7 +993,7 @@ PixelShader graphics::get_pixel_shader(void *shader_byte_code, uint32_t shader_s
 		PRINT_DEBUG("Failed to create pixel shader.");
 		return PixelShader{};
 	}
-	
+
 	return shader;
 }
 
@@ -1419,7 +1419,7 @@ Mesh graphics::get_quad_mesh() {
 	};
 
 	const uint32_t quad_vertices_stride = sizeof(float) * 6;
-	const uint32_t quad_vertices_count = 6;	
+	const uint32_t quad_vertices_count = 6;
 
 	Mesh mesh = graphics::get_mesh(quad_vertices, quad_vertices_count, quad_vertices_stride, NULL, 0, 0);
 	return mesh;

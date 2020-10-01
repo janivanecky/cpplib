@@ -2,8 +2,8 @@
 #include "memory.h"
 
 #ifdef DEBUG
-#include "logging.h"
-#define PRINT_DEBUG(message, ...) log_error(message, ##__VA_ARGS__)
+#include<stdio.h>
+#define PRINT_DEBUG(message, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(message, __VA_ARGS__); printf("\n");}
 #else
 #define PRINT_DEBUG(message, ...)
 #endif
@@ -24,8 +24,8 @@ bool font::init()
 Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size)
 {
     Font font = {};
-    
-    // Store temp allocator stack state    
+
+    // Store temp allocator stack state
     memory::push_temp_state();
 
     // Allocate memory for the texture
@@ -54,7 +54,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     font.top_pad = (float)(row_height - (ascender - descender));
     font.scale = 1.0f;
     font.face = face;
- 
+
     for (unsigned char c = 32; c < 128; ++c)
     {
         // Load character c
@@ -130,7 +130,7 @@ float font::get_string_width(char *string, Font *font)
 
         // Increment width by character's advance. This should be more precise than taking it's bitmap's width.
         width += glyph.advance;
-        
+
         // Take kerning into consideration
         if (*(string + 1)) width += font::get_kerning(font, c, *(string + 1));
 
