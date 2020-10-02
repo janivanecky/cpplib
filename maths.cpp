@@ -563,3 +563,52 @@ float math::ray_box_intersection(Vector3 ray_origin, Vector3 ray_direction, Vect
 {
 	return 0.0f;
 }
+
+
+// TODO: other source of randomness than rand()
+#include <cstdlib>
+float math::random_uniform(float low, float high)
+{
+	float normalized = (rand() % 10000) / 10000.0f;
+	float result = normalized * (high - low) + low;
+
+	return result;
+}
+
+int math::random_uniform_int(int low, int high)
+{
+	int result = (rand() % (high - low)) + low;
+	return result;
+}
+
+Vector3 math::random_uniform_unit_sphere() {
+	float azimuth = math::random_uniform(0, math::PI2);
+	float polar = math::acos(2 * math::random_uniform() - 1);
+	float r = math::pow(math::random_uniform(), 1.0f / 3.0f);
+	
+	Vector3 result;
+
+	result.x = r * math::cos(azimuth) * math::sin(polar);
+	result.y = r * math::cos(polar);
+	result.z = r * math::sin(azimuth) * math::sin(polar);
+
+	return result;
+}
+
+Vector3 math::random_uniform_unit_hemisphere()
+{
+	float y = math::random_uniform(0.0f, 1.0f);
+	float r = math::sqrt(1.0f - y * y);
+	float phi = math::random_uniform(0.0f, math::PI2);
+
+	float radius = math::random_uniform(0.0f, 1.0f);
+	radius = math::sqrt(radius);
+	
+	Vector3 result;
+
+	result.x = r * math::cos(phi) * radius;
+	result.y = y * radius;
+	result.z = r * math::sin(phi) * radius;
+
+	return result;
+}

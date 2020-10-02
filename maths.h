@@ -487,6 +487,14 @@ namespace math
 	float ray_plane_intersection(Vector3 ray_origin, Vector3 ray_direction, Vector3 plane_normal, float plane_distance);
 	float ray_box_intersection(Vector3 ray_origin, Vector3 ray_direction, Vector3 box_position,
 							   Vector3 x_axis, Vector3 y_axis, Vector3 z_axis);
+
+	float random_uniform(float low = 0.0f, float high = 1.0f);
+	int random_uniform_int(int low = 0, int high = 2);
+	// Azimuth: 0 at +x axis in right handed system
+	//			pi / 2 at +z axis in right handed system
+	// Polar: 0 at the top
+	Vector3 random_uniform_unit_sphere();
+	Vector3 random_uniform_unit_hemisphere();
 }
 
 #ifdef CPPLIB_MATHS_IMPL
