@@ -614,6 +614,7 @@ void ui::draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color) {
 }
 
 
+// NOTE: Memory allocation inside
 void ui::draw_line(Vector2 *points, int point_count, float width, Vector4 color) {
     ASSERT_SCREEN_SIZE;
 
@@ -632,7 +633,7 @@ void ui::draw_line(Vector2 *points, int point_count, float width, Vector4 color)
     graphics::set_constant_buffer(&buffer_color, 7);
 
     // TODO: Switch to using temporary mem buffer instead of heap
-    Vector4 *real_points = memory::alloc_heap<Vector4>(point_count);
+    Vector4 *real_points = (Vector4 *)malloc(point_count * sizeof(Vector4));
     for(int i = 0; i < point_count; ++i) {
         real_points[i].x = points[i].x;
         real_points[i].y = screen_height - points[i].y;
@@ -659,7 +660,7 @@ void ui::draw_line(Vector2 *points, int point_count, float width, Vector4 color)
 	graphics_context->context->IASetPrimitiveTopology(miter_mesh.topology);
     graphics_context->context->DrawInstanced(miter_mesh.vertex_count, point_count - 2, 0, 0);
 
-    memory::free_heap(real_points);
+    free(real_points);
 
     // Reset previous blending state
     graphics::set_blend_state(old_blend_state);
@@ -1075,6 +1076,7 @@ bool ui::add_combobox(Panel *panel, char *label, char **values, int value_count,
     return changed;
 }
 
+// NOTE: Memory allocation inside
 bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int point_count, float *select_x, float select_y) {
     int32_t plot_id = hash_string(label);
     float height = font::get_row_height(&font_ui);
@@ -1173,7 +1175,7 @@ bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int po
     }
 
     // TODO: Use temporary mem buffer instead of heap
-    Vector2 *points = memory::alloc_heap<Vector2>(point_count);
+    Vector2 *points = (Vector2 *)malloc(point_count * sizeof(Vector2));
     for(int i = 0; i < point_count; ++i) {
         float x_plot = (x[i] - min_x) / (max_x - min_x);
         float y_plot = (y[i] - min_y) / (max_y - min_y);
@@ -1203,9 +1205,8 @@ bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int po
     select_box = { select_box_color, select_box_pos, select_box_size };
     array::add(&rect_items, select_box);
 
-
     panel->item_pos.y += height * 4 + inner_padding;
-    memory::free_heap(points);
+    free(points);
     *select_x = new_x_value;
     return false;
 }

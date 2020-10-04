@@ -1,5 +1,4 @@
 #include "graphics.h"
-#include "memory.h"
 #include <d3dcompiler.h>
 #ifdef DEBUG
 #include<stdio.h>
@@ -28,6 +27,11 @@ static ID3D11RasterizerState *raster_states[2];
 
 // Do the same for RasterType as for BlendType
 static RasterType current_raster_type;
+
+// 1MB buffer we can use as memory pool.
+#define MEM_POOL_SIZE 1000000
+static char *mem_pool;
+static char *mem_pool_top;
 
 /////////////////////////////////////////////////////
 /// Public API
@@ -142,6 +146,15 @@ bool graphics::init(LUID *adapter_luid)
 
 	current_raster_type = RasterType::SOLID;
 	graphics_context->context->RSSetState(raster_states[current_raster_type]);
+
+	// Allocate memory pool.
+	mem_pool = (char *)malloc(MEM_POOL_SIZE);
+	if(!mem_pool) {
+		PRINT_DEBUG("Failed to allocate memory pool");
+		return false;
+	}
+	mem_pool_top = mem_pool;
+
 	return true;
 }
 
@@ -386,8 +399,9 @@ void graphics::set_render_targets(RenderTarget *buffer, DepthBuffer *depth_buffe
 
 void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffer_count, DepthBuffer *depth_buffer)
 {
-	memory::push_temp_state();
-	D3D11_VIEWPORT *viewports = memory::alloc_temp<D3D11_VIEWPORT>(buffer_count);
+	char *original_mem_pool_top = mem_pool_top;
+	D3D11_VIEWPORT *viewports = (D3D11_VIEWPORT *)mem_pool_top;
+	mem_pool_top += sizeof(D3D11_VIEWPORT) * buffer_count;
 
 	for (uint32_t i = 0; i < buffer_count; ++i)
 	{
@@ -397,7 +411,9 @@ void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffe
 		viewports[i].MaxDepth = 1.0f;
 	}
 
-	ID3D11RenderTargetView **rt_views = memory::alloc_temp<ID3D11RenderTargetView *>(buffer_count);
+	ID3D11RenderTargetView **rt_views = (ID3D11RenderTargetView **)mem_pool_top;
+	mem_pool_top += sizeof(ID3D11RenderTargetView *) * buffer_count;
+
 	for (uint32_t i = 0; i < buffer_count; ++i)
 	{
 		rt_views[i] = buffers[i].rt_view;
@@ -406,7 +422,8 @@ void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffe
 	graphics_context->context->RSSetViewports(buffer_count, viewports);
 	graphics_context->context->OMSetRenderTargets(buffer_count, rt_views, depth_buffer->ds_view);
 
-	memory::pop_temp_state();
+	// "Free" memory.
+	mem_pool_top = original_mem_pool_top;
 }
 
 void graphics::set_render_targets_viewport(RenderTarget *buffer, DepthBuffer *depth_buffer)
@@ -875,11 +892,14 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target, 
 {
 	CompiledShader compiled_shader;
 
-	memory::push_temp_state();
+	char *original_mem_pool_top = mem_pool_top;
+
 	char **defines = NULL;
 	if(macro_defines) {
 		// Create NULL-terminated macro defines list.
-		defines = memory::alloc_temp<char *>(macro_defines_count + 2); // We need two additional NULL items.
+		defines = (char **)mem_pool_top;
+		mem_pool_top += sizeof(char *) * macro_defines_count + 2; // We need two additional NULL items.
+
 		memcpy(defines, macro_defines, sizeof(char *) * macro_defines_count);
 		defines[macro_defines_count] = NULL;
 		defines[macro_defines_count + 1] = NULL;
@@ -892,13 +912,17 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target, 
 
 	ID3DBlob *error_msg;
 	HRESULT hr = D3DCompile(source, source_size, NULL, (D3D_SHADER_MACRO *)defines, NULL, "main", target, flags, NULL, &compiled_shader.blob, &error_msg);
-	memory::pop_temp_state();
+
+	// "Free" memory.
+	mem_pool_top = original_mem_pool_top;
+
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to compile shader!");
 		if (error_msg) {
 			PRINT_DEBUG((char *)error_msg->GetBufferPointer());
 			error_msg->Release();
 		}
+
 		return CompiledShader{};
 	}
 
@@ -947,8 +971,10 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 		return VertexShader{};
 	}
 
-	memory::push_temp_state();
-	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = memory::alloc_temp<D3D11_INPUT_ELEMENT_DESC>(vertex_input_count);
+	char *original_mem_pool_top = mem_pool_top;
+	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = (D3D11_INPUT_ELEMENT_DESC *) mem_pool_top;
+	mem_pool_top += sizeof(D3D11_INPUT_ELEMENT_DESC) * vertex_input_count;
+
 	for (uint32_t i = 0; i < vertex_input_count; ++i)
 	{
 		input_layout_desc[i] = {};
@@ -958,16 +984,18 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 	}
 
 	hr = graphics_context->device->CreateInputLayout(input_layout_desc, vertex_input_count, shader_byte_code, shader_size, &shader.input_layout);
+
+	// "Free" memory.
+	mem_pool_top = original_mem_pool_top;
+
 	if (FAILED(hr)) {
 		// Cleanup.
 		shader.vertex_shader->Release();
-		memory::pop_temp_state();
 
 		PRINT_DEBUG("Failed to create input layout.");
 		return VertexShader{};
 	}
 
-	memory::pop_temp_state();
 	return shader;
 }
 
@@ -1155,6 +1183,7 @@ void graphics::release()
 	RELEASE_DX_RESOURCE(blend_states[BlendType::ALPHA]);
 	RELEASE_DX_RESOURCE(raster_states[RasterType::SOLID]);
 	RELEASE_DX_RESOURCE(raster_states[RasterType::WIREFRAME]);
+	free(mem_pool);
 }
 
 void graphics::release(RenderTarget *buffer)
@@ -1360,17 +1389,21 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 		return VertexShader{};
 	}
 
-	memory::push_temp_state();
+	char *original_mem_pool_top = mem_pool_top;
 	// Get VertexInpuDescs
     uint32_t vertex_input_count = graphics::get_vertex_input_desc_from_shader(code, code_length, NULL);
-	VertexInputDesc *vertex_input_descs = memory::alloc_temp<VertexInputDesc>(vertex_input_count);
+	VertexInputDesc *vertex_input_descs = (VertexInputDesc *) mem_pool_top;
+	mem_pool_top += sizeof(VertexInputDesc) * vertex_input_count;
+
 	graphics::get_vertex_input_desc_from_shader(code, code_length, vertex_input_descs);
 
 	// Get VertexShader object
     VertexShader vertex_shader = graphics::get_vertex_shader(&vertex_shader_compiled, vertex_input_descs, vertex_input_count);
     graphics::release(&vertex_shader_compiled);
 
-	memory::pop_temp_state();
+	// "Free" memory.
+	mem_pool_top = original_mem_pool_top;
+
 	return vertex_shader;
 }
 

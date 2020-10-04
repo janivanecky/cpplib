@@ -1,5 +1,4 @@
 #include "font.h"
-#include "memory.h"
 
 #ifdef DEBUG
 #include<stdio.h>
@@ -21,19 +20,23 @@ bool font::init()
     return true;
 }
 
+// NOTE: Memory allocation inside
 Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size)
 {
     Font font = {};
 
-    // Store temp allocator stack state
-    memory::push_temp_state();
-
     // Allocate memory for the texture
-    uint8_t *font_buffer = memory::alloc_temp<uint8_t>(texture_size * texture_size);
+    uint8_t *font_buffer = (uint8_t *)malloc(texture_size * texture_size);
+    if(!font_buffer) {
+        PRINT_DEBUG("Error allocating memory for font texture!");
+        return Font{};
+    }
+
     FT_Face face;
     int32_t error = FT_New_Memory_Face(ft_library, data, data_size, 0, &face);
     if (error) {
         PRINT_DEBUG("Error creating font face!");
+        free(font_buffer);
         return Font{};
     }
 
@@ -42,6 +45,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     if (error)
     {
         PRINT_DEBUG("Error setting pixel size!");
+        free(font_buffer);
         return Font{};
     }
 
@@ -62,6 +66,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
         if(error)
         {
             PRINT_DEBUG("Error loading character %c!", c);
+            free(font_buffer);
             return Font{};
         }
 
@@ -101,12 +106,11 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     if(!graphics::is_ready(&font.texture))
     {
         PRINT_DEBUG("Could not create texture for font.");
+        free(font_buffer);
         return Font{};
     }
 
-    // Restore memory state of the temp allocator
-    memory::pop_temp_state();
-
+    free(font_buffer);
     return font;
 }
 
