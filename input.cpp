@@ -49,46 +49,9 @@ Vector2 input::mouse_delta_position()
     return mouse_delta_position_;
 }
 
-void input::set_mouse_left_button_down()
-{
-    if(!mouse_lbutton_down) mouse_lbutton_pressed = true;
-    mouse_lbutton_down = true;
-}
-
-void input::set_mouse_left_button_up()
-{
-    mouse_lbutton_down = false;
-}
-
-void input::set_mouse_position(Vector2 position)
-{
-    // Don't update delta on the first frame (initial position (-1, -1))
-    if(mouse_position_.x > 0.0f && mouse_position_.y > 0.0f)
-    {
-        mouse_delta_position_ = position - mouse_position_;
-    }
-    mouse_position_ = position;
-}
-
-void input::set_mouse_scroll_delta(float delta)
-{
-    mouse_scroll_delta_ = delta;
-}
-
 float input::mouse_scroll_delta()
 {
     return mouse_scroll_delta_;
-}
-
-void input::set_key_down(KeyCode code)
-{
-    if(!key_down_[code]) key_pressed_[code] = true;
-    key_down_[code] = true;
-}
-
-void input::set_key_up(KeyCode code)
-{
-    key_down_[code] = false;
 }
 
 bool input::key_pressed(KeyCode code)
@@ -114,36 +77,50 @@ void input::register_event(Event *event)
     {
         case MOUSE_MOVE:
         {
+            // Set mouse position.
             MouseMoveData *data = (MouseMoveData *)event->data;
-            input::set_mouse_position(Vector2(data->x, data->y));
+            // Don't update delta on the first frame (initial position (-1, -1))
+            Vector2 new_mouse_position = Vector2(data->x, data->y);
+            if(mouse_position_.x > 0.0f && mouse_position_.y > 0.0f)
+            {
+                mouse_delta_position_ = new_mouse_position - mouse_position_;
+            }
+            mouse_position_ = new_mouse_position;
         }
         break;
         case MOUSE_LBUTTON_DOWN:
         {
-            input::set_mouse_left_button_down();
+            // Set left mouse button down.
+            if(!mouse_lbutton_down) mouse_lbutton_pressed = true;
+            mouse_lbutton_down = true;
         }
         break;
         case MOUSE_LBUTTON_UP:
         {
-            input::set_mouse_left_button_up();
+            // Set left mouse button up.
+            mouse_lbutton_down = false;
         }
         break;
         case MOUSE_WHEEL:
         {
+            // Set mouse scroll delta.
 		    MouseWheelData *data = (MouseWheelData *)event->data;
-            input::set_mouse_scroll_delta(data->delta);
+            mouse_scroll_delta_ = data->delta;
         }
         break;
         case KEY_DOWN:
         {
+            // Set key down.
             KeyPressedData *key_data = (KeyPressedData *)event->data;
-            input::set_key_down(key_data->code);
+            if(!key_down_[key_data->code]) key_pressed_[key_data->code] = true;
+            key_down_[key_data->code] = true;
         }
         break;
         case KEY_UP:
         {
+            // Set key up.
             KeyPressedData *key_data = (KeyPressedData *)event->data;
-            input::set_key_up(key_data->code);
+            key_down_[key_data->code] = false;
         }
         break;
         case CHAR_ENTERED:

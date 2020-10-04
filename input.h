@@ -29,24 +29,6 @@ namespace input
     // NOTE: this is zeroed after calling reset()
     float mouse_scroll_delta();
 
-    // Registered left mouse button as being down
-    void set_mouse_left_button_down();
-
-    // Registered left mouse button as being u
-    void set_mouse_left_button_up();
-    
-    // Registered mouse position
-    void set_mouse_position(Vector2 position);
-
-    // Register mouse wheel scroll delta
-    void set_mouse_scroll_delta(float delta);
-
-    // Registered key with specific KeyCode as being down
-    void set_key_down(KeyCode code);
-
-    // Registered key with specific KeyCode as being up
-    void set_key_up(KeyCode code);
-
     // Return if key with specific KeyCode was pressed this frame
     bool key_pressed(KeyCode code);
 
