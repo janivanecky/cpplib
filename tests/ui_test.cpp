@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
         ui::add_function_plot(&panel, "sin function", sin_x, sin_y, ARRAYSIZE(sin_x), &sin_x_selected, sin_y_selected);
 
         // Test text drawing
-        ui::draw_text("TEST", ui::get_font(), 600, 10, Vector4(1,1,1,1));
+        ui::draw_text("TEST", 600, 10, Vector4(1,1,1,1));
 
         // Test rect drawing
         ui::draw_rect(600, 50, 100, 20, Vector4(1,0,0,1));

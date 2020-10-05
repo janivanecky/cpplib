@@ -460,7 +460,7 @@ void ui::init(float screen_width_ui, float screen_height_ui) {
     array::init(&rect_items_bg, 100);
 }
 
-void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vector2 origin) {
+void ui::draw_text(char *text, float x, float y, Vector4 color, Vector2 origin) {
     ASSERT_SCREEN_SIZE;
 
     // Set font shaders
@@ -468,7 +468,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vect
     graphics::set_vertex_shader(&vertex_shader_font);
 
     // Set font texture
-    graphics::set_texture(&font->texture, 0);
+    graphics::set_texture(&font_ui.texture, 0);
     graphics::set_texture_sampler(&texture_sampler, 0);
 
     // Set alpha blending state
@@ -490,18 +490,18 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vect
     graphics::update_constant_buffer(&buffer_color, &color);
 
     // Get final text dimensions
-    float text_width = font::get_string_width(text, font);
-    float text_height = font::get_row_height(font);
+    float text_width = font::get_string_width(text, &font_ui);
+    float text_height = font::get_row_height(&font_ui);
 
     // Adjust starting point based on the origin
     x = math::floor(x - origin.x * text_width);
     y = math::floor(y - origin.y * text_height);
 
-    y += font->top_pad;
+    y += font_ui.top_pad;
     while(*text)
     {
         char c = *text;
-        Glyph glyph = font->glyphs[c - 32];
+        Glyph glyph = font_ui.glyphs[c - 32];
 
         // Set up source rectangle
         float rel_x = glyph.bitmap_x / FONT_TEXTURE_SIZE;
@@ -523,7 +523,7 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vect
         graphics::draw_mesh(&quad_mesh);
 
         // Update current position for next letter
-        if (*(text + 1)) x += font::get_kerning(font, c, *(text + 1));
+        if (*(text + 1)) x += font::get_kerning(&font_ui, c, *(text + 1));
         x += glyph.advance;
         text++;
     }
@@ -532,8 +532,8 @@ void ui::draw_text(char *text, Font *font, float x, float y, Vector4 color, Vect
     graphics::set_blend_state(old_blend_state);
 };
 
-void ui::draw_text(char *text, Font *font, Vector2 pos, Vector4 color, Vector2 origin) {
-    ui::draw_text(text, font, pos.x, pos.y, color, origin);
+void ui::draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin) {
+    ui::draw_text(text, pos.x, pos.y, color, origin);
 }
 
 void ui::draw_rect(float x, float y, float width, float height, Vector4 color) {
@@ -1380,7 +1380,7 @@ void ui::end()
     for(uint32_t i = 0; i < text_items.count; ++i)
     {
         TextItem *item = &text_items.data[i];
-        ui::draw_text(item->text, &font_ui, item->pos, item->color, item->origin);
+        ui::draw_text(item->text, item->pos, item->color, item->origin);
     }
 
     array::reset(&rect_items_bg);
