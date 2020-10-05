@@ -21,14 +21,14 @@ bool font::init()
 }
 
 // NOTE: Memory allocation inside
-Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size)
+Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_size)
 {
     Font font = {};
 
-    // Allocate memory for the texture
-    uint8_t *font_buffer = (uint8_t *)malloc(texture_size * texture_size);
-    if(!font_buffer) {
-        PRINT_DEBUG("Error allocating memory for font texture!");
+    // Allocate memory for the bitmap
+    uint8_t *font_bitmap = (uint8_t *)malloc(bitmap_size * bitmap_size);
+    if(!font_bitmap) {
+        PRINT_DEBUG("Error allocating memory for font bitmap!");
         return Font{};
     }
 
@@ -36,7 +36,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     int32_t error = FT_New_Memory_Face(ft_library, data, data_size, 0, &face);
     if (error) {
         PRINT_DEBUG("Error creating font face!");
-        free(font_buffer);
+        free(font_bitmap);
         return Font{};
     }
 
@@ -45,7 +45,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
     if (error)
     {
         PRINT_DEBUG("Error setting pixel size!");
-        free(font_buffer);
+        free(font_bitmap);
         return Font{};
     }
 
@@ -66,7 +66,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
         if(error)
         {
             PRINT_DEBUG("Error loading character %c!", c);
-            free(font_buffer);
+            free(font_bitmap);
             return Font{};
         }
 
@@ -76,11 +76,11 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
         int advance = face->glyph->advance.x >> 6;
 
         // Get bitmap parameters
-        int bitmap_width = face->glyph->bitmap.width, bitmap_height = face->glyph->bitmap.rows;
+        int glyph_bitmap_width = face->glyph->bitmap.width, bitmap_height = face->glyph->bitmap.rows;
         int pitch = face->glyph->bitmap.pitch;
 
         // In case we don't fit in the row, let's move to next row
-        if(x > texture_size - bitmap_width)
+        if(x > bitmap_size - glyph_bitmap_width)
         {
             x = 0;
             y += row_height;
@@ -90,27 +90,21 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_s
         for(int32_t r = 0; r < bitmap_height; ++r)
         {
             uint8_t *source = face->glyph->bitmap.buffer + pitch * r;
-            uint8_t *dest = font_buffer + (y + r) * texture_size + x;
-            memcpy(dest, source, bitmap_width);
+            uint8_t *dest = font_bitmap + (y + r) * bitmap_size + x;
+            memcpy(dest, source, glyph_bitmap_width);
         }
 
         // Store glyph settings
-        font.glyphs[c - 32] = {x, y, bitmap_width, bitmap_height, x_offset, y_offset, advance};
+        font.glyphs[c - 32] = {x, y, glyph_bitmap_width, bitmap_height, x_offset, y_offset, advance};
 
         // Move in the bitmap
-        x += bitmap_width;
+        x += glyph_bitmap_width;
     }
 
-    // Initialize D3D texture for the Font
-    font.texture = graphics::get_texture2D(font_buffer, texture_size, texture_size, DXGI_FORMAT_R8_UNORM, 1);
-    if(!graphics::is_ready(&font.texture))
-    {
-        PRINT_DEBUG("Could not create texture for font.");
-        free(font_buffer);
-        return Font{};
-    }
+    font.bitmap = font_bitmap;
+    font.bitmap_width = bitmap_size;
+    font.bitmap_height = bitmap_size;
 
-    free(font_buffer);
     return font;
 }
 
@@ -173,5 +167,6 @@ float font::get_row_height(Font *font)
 
 void font::release(Font *font)
 {
-    graphics::release(&font->texture);
+    free(font->bitmap);
+    font->bitmap = 0;
 }

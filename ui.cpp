@@ -32,6 +32,7 @@ static Mesh line_mesh;
 static Mesh miter_mesh;
 
 static Font font_ui;
+static Texture2D font_ui_texture;
 
 static File font_file;
 
@@ -452,7 +453,10 @@ void ui::init(float screen_width_ui, float screen_height_ui) {
     font_file = file_system::read_file("consola.ttf");
     assert(font_file.data);
     font_ui = font::get((uint8_t *)font_file.data, font_file.size, FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE);
-    assert(graphics::is_ready(&font_ui.texture));
+
+    // Initialize D3D texture for the Font
+    font_ui_texture = graphics::get_texture2D(font_ui.bitmap, font_ui.bitmap_width, font_ui.bitmap_height, DXGI_FORMAT_R8_UNORM, 1);
+    assert(graphics::is_ready(&font_ui_texture));
 
     // Init rendering arrays
     array::init(&text_items, 100);
@@ -468,7 +472,7 @@ void ui::draw_text(char *text, float x, float y, Vector4 color, Vector2 origin) 
     graphics::set_vertex_shader(&vertex_shader_font);
 
     // Set font texture
-    graphics::set_texture(&font_ui.texture, 0);
+    graphics::set_texture(&font_ui_texture, 0);
     graphics::set_texture_sampler(&texture_sampler, 0);
 
     // Set alpha blending state

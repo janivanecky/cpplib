@@ -1,5 +1,5 @@
 #pragma once
-#include "graphics.h"
+#include <stdint.h>
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
@@ -20,7 +20,8 @@ struct Font
     float row_height;
     float top_pad;
     float scale;
-    Texture2D texture;
+    uint8_t *bitmap;
+    int bitmap_width, bitmap_height;
     FT_Face face;
 };
 
@@ -34,9 +35,9 @@ namespace font
         - data: binary data from .ttf/.otf file
         - data_size: size of data block in bytes
         - size: height of the font in pixels
-        - texture_size: size of a side of texture that stores font bitmap, in pixels
+        - bitmap_size: size of a side of bitmap that stores font, in pixels
     */
-    Font get(uint8_t *data, int32_t data_size, int32_t size, int32_t texture_size);
+    Font get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_size);
 
     // Initialize font rasterization code (FreeType2)
     bool init();
