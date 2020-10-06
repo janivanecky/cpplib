@@ -158,18 +158,18 @@ bool graphics::init(LUID *adapter_luid)
 	return true;
 }
 
-bool graphics::init_swap_chain(Window *window)
+bool graphics::init_swap_chain(HWND window, uint32_t window_width, uint32_t window_height)
 {
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
 
-	swap_chain_desc.BufferDesc.Width = window->window_width;
-	swap_chain_desc.BufferDesc.Height = window->window_height;
+	swap_chain_desc.BufferDesc.Width = window_width;
+	swap_chain_desc.BufferDesc.Height = window_height;
 	swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swap_chain_desc.SampleDesc.Count = 1;
 	swap_chain_desc.SampleDesc.Quality = 0;
 	swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swap_chain_desc.BufferCount = 2;
-	swap_chain_desc.OutputWindow = window->window_handle;
+	swap_chain_desc.OutputWindow = window;
 	swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
 	swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
 	swap_chain_desc.Windowed = true;

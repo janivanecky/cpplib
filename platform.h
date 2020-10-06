@@ -2,16 +2,6 @@
 #include <Windows.h>
 #include <stdint.h>
 
-#define IS_WINDOW_VALID(window) (!(window.window_handle == INVALID_HANDLE_VALUE))
-
-// Represents current window
-struct Window
-{
-	HWND window_handle;
-	uint32_t window_width;
-	uint32_t window_height;
-};
-
 /////////////////////////////////////////
 // Event system specific structures
 /////////////////////////////////////////
@@ -105,10 +95,10 @@ typedef LARGE_INTEGER Ticks;
 namespace platform
 {
 	// Create and return windows with specific name and dimensions
-	Window get_window(char *window_name, uint32_t window_width, uint32_t window_height);
+	HWND get_window(char *window_name, uint32_t window_width, uint32_t window_height);
 
 	// Check if window is valid
-	bool is_window_valid(Window *window);
+	bool is_window_valid(HWND window);
 
 	// Get next Event, should be called per frame until false is returned
 	bool get_event(Event *event);

@@ -137,7 +137,7 @@ bool platform::get_event(Event *event)
 	return true;
 }
 
-Window platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height)
+HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height)
 {
 	HINSTANCE program_instance = GetModuleHandle(0);
 
@@ -149,13 +149,9 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 	window_class.hCursor = LoadCursor(0, IDC_ARROW);
 	window_class.lpszClassName = "CustomWindowClass";
 
-	Window window = {};
+	HWND window = (HWND)INVALID_HANDLE_VALUE;
 	if (RegisterClassExA(&window_class))
 	{
-		//SetProcessDPIAware();
-		window.window_width = window_width;
-		window.window_height = window_height;
-
 		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 		window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
@@ -163,24 +159,23 @@ Window platform::get_window(char *window_name, uint32_t window_width, uint32_t w
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
 
-		window.window_handle = CreateWindowA("CustomWindowClass", window_name, window_flags,
-//											 100, 100, window_width, window_height, NULL, NULL, program_instance, NULL);
-											 0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
+		window = CreateWindowA("CustomWindowClass", window_name, window_flags,
+								0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
 
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;
 		device.usUsage = 0x06;
 		// NOTE: This used to have value RIDEV_NOLEGACY, but that prevents WM_CHAR messages from firing.
 		device.dwFlags = 0;
-		device.hwndTarget = window.window_handle;
+		device.hwndTarget = window;
 		RegisterRawInputDevices(&device, 1, sizeof(device));
 	}
 	return window;
 }
 
-bool platform::is_window_valid(Window *window)
+bool platform::is_window_valid(HWND window)
 {
-	return window->window_handle != INVALID_HANDLE_VALUE;
+	return window != INVALID_HANDLE_VALUE;
 }
 
 void platform::show_cursor()

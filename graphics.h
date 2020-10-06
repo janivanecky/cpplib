@@ -1,8 +1,7 @@
 #pragma once
 #include <D3D11.h>
 #include <dxgi.h>
-
-#include "platform.h"
+#include <stdint.h>
 
 // GraphicsContext wraps handles to D3D device and context
 struct GraphicsContext
@@ -189,8 +188,7 @@ namespace graphics
 	bool init(LUID *adapter_luid = NULL);
 
 	// Initialize swap chain for rendering to window
-	bool init_swap_chain(Window *window);
-	
+	bool init_swap_chain(HWND window, uint32_t window_width, uint32_t window_height);
 
 	// Get RenderTarget to use for rendering directly to a window passed in to `init_swap_chain`
 	RenderTarget get_render_target_window(bool srgb=true);
