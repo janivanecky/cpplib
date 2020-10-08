@@ -787,7 +787,7 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active) {
     // Check for mouse input
     if(ui::is_input_responsive()) {
         // Check if mouse over
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         if(is_in_rect(mouse_position, box_bg_pos, box_bg_size)) {
             set_hot(toggle_id);
         } else {
@@ -880,7 +880,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
 
     // Check for mouse input
     if(ui::is_input_responsive()) {
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         if(is_in_rect(mouse_position, slider_bar_pos, slider_bar_size)) {
             set_hot(slider_id);
         } else if(!is_active(slider_id)) {
@@ -929,7 +929,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     array::add(&text_items, current_label);
 
     if(is_active(slider_id)) {
-        float mouse_x = input::mouse_position().x;
+        float mouse_x = input::mouse_position_x();
         float mouse_x_rel = (mouse_x - slider_bar_pos.x) / (slider_bar_size.x);
         mouse_x_rel = math::clamp(mouse_x_rel, 0.0f, 1.0f);
 
@@ -968,7 +968,7 @@ bool ui::add_combobox(Panel *panel, char *label, char **values, int value_count,
     selected_value_item.pos = position + Vector2(2 + inner_padding, 0);
 
     if(ui::is_input_responsive()) {
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         if(is_in_rect(mouse_position, selected_value_item.pos, Vector2(text_field_width, height))) {
             set_hot(slider_id);
         } else if(!is_active(slider_id)) {
@@ -1041,7 +1041,7 @@ bool ui::add_combobox(Panel *panel, char *label, char **values, int value_count,
             TextItem slider_label = {};
             slider_label.pos = text_pos + Vector2(2 + inner_padding, 0);
 
-            Vector2 mouse_position = input::mouse_position();
+            Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
             bool mouse_over = is_in_rect(mouse_position, slider_label.pos, Vector2(text_field_width, height));
             if(mouse_over) {
                 color_modifier = 1.0f;
@@ -1093,7 +1093,7 @@ bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int po
     Vector2 plot_box_size = Vector2(plot_width, height * 4 - plot_box_padding * 2.0f);
 
     if(ui::is_input_responsive()) {
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         if(is_in_rect(mouse_position, plot_box_pos, plot_box_size)) {
             set_hot(plot_id);
         } else if(!is_active(plot_id)) {
@@ -1128,7 +1128,7 @@ bool ui::add_function_plot(Panel *panel, char *label, float *x, float *y, int po
 
     float new_x_value = *select_x;
     if(is_active(plot_id)) {
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         Vector2 pos_relative_to_plot = mouse_position - plot_box_pos;
         Vector2 pos_relative_in_plot = Vector2(
             pos_relative_to_plot.x / plot_box_size.x,
@@ -1226,7 +1226,7 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
     Vector2 textfield_size = Vector2(textbox_width, height);
 
     if(ui::is_input_responsive()) {
-        Vector2 mouse_position = input::mouse_position();
+        Vector2 mouse_position = Vector2(input::mouse_position_x(), input::mouse_position_y());
         if(is_in_rect(mouse_position, textfield_pos, textfield_size)) {
             set_hot(textfield_id);
         } else if(!is_active(textfield_id)) {

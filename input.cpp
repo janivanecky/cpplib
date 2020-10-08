@@ -1,10 +1,12 @@
 #include "input.h"
 
 // Input state variables
-bool mouse_lbutton_pressed   = false;
-bool mouse_lbutton_down      = false;
-Vector2 mouse_position_       = Vector2(-1,-1);
-Vector2 mouse_delta_position_ = Vector2(0.0f,0.0f);
+bool mouse_lbutton_pressed    = false;
+bool mouse_lbutton_down       = false;
+float mouse_position_x_       = -1.0f;
+float mouse_position_y_       = -1.0f;
+float mouse_delta_position_x_ = 0.0f;
+float mouse_delta_position_y_ = 0.0f;
 
 float mouse_scroll_delta_ = 0.0f;
 
@@ -23,7 +25,8 @@ bool ui_active_ = false;
 void input::reset()
 {
     mouse_lbutton_pressed = false;
-    mouse_delta_position_ = Vector2(0.0f, 0.0f);
+    mouse_delta_position_x_ = 0.0f;
+    mouse_delta_position_y_ = 0.0f;
     mouse_scroll_delta_ = 0.0f;
     memset(key_pressed_, 0, sizeof(bool) * 100);
     characters_entered_count = 0;
@@ -39,14 +42,24 @@ bool input::mouse_left_button_down()
     return mouse_lbutton_down;
 }
 
-Vector2 input::mouse_position()
+float input::mouse_position_x()
 {
-    return mouse_position_;
+    return mouse_position_x_;
 }
 
-Vector2 input::mouse_delta_position()
+float input::mouse_position_y()
 {
-    return mouse_delta_position_;
+    return mouse_position_y_;
+}
+
+float input::mouse_delta_position_x()
+{
+    return mouse_delta_position_x_;
+}
+
+float input::mouse_delta_position_y()
+{
+    return mouse_delta_position_y_;
 }
 
 float input::mouse_scroll_delta()
@@ -80,12 +93,13 @@ void input::register_event(Event *event)
             // Set mouse position.
             MouseMoveData *data = (MouseMoveData *)event->data;
             // Don't update delta on the first frame (initial position (-1, -1))
-            Vector2 new_mouse_position = Vector2(data->x, data->y);
-            if(mouse_position_.x > 0.0f && mouse_position_.y > 0.0f)
+            if(mouse_position_x_ > 0.0f && mouse_position_y_ > 0.0f)
             {
-                mouse_delta_position_ = new_mouse_position - mouse_position_;
+                mouse_delta_position_x_ = data->x - mouse_position_x_;
+                mouse_delta_position_y_ = data->y - mouse_position_y_;
             }
-            mouse_position_ = new_mouse_position;
+            mouse_position_x_ = data->x;
+            mouse_position_y_ = data->y;
         }
         break;
         case MOUSE_LBUTTON_DOWN:

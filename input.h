@@ -1,5 +1,4 @@
 #pragma once
-#include "maths.h"
 #include "platform.h"
 
 // Input namespace handles input state
@@ -19,11 +18,13 @@ namespace input
     bool mouse_left_button_down();
     
     // Get last mouse position registered
-    Vector2 mouse_position();
+    float mouse_position_x();
+    float mouse_position_y();
 
     // Get difference between last registered position and the one before
     // NOTE: this is zeroed after calling reset()
-    Vector2 mouse_delta_position();
+    float mouse_delta_position_x();
+    float mouse_delta_position_y();
 
     // Get current movement of mouse scroll wheel
     // NOTE: this is zeroed after calling reset()
