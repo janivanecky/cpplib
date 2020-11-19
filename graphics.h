@@ -110,6 +110,7 @@ struct StructuredBuffer
 {
 	ID3D11Buffer *buffer;
 	ID3D11UnorderedAccessView *ua_view;
+	ID3D11ShaderResourceView *sr_view;
 	uint32_t size;
 };
 
@@ -313,7 +314,7 @@ namespace graphics
 	ConstantBuffer get_constant_buffer(uint32_t size);
 
 	// Get StructuredBuffer
-	StructuredBuffer get_structured_buffer(int element_stride, int num_elements);
+	StructuredBuffer get_structured_buffer(int element_stride, int num_elements, bool staging=false);
 
 	// Get ByteAddressBuffer
 	ByteAddressBuffer get_byte_address_buffer(int size);

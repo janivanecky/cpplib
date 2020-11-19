@@ -820,40 +820,59 @@ ByteAddressBuffer graphics::get_byte_address_buffer(int size)
 	return buffer;
 }
 
-StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_elements)
+StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_elements, bool staging)
 {
 	StructuredBuffer buffer = {};
 	buffer.size = element_stride * num_elements;
 
-	D3D11_BUFFER_DESC constant_buffer_desc = {};
-	constant_buffer_desc.ByteWidth = element_stride * num_elements;
-	constant_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	constant_buffer_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
-	constant_buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	constant_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	constant_buffer_desc.StructureByteStride = element_stride;
+	D3D11_BUFFER_DESC structured_buffer_desc = {};
+	structured_buffer_desc.ByteWidth = element_stride * num_elements;
+	structured_buffer_desc.Usage = staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
+	structured_buffer_desc.BindFlags = staging ? 0 : D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+	structured_buffer_desc.CPUAccessFlags = staging ? D3D11_CPU_ACCESS_READ : D3D11_CPU_ACCESS_WRITE;
+	structured_buffer_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	structured_buffer_desc.StructureByteStride = element_stride;
 
-	HRESULT hr = graphics_context->device->CreateBuffer(&constant_buffer_desc, NULL, &buffer.buffer);
+	HRESULT hr = graphics_context->device->CreateBuffer(&structured_buffer_desc, NULL, &buffer.buffer);
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create buffer.");
 		return StructuredBuffer{};
 	}
 
-	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
-	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-	unordered_access_desc.Format = DXGI_FORMAT_UNKNOWN;
-	unordered_access_desc.Buffer.FirstElement = 0;
-	unordered_access_desc.Buffer.Flags = 0;
-	unordered_access_desc.Buffer.NumElements = num_elements;
+	if (!staging) {
+		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
+		shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		shader_resource_desc.Format = DXGI_FORMAT_UNKNOWN;
+		shader_resource_desc.Buffer.NumElements = num_elements;
+		shader_resource_desc.Buffer.FirstElement = 0;
 
-	hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
-	if (FAILED(hr)) {
-		// Cleanup.
-		buffer.buffer->Release();
+		hr = graphics_context->device->CreateShaderResourceView(buffer.buffer, &shader_resource_desc, &buffer.sr_view);
+		if (FAILED(hr)) {
+			// Cleanup.
+			buffer.buffer->Release();
 
-		PRINT_DEBUG("Failed to create unordered access view.");
-		return StructuredBuffer{};
+			PRINT_DEBUG("Failed to create shader resource view.");
+			return StructuredBuffer{};
+		}
+
+		D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+		unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+		unordered_access_desc.Format = DXGI_FORMAT_UNKNOWN;
+		unordered_access_desc.Buffer.FirstElement = 0;
+		unordered_access_desc.Buffer.Flags = 0;
+		unordered_access_desc.Buffer.NumElements = num_elements;
+
+		hr = graphics_context->device->CreateUnorderedAccessView(buffer.buffer, &unordered_access_desc, &buffer.ua_view);
+		if (FAILED(hr)) {
+			// Cleanup.
+			buffer.buffer->Release();
+			buffer.sr_view->Release();
+
+			PRINT_DEBUG("Failed to create unordered access view.");
+			return StructuredBuffer{};
+		}
 	}
+
 
 	return buffer;
 }
@@ -1253,6 +1272,7 @@ void graphics::release(StructuredBuffer *buffer)
 {
 	RELEASE_DX_RESOURCE(buffer->buffer);
 	RELEASE_DX_RESOURCE(buffer->ua_view);
+	RELEASE_DX_RESOURCE(buffer->sr_view);
 }
 
 void graphics::release(ByteAddressBuffer *buffer)
