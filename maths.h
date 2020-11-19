@@ -68,6 +68,30 @@ struct Vector2
 		return result;
 	}
 
+	Vector2& operator+=(Vector2 v)
+	{
+		this->x += v.x;
+		this->y += v.y;
+
+		return *this;
+	}
+
+	Vector2& operator-=(Vector2 v)
+	{
+		this->x -= v.x;
+		this->y -= v.y;
+
+		return *this;
+	}
+
+	Vector2& operator*=(float x)
+	{
+		this->x *= x;
+		this->y *= x;
+
+		return *this;
+	}
+
 };
 
 struct Vector4;
@@ -458,6 +482,7 @@ namespace math
 	float dot(Vector3 a, Vector3 b);
 	float dot(Vector4 a, Vector4 b);
 	Vector3 cross(Vector3 a, Vector3 b);
+	Vector2 normalize(Vector2);
 	Vector3 normalize(Vector3);
 	Vector4 normalize(Vector4);
 

@@ -204,6 +204,16 @@ Vector3 math::cross(Vector3 a, Vector3 b)
 	return result;
 }
 
+Vector2 math::normalize(Vector2 x)
+{
+	float length = math::length(x);
+	if (length < 0.001f)
+	{
+		return Vector2();
+	}
+	return x / length;
+}
+
 Vector3 math::normalize(Vector3 x)
 {
 	float length = math::length(x);
