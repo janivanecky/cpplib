@@ -14,16 +14,7 @@ struct Panel
 
 namespace ui
 {
-    void init(float screen_width, float screen_height);
-
-    void draw_text(char *text, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
-    void draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin = Vector2(0,0));
-
-    void draw_rect(float x, float y, float width, float height, Vector4 color);
-    void draw_rect(Vector2 pos, float width, float height, Vector4 color);
-
-    void draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color);
-    void draw_line(Vector2 *points, int point_count, float width, Vector4 color);
+    void init();
 
     Panel start_panel(char *name, Vector2 pos, float width);
     Panel start_panel(char *name, float x, float y, float width);
@@ -52,7 +43,6 @@ namespace ui
     bool is_registering_input();
 
     // Getters for values on which UI operates
-    float get_screen_width();
     Font *get_font();
 }
 

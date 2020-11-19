@@ -4,12 +4,14 @@
 #define CPPLIB_MATHS_IMPL
 #define CPPLIB_MEMORY_IMPL
 #define CPPLIB_UI_IMPL
+#define CPPLIB_UIDRAW_IMPL
 #define CPPLIB_FONT_IMPL
 #define CPPLIB_INPUT_IMPL
 #include "platform.h"
 #include "graphics.h"
 #include "memory.h"
 #include "ui.h"
+#include "ui_draw.h"
 #include "font.h"
 #include "input.h"
 #include <cassert>
@@ -25,7 +27,8 @@ int main(int argc, char **argv) {
     graphics::init_swap_chain(window, window_width, window_height);
 
     font::init();
-    ui::init((float)window_width, (float)window_height);
+    ui::init();
+    ui_draw::init((float)window_width, (float)window_height);
     ui::set_input_responsive(true);
 
     // Create window render target
@@ -102,13 +105,13 @@ int main(int argc, char **argv) {
         ui::add_function_plot(&panel, "sin function", sin_x, sin_y, ARRAYSIZE(sin_x), &sin_x_selected, sin_y_selected);
 
         // Test text drawing
-        ui::draw_text("TEST", 600, 10, Vector4(1,1,1,1));
+        ui_draw::draw_text("TEST", 600, 10, Vector4(1,1,1,1));
 
         // Test rect drawing
-        ui::draw_rect(600, 50, 100, 20, Vector4(1,0,0,1));
+        ui_draw::draw_rect(600, 50, 100, 20, Vector4(1,0,0,1));
 
         // Test triangle drawing
-        ui::draw_triangle(Vector2(600, 80), Vector2(700, 80), Vector2(650, 100), Vector4(0,1,0,1));
+        ui_draw::draw_triangle(Vector2(600, 80), Vector2(700, 80), Vector2(650, 100), Vector4(0,1,0,1));
         Vector2 line_points[4] = {
             Vector2(600, 110),
             Vector2(600, 120),
@@ -117,7 +120,7 @@ int main(int argc, char **argv) {
         };
 
         // Test line drawing
-        ui::draw_line(line_points, 4, 4, Vector4(0,1,1,1));
+        ui_draw::draw_line(line_points, 4, 4, Vector4(0,1,1,1));
 
         // End frame
         ui::end_panel(&panel);
