@@ -68,7 +68,11 @@ enum KeyCode
 	ENTER,
 	BACKSPACE,
 	HOME,
-	END
+	END,
+	W,
+	A,
+	S,
+	D
 };
 
 struct KeyPressedData

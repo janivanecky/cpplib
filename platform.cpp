@@ -67,6 +67,10 @@ bool platform::get_event(Event *event)
 			else if(raw_kb.VKey == VK_HOME) data->code = KeyCode::HOME;
 			else if(raw_kb.VKey == VK_END) data->code = KeyCode::END;
 			else if(raw_kb.VKey == VK_RETURN) data->code = KeyCode::ENTER;
+			else if(raw_kb.VKey == 0x57) data->code = KeyCode::W;
+			else if(raw_kb.VKey == 0x41) data->code = KeyCode::A;
+			else if(raw_kb.VKey == 0x53) data->code = KeyCode::S;
+			else if(raw_kb.VKey == 0x44) data->code = KeyCode::D;
 			else data->code = KeyCode::OTHER;
 		}
 	} break;
