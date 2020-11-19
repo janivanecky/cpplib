@@ -331,6 +331,9 @@ namespace graphics
 	// Set StructuredBuffer to a slot
 	void set_structured_buffer(StructuredBuffer *buffer, uint32_t slot);
 
+	// Unset StructuredBuffer slot;
+	void unset_structured_buffer(uint32_t slot);
+
 	// Set ByteAddressBuffer to a slot
 	void set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot);
 

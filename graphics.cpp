@@ -904,6 +904,13 @@ void graphics::set_structured_buffer(StructuredBuffer *buffer, uint32_t slot)
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
 
+void graphics::unset_structured_buffer(uint32_t slot)
+{
+	UINT init_counts = 0;
+	ID3D11UnorderedAccessView *null[] = { NULL };
+	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, null, &init_counts);
+}
+
 void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
 {
 	UINT init_counts = 0;
