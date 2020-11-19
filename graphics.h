@@ -273,7 +273,7 @@ namespace graphics
 	//  - depth: bitmap depth
 	//  - format: DXGI format
 	//  - pixel_byte_count: number of bytes per pixel. Used to compute memory pitch.
-	Texture3D get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4);
+	Texture3D get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, uint32_t pixel_byte_count = 4, bool staging=false);
 
 	// Set texture to accessible from shaders
 	void set_texture(Texture3D *texture, uint32_t slot);

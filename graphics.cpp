@@ -514,7 +514,7 @@ void graphics::clear_texture(Texture2D *texture, float r, float g, float b, floa
     graphics_context->context->ClearUnorderedAccessViewFloat(texture->ua_view, clear_tex);
 }
 
-Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count)
+Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging)
 {
 	Texture3D texture;
 
@@ -525,8 +525,9 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	texture_desc.MipLevels = 1;
 	texture_desc.Format = format;
 	// TODO: Maybe not the best Usage flag.
-	texture_desc.Usage = D3D11_USAGE_DEFAULT;
-	texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	texture_desc.Usage = staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
+	texture_desc.BindFlags = staging ? 0 : D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	texture_desc.CPUAccessFlags = staging ? D3D11_CPU_ACCESS_READ : 0;
 
 	D3D11_SUBRESOURCE_DATA texture_data = {};
 	texture_data.pSysMem = data;
@@ -540,36 +541,38 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 		return Texture3D{};
 	}
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
-	shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	shader_resource_desc.Format = format;
-	shader_resource_desc.Texture3D.MipLevels = 1;
-	shader_resource_desc.Texture3D.MostDetailedMip = 0;
+	if (!staging) {
+		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_desc = {};
+		shader_resource_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+		shader_resource_desc.Format = format;
+		shader_resource_desc.Texture3D.MipLevels = 1;
+		shader_resource_desc.Texture3D.MostDetailedMip = 0;
 
-	hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
-	if (FAILED(hr)) {
-		// Cleanup.
-		texture.texture->Release();
+		hr = graphics_context->device->CreateShaderResourceView(texture.texture, &shader_resource_desc, &texture.sr_view);
+		if (FAILED(hr)) {
+			// Cleanup.
+			texture.texture->Release();
 
-		PRINT_DEBUG("Failed to create shader resource view.");
-		return Texture3D{};
-	}
+			PRINT_DEBUG("Failed to create shader resource view.");
+			return Texture3D{};
+		}
 
-	D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
-	unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-	unordered_access_desc.Format = format;
-	unordered_access_desc.Texture3D.MipSlice = 0;
-	unordered_access_desc.Texture3D.FirstWSlice = 0;
-	unordered_access_desc.Texture3D.WSize = depth;
+		D3D11_UNORDERED_ACCESS_VIEW_DESC unordered_access_desc = {};
+		unordered_access_desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+		unordered_access_desc.Format = format;
+		unordered_access_desc.Texture3D.MipSlice = 0;
+		unordered_access_desc.Texture3D.FirstWSlice = 0;
+		unordered_access_desc.Texture3D.WSize = depth;
 
-	hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
-	if (FAILED(hr)) {
-		// Cleanup.
-		texture.texture->Release();
-		texture.sr_view->Release();
+		hr = graphics_context->device->CreateUnorderedAccessView(texture.texture, &unordered_access_desc, &texture.ua_view);
+		if (FAILED(hr)) {
+			// Cleanup.
+			texture.texture->Release();
+			texture.sr_view->Release();
 
-		PRINT_DEBUG("Failed to create unordered access view.");
-		return Texture3D{};
+			PRINT_DEBUG("Failed to create unordered access view.");
+			return Texture3D{};
+		}
 	}
 
 	texture.width = width;
