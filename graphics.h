@@ -175,6 +175,13 @@ struct Viewport
 	float height;
 };
 
+struct ProfilingBlock
+{
+	ID3D11Query *start;
+	ID3D11Query *end;
+	ID3D11Query *disjoint;
+};
+
 //////////////////////////////////////////
 /// Low level API
 //////////////////////////////////////////
@@ -442,6 +449,15 @@ namespace graphics
 	void release(GeometryShader *shader);
 	void release(ComputeShader *shader);
 	void release(CompiledShader *shader);
+
+	////////////////////////////////////////////////
+	// Profiling API
+	////////////////////////////////////////////////
+
+	ProfilingBlock get_profiling_block();
+	void start_profiling_block(ProfilingBlock *block);
+	void end_profiling_block(ProfilingBlock *block);
+	float get_latest_profiling_time(ProfilingBlock *block);
 
 	////////////////////////////////////////////////
 	/// HIGHER LEVEL API

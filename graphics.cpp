@@ -1321,6 +1321,62 @@ void graphics::release(CompiledShader *shader)
 	RELEASE_DX_RESOURCE(shader->blob);
 }
 
+
+////////////////////////////////////////////////
+/// PROFILING API
+////////////////////////////////////////////////
+
+ProfilingBlock graphics::get_profiling_block() {
+	ProfilingBlock result = {};
+    
+	// Create disjoint timestamp query.
+	D3D11_QUERY_DESC desc = {};
+    desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+    graphics_context->device->CreateQuery(&desc, &result.disjoint);
+
+	// Create start and end timestamp queries.
+    desc.Query = D3D11_QUERY_TIMESTAMP;
+    graphics_context->device->CreateQuery(&desc, &result.start);
+    graphics_context->device->CreateQuery(&desc, &result.end);
+
+	return result;
+}
+
+void graphics::start_profiling_block(ProfilingBlock *block) {
+	graphics_context->context->Begin(block->disjoint);
+    graphics_context->context->End(block->start);
+}
+
+void graphics::end_profiling_block(ProfilingBlock *block) {
+    graphics_context->context->End(block->end);
+	graphics_context->context->End(block->disjoint);
+}
+
+float graphics::get_latest_profiling_time(ProfilingBlock *block) {
+	// Wait for data to be available.
+    while (graphics_context->context->GetData(block->disjoint, NULL, 0, 0) == S_FALSE) {
+        Sleep(1);
+    }
+
+	// Get disjoint query data.
+	D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint_query_data;
+    graphics_context->context->GetData(block->disjoint, &disjoint_query_data, sizeof(disjoint_query_data), 0);
+	if (disjoint_query_data.Disjoint) {
+		return -1.0f;
+	}
+
+	// Get start and end timestamps.
+	uint64_t start, end;
+    graphics_context->context->GetData(block->start, &start, sizeof(start), 0);
+    graphics_context->context->GetData(block->end, &end, sizeof(end), 0);
+    
+	// Compute difference between start and end in seconds.
+	uint64_t diff = end - start;
+    float result = float(double(diff) / double(disjoint_query_data.Frequency));
+
+	return result;
+}
+
 ////////////////////////////////////////////////
 /// HIGHER LEVEL API
 ////////////////////////////////////////////////
