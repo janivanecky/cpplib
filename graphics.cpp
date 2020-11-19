@@ -917,6 +917,29 @@ void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
 
+void graphics::copy_resource(StructuredBuffer *src, StructuredBuffer *dst) {
+    graphics_context->context->CopyResource(dst->buffer, src->buffer);
+}
+
+void *graphics::read_resource(StructuredBuffer *buffer, void *data) {
+	// Map the subresource.
+	D3D11_MAPPED_SUBRESOURCE subresource;
+    graphics_context->context->Map(buffer->buffer, 0, D3D11_MAP_READ, NULL, &subresource);
+
+	// Allocate memory for the resource data (if not provided).
+    if(!data) {
+		data = malloc(buffer->size);
+	}
+
+	// Copy the resource data.
+    memcpy(data, subresource.pData, buffer->size);
+
+	// Unmap the subresource.
+    graphics_context->context->Unmap(buffer->buffer, 0);
+
+	return data;
+}
+
 CompiledShader compile_shader(void *source, uint32_t source_size, char *target, char **macro_defines = NULL, uint32_t macro_defines_count = 0)
 {
 	CompiledShader compiled_shader;

@@ -337,6 +337,14 @@ namespace graphics
 	// Set ByteAddressBuffer to a slot
 	void set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot);
 
+	// Copy resources.
+	// Should be used to copy from GPU-only to staging resources.
+	void copy_resource(StructuredBuffer *src, StructuredBuffer *dst);
+
+	// Read GPU resource.
+	// Should be used only with staging resources.
+	void *read_resource(StructuredBuffer *buffer, void *data=NULL);
+
 	// Compile a vertex shader from a source code
 	CompiledShader compile_vertex_shader(void *source, uint32_t source_size, char **macro_defines = NULL, uint32_t macro_defines_count = 0);
 	
