@@ -10,8 +10,7 @@
 // Globally unique objects
 FT_Library ft_library;
 
-bool font::init()
-{
+bool font::init() {
     int32_t error = FT_Init_FreeType(&ft_library);
     if (error) {
         PRINT_DEBUG("Error initializing FreeType library!");
@@ -21,8 +20,7 @@ bool font::init()
 }
 
 // NOTE: Memory allocation inside
-Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_size)
-{
+Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_size) {
     Font font = {};
 
     // Allocate memory for the bitmap
@@ -42,8 +40,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
 
     int32_t supersampling = 1;
     error = FT_Set_Pixel_Sizes(face, 0, size);
-    if (error)
-    {
+    if (error) {
         PRINT_DEBUG("Error setting pixel size!");
         free(font_bitmap);
         return Font{};
@@ -59,12 +56,10 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
     font.scale = 1.0f;
     font.face = face;
 
-    for (unsigned char c = 32; c < 128; ++c)
-    {
+    for (unsigned char c = 32; c < 128; ++c) {
         // Load character c
         error = FT_Load_Char(face, c, FT_LOAD_RENDER | FT_LOAD_TARGET_LIGHT);
-        if(error)
-        {
+        if(error) {
             PRINT_DEBUG("Error loading character %c!", c);
             free(font_bitmap);
             return Font{};
@@ -80,15 +75,13 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
         int pitch = face->glyph->bitmap.pitch;
 
         // In case we don't fit in the row, let's move to next row
-        if(x > bitmap_size - glyph_bitmap_width)
-        {
+        if(x > bitmap_size - glyph_bitmap_width) {
             x = 0;
             y += row_height;
         }
 
         // Copy over bitmap
-        for(int32_t r = 0; r < bitmap_height; ++r)
-        {
+        for(int32_t r = 0; r < bitmap_height; ++r) {
             uint8_t *source = face->glyph->bitmap.buffer + pitch * r;
             uint8_t *dest = font_bitmap + (y + r) * bitmap_size + x;
             memcpy(dest, source, glyph_bitmap_width);
@@ -108,8 +101,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
     return font;
 }
 
-float font::get_kerning(Font *font, char c1, char c2)
-{
+float font::get_kerning(Font *font, char c1, char c2) {
     FT_Vector kerning;
     int32_t left_glyph_index = FT_Get_Char_Index(font->face, c1);
     int32_t right_glyph_index = FT_Get_Char_Index(font->face, c2);
@@ -117,11 +109,9 @@ float font::get_kerning(Font *font, char c1, char c2)
     return (float)kerning.x;
 }
 
-float font::get_string_width(char *string, Font *font)
-{
+float font::get_string_width(char *string, Font *font) {
     float width = 0;
-    while(*string)
-    {
+    while(*string) {
         // Get a glyph for the current character
         char c = *string;
         Glyph glyph = font->glyphs[c - 32];
@@ -141,8 +131,7 @@ float font::get_string_width(char *string, Font *font)
 
 float font::get_string_width(char *string, int string_length, Font *font) {
     float width = 0;
-    for(int i = 0; i < string_length; ++i)
-    {
+    for(int i = 0; i < string_length; ++i) {
         // Get a glyph for the current character
         char c = *string;
         Glyph glyph = font->glyphs[c - 32];
@@ -160,13 +149,11 @@ float font::get_string_width(char *string, int string_length, Font *font) {
     return width;
 }
 
-float font::get_row_height(Font *font)
-{
+float font::get_row_height(Font *font) {
     return font->row_height;
 }
 
-void font::release(Font *font)
-{
+void font::release(Font *font) {
     free(font->bitmap);
     font->bitmap = 0;
 }

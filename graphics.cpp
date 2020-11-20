@@ -37,8 +37,7 @@ static char *mem_pool_top;
 /// Public API
 /////////////////////////////////////////////////////
 
-bool graphics::init(LUID *adapter_luid)
-{
+bool graphics::init(LUID *adapter_luid) {
 	UINT flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
 #ifdef DEBUG
 	flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -47,24 +46,20 @@ bool graphics::init(LUID *adapter_luid)
 	IDXGIAdapter *adapter = NULL;
 
 	// In case adapter LUID was specified, go through available adapters and pick the one with specified LUID
-	if (adapter_luid)
-	{
+	if (adapter_luid) {
 		// Create IDXGIFactory, needed for probing avaliable devices/adapters
 		IDXGIFactory *idxgi_factory;
 		HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)(&idxgi_factory));
-		if (FAILED(hr))
-		{
+		if (FAILED(hr)) {
 			PRINT_DEBUG("Failed to create IDXGI factory.");
 			return false;
 		}
 
 		IDXGIAdapter *temp_adapter = NULL;
-		for (uint32_t i = 0; idxgi_factory->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i)
-		{
+		for (uint32_t i = 0; idxgi_factory->EnumAdapters(i, &temp_adapter) != DXGI_ERROR_NOT_FOUND; ++i) {
 			DXGI_ADAPTER_DESC temp_adapter_desc;
 			temp_adapter->GetDesc(&temp_adapter_desc);
-			if(memcmp(&temp_adapter_desc.AdapterLuid, adapter_luid, sizeof(LUID)) == 0)
-			{
+			if(memcmp(&temp_adapter_desc.AdapterLuid, adapter_luid, sizeof(LUID)) == 0) {
 				adapter = temp_adapter;
 				break;
 			}
@@ -138,8 +133,7 @@ bool graphics::init(LUID *adapter_luid)
 	rasterizer_desc_wireframe.FrontCounterClockwise = TRUE;
 
 	hr = graphics_context->device->CreateRasterizerState(&rasterizer_desc_wireframe, &raster_states[RasterType::WIREFRAME]);
-	if (FAILED(hr))
-	{
+	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create Rasterizer state");
 		return false;
 	}
@@ -158,8 +152,7 @@ bool graphics::init(LUID *adapter_luid)
 	return true;
 }
 
-bool graphics::init_swap_chain(HWND window, uint32_t window_width, uint32_t window_height)
-{
+bool graphics::init_swap_chain(HWND window, uint32_t window_width, uint32_t window_height) {
 	DXGI_SWAP_CHAIN_DESC swap_chain_desc = {};
 
 	swap_chain_desc.BufferDesc.Width = window_width;
@@ -194,8 +187,7 @@ bool graphics::init_swap_chain(HWND window, uint32_t window_width, uint32_t wind
 	return true;
 }
 
-RenderTarget graphics::get_render_target_window(bool srgb)
-{
+RenderTarget graphics::get_render_target_window(bool srgb) {
 	// NOTE: buffer.sr_view is not filled and remains NULL - window render target cannot be used as a texture in shader
 	RenderTarget buffer = {};
 
@@ -227,8 +219,7 @@ RenderTarget graphics::get_render_target_window(bool srgb)
 	return buffer;
 }
 
-RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t num_samples)
-{
+RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t num_samples) {
 	RenderTarget buffer = {};
 
 	D3D11_TEXTURE2D_DESC texture_desc = {};
@@ -283,14 +274,12 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 	return buffer;
 }
 
-void graphics::clear_render_target(RenderTarget *buffer, float r, float g, float b, float a)
-{
+void graphics::clear_render_target(RenderTarget *buffer, float r, float g, float b, float a) {
 	float color[4] = { r, g, b, a };
 	graphics_context->context->ClearRenderTargetView(buffer->rt_view, color);
 }
 
-DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height, uint32_t num_samples)
-{
+DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height, uint32_t num_samples) {
 	DepthBuffer buffer = {};
 
 	D3D11_TEXTURE2D_DESC texture_desc = {};
@@ -345,13 +334,11 @@ DepthBuffer graphics::get_depth_buffer(uint32_t width, uint32_t height, uint32_t
 	return buffer;
 }
 
-void graphics::clear_depth_buffer(DepthBuffer *buffer)
-{
+void graphics::clear_depth_buffer(DepthBuffer *buffer) {
 	graphics_context->context->ClearDepthStencilView(buffer->ds_view, D3D11_CLEAR_DEPTH, 1.0f, 0);
 }
 
-void graphics::set_viewport(RenderTarget *buffer)
-{
+void graphics::set_viewport(RenderTarget *buffer) {
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = (float)buffer->width;
 	viewport.Height = (float)buffer->height;
@@ -359,8 +346,7 @@ void graphics::set_viewport(RenderTarget *buffer)
 	graphics_context->context->RSSetViewports(1, &viewport);
 }
 
-void graphics::set_viewport(DepthBuffer *buffer)
-{
+void graphics::set_viewport(DepthBuffer *buffer) {
 	D3D11_VIEWPORT viewport = {};
 	viewport.Width = (float)buffer->width;
 	viewport.Height = (float)buffer->height;
@@ -368,8 +354,7 @@ void graphics::set_viewport(DepthBuffer *buffer)
 	graphics_context->context->RSSetViewports(1, &viewport);
 }
 
-void graphics::set_viewport(Viewport *target_viewport)
-{
+void graphics::set_viewport(Viewport *target_viewport) {
 	D3D11_VIEWPORT viewport = {};
 
 	viewport.Width    = target_viewport->width;
@@ -381,30 +366,25 @@ void graphics::set_viewport(Viewport *target_viewport)
 	graphics_context->context->RSSetViewports(1, &viewport);
 }
 
-void graphics::set_render_targets(DepthBuffer *buffer)
-{
+void graphics::set_render_targets(DepthBuffer *buffer) {
 	ID3D11RenderTargetView **null = { NULL };
 	graphics_context->context->OMSetRenderTargets(0, null, buffer->ds_view);
 }
 
-void graphics::set_render_targets(RenderTarget *buffer)
-{
+void graphics::set_render_targets(RenderTarget *buffer) {
 	graphics_context->context->OMSetRenderTargets(1, &buffer->rt_view, NULL);
 }
 
-void graphics::set_render_targets(RenderTarget *buffer, DepthBuffer *depth_buffer)
-{
+void graphics::set_render_targets(RenderTarget *buffer, DepthBuffer *depth_buffer) {
 	graphics_context->context->OMSetRenderTargets(1, &buffer->rt_view, depth_buffer->ds_view);
 }
 
-void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffer_count, DepthBuffer *depth_buffer)
-{
+void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffer_count, DepthBuffer *depth_buffer) {
 	char *original_mem_pool_top = mem_pool_top;
 	D3D11_VIEWPORT *viewports = (D3D11_VIEWPORT *)mem_pool_top;
 	mem_pool_top += sizeof(D3D11_VIEWPORT) * buffer_count;
 
-	for (uint32_t i = 0; i < buffer_count; ++i)
-	{
+	for (uint32_t i = 0; i < buffer_count; ++i) {
 		viewports[i] = {};
 		viewports[i].Width = (float)buffers[i].width;
 		viewports[i].Height = (float)buffers[i].height;
@@ -414,8 +394,7 @@ void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffe
 	ID3D11RenderTargetView **rt_views = (ID3D11RenderTargetView **)mem_pool_top;
 	mem_pool_top += sizeof(ID3D11RenderTargetView *) * buffer_count;
 
-	for (uint32_t i = 0; i < buffer_count; ++i)
-	{
+	for (uint32_t i = 0; i < buffer_count; ++i) {
 		rt_views[i] = buffers[i].rt_view;
 	}
 
@@ -426,20 +405,17 @@ void graphics::set_render_targets_viewport(RenderTarget *buffers, uint32_t buffe
 	mem_pool_top = original_mem_pool_top;
 }
 
-void graphics::set_render_targets_viewport(RenderTarget *buffer, DepthBuffer *depth_buffer)
-{
+void graphics::set_render_targets_viewport(RenderTarget *buffer, DepthBuffer *depth_buffer) {
 	set_viewport(buffer);
 	set_render_targets(buffer, depth_buffer);
 }
 
-void graphics::set_render_targets_viewport(RenderTarget *buffer)
-{
+void graphics::set_render_targets_viewport(RenderTarget *buffer) {
 	set_viewport(buffer);
 	set_render_targets(buffer);
 }
 
-Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging)
-{
+Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging) {
 	Texture2D texture;
 
 	D3D11_TEXTURE2D_DESC texture_desc = {};
@@ -514,8 +490,7 @@ void graphics::clear_texture(Texture2D *texture, float r, float g, float b, floa
     graphics_context->context->ClearUnorderedAccessViewFloat(texture->ua_view, clear_tex);
 }
 
-Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging)
-{
+Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, uint32_t depth, DXGI_FORMAT format, uint32_t pixel_byte_count, bool staging) {
 	Texture3D texture;
 
 	D3D11_TEXTURE3D_DESC texture_desc = {};
@@ -582,88 +557,74 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	return texture;
 }
 
-void graphics::set_texture(RenderTarget *buffer, uint32_t slot)
-{
+void graphics::set_texture(RenderTarget *buffer, uint32_t slot) {
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
 	graphics_context->context->CSSetShaderResources(slot, 1, &buffer->sr_view);
 }
 
-void graphics::set_texture(DepthBuffer *buffer, uint32_t slot)
-{
+void graphics::set_texture(DepthBuffer *buffer, uint32_t slot) {
 	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
 	graphics_context->context->CSSetShaderResources(slot, 1, &buffer->sr_view);
 }
 
-void graphics::set_texture(Texture2D *texture, uint32_t slot)
-{
+void graphics::set_texture(Texture2D *texture, uint32_t slot) {
 	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
 	graphics_context->context->CSSetShaderResources(slot, 1, &texture->sr_view);
 }
 
-void graphics::set_texture(Texture3D *texture, uint32_t slot)
-{
+void graphics::set_texture(Texture3D *texture, uint32_t slot) {
 	graphics_context->context->PSSetShaderResources(slot, 1, &texture->sr_view);
 	graphics_context->context->CSSetShaderResources(slot, 1, &texture->sr_view);
 }
 
-void graphics::unset_texture(uint32_t slot)
-{
+void graphics::unset_texture(uint32_t slot) {
 	ID3D11ShaderResourceView *null[] = { NULL };
 	graphics_context->context->PSSetShaderResources(slot, 1, null);
 	graphics_context->context->CSSetShaderResources(slot, 1, null);
 }
 
-void graphics::set_texture_compute(Texture2D *texture, uint32_t slot)
-{
+void graphics::set_texture_compute(Texture2D *texture, uint32_t slot) {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &texture->ua_view, &init_counts);
 }
 
-void graphics::set_texture_compute(Texture3D *texture, uint32_t slot)
-{
+void graphics::set_texture_compute(Texture3D *texture, uint32_t slot) {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &texture->ua_view, &init_counts);
 }
 
-void graphics::unset_texture_compute(uint32_t slot)
-{
+void graphics::unset_texture_compute(uint32_t slot) {
 	UINT init_counts = 0;
 	ID3D11UnorderedAccessView *null[] = { NULL };
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, null, &init_counts);
 }
 
-void graphics::set_blend_state(BlendType type)
-{
+void graphics::set_blend_state(BlendType type) {
 	current_blend_type = type;
 	float blend_factor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	graphics_context->context->OMSetBlendState(blend_states[current_blend_type], blend_factor, 0xffffffff);
 }
 
-BlendType graphics::get_blend_state()
-{
+BlendType graphics::get_blend_state() {
 	return current_blend_type;
 }
 
-void graphics::set_rasterizer_state(RasterType type)
-{
+void graphics::set_rasterizer_state(RasterType type) {
 	current_raster_type = type;
 	graphics_context->context->RSSetState(raster_states[current_raster_type]);
 }
 
-RasterType graphics::get_rasterizer_state()
-{
+RasterType graphics::get_rasterizer_state() {
 	return current_raster_type;
 }
 
-D3D11_TEXTURE_ADDRESS_MODE m2m[3] =
-{
+D3D11_TEXTURE_ADDRESS_MODE m2m[3] = {
 	D3D11_TEXTURE_ADDRESS_CLAMP,
 	D3D11_TEXTURE_ADDRESS_WRAP,
 	D3D11_TEXTURE_ADDRESS_BORDER
 };
 
-TextureSampler graphics::get_texture_sampler(SampleMode mode, bool bilinear_filter)
-{
+TextureSampler graphics::get_texture_sampler(SampleMode mode, bool bilinear_filter) {
 	TextureSampler sampler;
 
 	D3D11_TEXTURE_ADDRESS_MODE address_mode = m2m[mode];
@@ -683,14 +644,12 @@ TextureSampler graphics::get_texture_sampler(SampleMode mode, bool bilinear_filt
 	return sampler;
 }
 
-void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot)
-{
+void graphics::set_texture_sampler(TextureSampler *sampler, uint32_t slot) {
 	graphics_context->context->PSSetSamplers(slot, 1, &sampler->sampler);
 }
 
 
-Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology)
-{
+Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_stride, void *indices, uint32_t index_count, uint32_t index_byte_size, D3D11_PRIMITIVE_TOPOLOGY topology) {
 	Mesh mesh = {};
 
 	D3D11_BUFFER_DESC vertex_buffer_desc = {};
@@ -708,8 +667,7 @@ Mesh graphics::get_mesh(void *vertices, uint32_t vertex_count, uint32_t vertex_s
 		return Mesh{};
 	}
 
-	if (indices && index_count > 0)
-	{
+	if (indices && index_count > 0) {
 		D3D11_BUFFER_DESC index_buffer_desc = {};
 		index_buffer_desc.ByteWidth = index_count * index_byte_size;
 		index_buffer_desc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -752,8 +710,7 @@ Mesh graphics::get_mesh(ByteAddressBuffer buffer, uint32_t vertex_count, uint32_
 }
 
 
-void graphics::draw_mesh(Mesh *mesh)
-{
+void graphics::draw_mesh(Mesh *mesh) {
 	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
 
 	graphics_context->context->IASetPrimitiveTopology(mesh->topology);
@@ -765,8 +722,7 @@ void graphics::draw_mesh(Mesh *mesh)
 	}
 }
 
-ConstantBuffer graphics::get_constant_buffer(uint32_t size)
-{
+ConstantBuffer graphics::get_constant_buffer(uint32_t size) {
 	// Make sure that size is always multiple of 16.
 	size = size % 16 == 0 ? size : (size / 16 + 1) * 16;
 
@@ -784,8 +740,7 @@ ConstantBuffer graphics::get_constant_buffer(uint32_t size)
 	return buffer;
 }
 
-ByteAddressBuffer graphics::get_byte_address_buffer(int size)
-{
+ByteAddressBuffer graphics::get_byte_address_buffer(int size) {
 	ByteAddressBuffer buffer = {};
 	buffer.size = size;
 
@@ -820,8 +775,7 @@ ByteAddressBuffer graphics::get_byte_address_buffer(int size)
 	return buffer;
 }
 
-StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_elements, bool staging)
-{
+StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_elements, bool staging) {
 	StructuredBuffer buffer = {};
 	buffer.size = element_stride * num_elements;
 
@@ -877,42 +831,36 @@ StructuredBuffer graphics::get_structured_buffer(int element_stride, int num_ele
 	return buffer;
 }
 
-void graphics::update_constant_buffer(ConstantBuffer *buffer, void *data)
-{
+void graphics::update_constant_buffer(ConstantBuffer *buffer, void *data) {
 	D3D11_MAPPED_SUBRESOURCE mapped_buffer;
 	graphics_context->context->Map(buffer->buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped_buffer);
 	memcpy(mapped_buffer.pData, data, buffer->size);
 	graphics_context->context->Unmap(buffer->buffer, 0);
 }
 
-void graphics::update_structured_buffer(StructuredBuffer *buffer, void *data)
-{
+void graphics::update_structured_buffer(StructuredBuffer *buffer, void *data) {
 	graphics_context->context->UpdateSubresource(buffer->buffer, 0, NULL, data, 0, 0);
 }
 
-void graphics::set_constant_buffer(ConstantBuffer *buffer, uint32_t slot)
-{
+void graphics::set_constant_buffer(ConstantBuffer *buffer, uint32_t slot) {
 	graphics_context->context->PSSetConstantBuffers(slot, 1, &buffer->buffer);
 	graphics_context->context->GSSetConstantBuffers(slot, 1, &buffer->buffer);
 	graphics_context->context->VSSetConstantBuffers(slot, 1, &buffer->buffer);
 	graphics_context->context->CSSetConstantBuffers(slot, 1, &buffer->buffer);
 }
 
-void graphics::set_structured_buffer(StructuredBuffer *buffer, uint32_t slot)
-{
+void graphics::set_structured_buffer(StructuredBuffer *buffer, uint32_t slot) {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
 
-void graphics::unset_structured_buffer(uint32_t slot)
-{
+void graphics::unset_structured_buffer(uint32_t slot) {
 	UINT init_counts = 0;
 	ID3D11UnorderedAccessView *null[] = { NULL };
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, null, &init_counts);
 }
 
-void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
-{
+void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot) {
 	UINT init_counts = 0;
 	graphics_context->context->CSSetUnorderedAccessViews(slot, 1, &buffer->ua_view, &init_counts);
 }
@@ -940,8 +888,7 @@ void *graphics::read_resource(StructuredBuffer *buffer, void *data) {
 	return data;
 }
 
-CompiledShader compile_shader(void *source, uint32_t source_size, char *target, char **macro_defines = NULL, uint32_t macro_defines_count = 0)
-{
+CompiledShader compile_shader(void *source, uint32_t source_size, char *target, char **macro_defines = NULL, uint32_t macro_defines_count = 0) {
 	CompiledShader compiled_shader;
 
 	char *original_mem_pool_top = mem_pool_top;
@@ -981,40 +928,34 @@ CompiledShader compile_shader(void *source, uint32_t source_size, char *target, 
 	return compiled_shader;
 }
 
-CompiledShader graphics::compile_vertex_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
-{
+CompiledShader graphics::compile_vertex_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader vertex_shader = compile_shader(source, source_size, "vs_5_0", macro_defines, macro_defines_count);
 	return vertex_shader;
 }
 
-CompiledShader graphics::compile_pixel_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
-{
+CompiledShader graphics::compile_pixel_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader pixel_shader = compile_shader(source, source_size, "ps_5_0", macro_defines, macro_defines_count);
 	return pixel_shader;
 }
 
-CompiledShader graphics::compile_geometry_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
-{
+CompiledShader graphics::compile_geometry_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader geometry_shader = compile_shader(source, source_size, "gs_5_0", macro_defines, macro_defines_count);
 	return geometry_shader;
 }
 
-CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count)
-{
+CompiledShader graphics::compile_compute_shader(void *source, uint32_t source_size, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader compute_shader = compile_shader(source, source_size, "cs_5_0", macro_defines, macro_defines_count);
 	return compute_shader;
 }
 
-VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count)
-{
+VertexShader graphics::get_vertex_shader(CompiledShader *compiled_shader, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count) {
 	VertexShader vertex_shader = graphics::get_vertex_shader(compiled_shader->blob->GetBufferPointer(),
 															 (uint32_t)compiled_shader->blob->GetBufferSize(),
 															 vertex_input_descs, vertex_input_count);
 	return vertex_shader;
 }
 
-VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader_size, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count)
-{
+VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader_size, VertexInputDesc *vertex_input_descs, uint32_t vertex_input_count) {
 
 	VertexShader shader = {};
 	HRESULT hr = graphics_context->device->CreateVertexShader(shader_byte_code, shader_size, NULL, &shader.vertex_shader);
@@ -1027,8 +968,7 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 	D3D11_INPUT_ELEMENT_DESC *input_layout_desc = (D3D11_INPUT_ELEMENT_DESC *) mem_pool_top;
 	mem_pool_top += sizeof(D3D11_INPUT_ELEMENT_DESC) * vertex_input_count;
 
-	for (uint32_t i = 0; i < vertex_input_count; ++i)
-	{
+	for (uint32_t i = 0; i < vertex_input_count; ++i) {
 		input_layout_desc[i] = {};
 		input_layout_desc[i].SemanticName = vertex_input_descs[i].semantic_name;
 		input_layout_desc[i].Format = vertex_input_descs[i].format;
@@ -1051,21 +991,18 @@ VertexShader graphics::get_vertex_shader(void *shader_byte_code, uint32_t shader
 	return shader;
 }
 
-void graphics::set_vertex_shader(VertexShader *shader)
-{
+void graphics::set_vertex_shader(VertexShader *shader) {
 	graphics_context->context->IASetInputLayout(shader->input_layout);
 	graphics_context->context->VSSetShader(shader->vertex_shader, NULL, 0);
 }
 
-PixelShader graphics::get_pixel_shader(CompiledShader *compiled_shader)
-{
+PixelShader graphics::get_pixel_shader(CompiledShader *compiled_shader) {
 	PixelShader pixel_shader = graphics::get_pixel_shader(compiled_shader->blob->GetBufferPointer(),
 														  (uint32_t)compiled_shader->blob->GetBufferSize());
 	return pixel_shader;
 }
 
-PixelShader graphics::get_pixel_shader(void *shader_byte_code, uint32_t shader_size)
-{
+PixelShader graphics::get_pixel_shader(void *shader_byte_code, uint32_t shader_size) {
 	PixelShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreatePixelShader(shader_byte_code, shader_size, NULL, &shader.pixel_shader);
@@ -1077,25 +1014,22 @@ PixelShader graphics::get_pixel_shader(void *shader_byte_code, uint32_t shader_s
 	return shader;
 }
 
-void graphics::set_pixel_shader()
-{
+void graphics::set_pixel_shader() {
 	graphics_context->context->PSSetShader(NULL, NULL, 0);
 }
 
-void graphics::set_pixel_shader(PixelShader *shader)
-{
+void graphics::set_pixel_shader(PixelShader *shader) {
 	graphics_context->context->PSSetShader(shader->pixel_shader, NULL, 0);
 }
 
-GeometryShader graphics::get_geometry_shader(CompiledShader *compiled_shader)
-{
-	GeometryShader geometry_shader = graphics::get_geometry_shader(compiled_shader->blob->GetBufferPointer(),
-																   (uint32_t) compiled_shader->blob->GetBufferSize());
+GeometryShader graphics::get_geometry_shader(CompiledShader *compiled_shader) {
+	GeometryShader geometry_shader = graphics::get_geometry_shader(
+		compiled_shader->blob->GetBufferPointer(), (uint32_t) compiled_shader->blob->GetBufferSize()
+	);
 	return geometry_shader;
 }
 
-GeometryShader graphics::get_geometry_shader(void *shader_byte_code, uint32_t shader_size)
-{
+GeometryShader graphics::get_geometry_shader(void *shader_byte_code, uint32_t shader_size) {
 	GeometryShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreateGeometryShader(shader_byte_code, shader_size, NULL, &shader.geometry_shader);
@@ -1107,25 +1041,22 @@ GeometryShader graphics::get_geometry_shader(void *shader_byte_code, uint32_t sh
 	return shader;
 }
 
-void graphics::set_geometry_shader()
-{
+void graphics::set_geometry_shader() {
 	graphics_context->context->GSSetShader(NULL, NULL, 0);
 }
 
-void graphics::set_geometry_shader(GeometryShader *shader)
-{
+void graphics::set_geometry_shader(GeometryShader *shader) {
 	graphics_context->context->GSSetShader(shader->geometry_shader, NULL, 0);
 }
 
-ComputeShader graphics::get_compute_shader(CompiledShader *compiled_shader)
-{
-	ComputeShader compute_shader = graphics::get_compute_shader(compiled_shader->blob->GetBufferPointer(),
-																(uint32_t) compiled_shader->blob->GetBufferSize());
+ComputeShader graphics::get_compute_shader(CompiledShader *compiled_shader) {
+	ComputeShader compute_shader = graphics::get_compute_shader(
+		compiled_shader->blob->GetBufferPointer(), (uint32_t) compiled_shader->blob->GetBufferSize()
+	);
 	return compute_shader;
 }
 
-ComputeShader graphics::get_compute_shader(void *shader_byte_code, uint32_t shader_size)
-{
+ComputeShader graphics::get_compute_shader(void *shader_byte_code, uint32_t shader_size) {
 	ComputeShader shader = {};
 
 	HRESULT hr = graphics_context->device->CreateComputeShader(shader_byte_code, shader_size, NULL, &shader.compute_shader);
@@ -1137,29 +1068,23 @@ ComputeShader graphics::get_compute_shader(void *shader_byte_code, uint32_t shad
 	return shader;
 }
 
-void graphics::set_compute_shader()
-{
+void graphics::set_compute_shader() {
 	graphics_context->context->CSSetShader(NULL, NULL, 0);
 }
 
-void graphics::set_compute_shader(ComputeShader *shader)
-{
+void graphics::set_compute_shader(ComputeShader *shader) {
 	graphics_context->context->CSSetShader(shader->compute_shader, NULL, 0);
 }
 
-void graphics::run_compute(int group_x, int group_y, int group_z)
-{
+void graphics::run_compute(int group_x, int group_y, int group_z) {
 	graphics_context->context->Dispatch(group_x, group_y, group_z);
 }
 
-
-void graphics::swap_frames()
-{
+void graphics::swap_frames() {
 	swap_chain->swap_chain->Present(1, 0);
 }
 
-void graphics::show_live_objects()
-{
+void graphics::show_live_objects() {
 	ID3D11Debug *debug_device;
 	graphics_context->device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug_device));
 	debug_device->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
@@ -1167,58 +1092,47 @@ void graphics::show_live_objects()
 
 // is_ready functions
 
-bool graphics::is_ready(Texture2D *texture)
-{
+bool graphics::is_ready(Texture2D *texture) {
 	return texture->texture && texture->sr_view;
 }
 
-bool graphics::is_ready(Texture3D *texture)
-{
+bool graphics::is_ready(Texture3D *texture) {
 	return texture->texture && texture->sr_view;
 }
 
-bool graphics::is_ready(RenderTarget *render_target)
-{
+bool graphics::is_ready(RenderTarget *render_target) {
 	return render_target->rt_view && render_target->texture;
 }
 
-bool graphics::is_ready(DepthBuffer *depth_buffer)
-{
+bool graphics::is_ready(DepthBuffer *depth_buffer) {
 	return depth_buffer->ds_view && depth_buffer->sr_view && depth_buffer->texture;
 }
 
-bool graphics::is_ready(Mesh *mesh)
-{
+bool graphics::is_ready(Mesh *mesh) {
 	return mesh->vertex_buffer && (!mesh->index_count || mesh->index_buffer);
 }
 
-bool graphics::is_ready(ConstantBuffer *buffer)
-{
+bool graphics::is_ready(ConstantBuffer *buffer) {
 	return buffer->buffer;
 }
 
-bool graphics::is_ready(TextureSampler *sampler)
-{
+bool graphics::is_ready(TextureSampler *sampler) {
 	return sampler->sampler;
 }
 
-bool graphics::is_ready(VertexShader *shader)
-{
+bool graphics::is_ready(VertexShader *shader) {
 	return shader->vertex_shader && shader->input_layout;
 }
 
-bool graphics::is_ready(PixelShader *shader)
-{
+bool graphics::is_ready(PixelShader *shader) {
 	return shader->pixel_shader;
 }
 
-bool graphics::is_ready(ComputeShader *shader)
-{
+bool graphics::is_ready(ComputeShader *shader) {
 	return shader->compute_shader;
 }
 
-bool graphics::is_ready(CompiledShader *shader)
-{
+bool graphics::is_ready(CompiledShader *shader) {
 	return shader->blob;
 }
 
@@ -1226,8 +1140,7 @@ bool graphics::is_ready(CompiledShader *shader)
 
 #define RELEASE_DX_RESOURCE(resource) if(resource) resource->Release(); resource = NULL;
 
-void graphics::release()
-{
+void graphics::release() {
 	RELEASE_DX_RESOURCE(swap_chain->swap_chain);
 	RELEASE_DX_RESOURCE(graphics_context->context);
 	RELEASE_DX_RESOURCE(graphics_context->device);
@@ -1238,86 +1151,72 @@ void graphics::release()
 	free(mem_pool);
 }
 
-void graphics::release(RenderTarget *buffer)
-{
+void graphics::release(RenderTarget *buffer) {
 	RELEASE_DX_RESOURCE(buffer->rt_view);
 	RELEASE_DX_RESOURCE(buffer->sr_view);
 	RELEASE_DX_RESOURCE(buffer->texture);
 }
 
-void graphics::release(DepthBuffer *buffer)
-{
+void graphics::release(DepthBuffer *buffer) {
 	RELEASE_DX_RESOURCE(buffer->ds_view);
 	RELEASE_DX_RESOURCE(buffer->sr_view);
 	RELEASE_DX_RESOURCE(buffer->texture);
 }
 
-void graphics::release(Texture2D *texture)
-{
+void graphics::release(Texture2D *texture) {
 	RELEASE_DX_RESOURCE(texture->sr_view);
 	RELEASE_DX_RESOURCE(texture->ua_view);
 	RELEASE_DX_RESOURCE(texture->texture);
 }
 
-void graphics::release(Texture3D *texture)
-{
+void graphics::release(Texture3D *texture) {
 	RELEASE_DX_RESOURCE(texture->sr_view);
 	RELEASE_DX_RESOURCE(texture->ua_view);
 	RELEASE_DX_RESOURCE(texture->texture);
 }
 
-void graphics::release(Mesh *mesh)
-{
+void graphics::release(Mesh *mesh) {
 	RELEASE_DX_RESOURCE(mesh->vertex_buffer);
 	RELEASE_DX_RESOURCE(mesh->index_buffer);
 }
 
-void graphics::release(VertexShader *shader)
-{
+void graphics::release(VertexShader *shader) {
 	RELEASE_DX_RESOURCE(shader->vertex_shader);
 	RELEASE_DX_RESOURCE(shader->input_layout);
 }
 
-void graphics::release(GeometryShader *shader)
-{
+void graphics::release(GeometryShader *shader) {
 	RELEASE_DX_RESOURCE(shader->geometry_shader);
 }
 
-void graphics::release(PixelShader *shader)
-{
+void graphics::release(PixelShader *shader) {
 	RELEASE_DX_RESOURCE(shader->pixel_shader);
 }
 
-void graphics::release(ComputeShader *shader)
-{
+void graphics::release(ComputeShader *shader) {
 	RELEASE_DX_RESOURCE(shader->compute_shader);
 }
 
-void graphics::release(ConstantBuffer *buffer)
-{
+void graphics::release(ConstantBuffer *buffer) {
 	RELEASE_DX_RESOURCE(buffer->buffer);
 }
 
-void graphics::release(StructuredBuffer *buffer)
-{
+void graphics::release(StructuredBuffer *buffer) {
 	RELEASE_DX_RESOURCE(buffer->buffer);
 	RELEASE_DX_RESOURCE(buffer->ua_view);
 	RELEASE_DX_RESOURCE(buffer->sr_view);
 }
 
-void graphics::release(ByteAddressBuffer *buffer)
-{
+void graphics::release(ByteAddressBuffer *buffer) {
 	RELEASE_DX_RESOURCE(buffer->buffer);
 	RELEASE_DX_RESOURCE(buffer->ua_view);
 }
 
-void graphics::release(TextureSampler *sampler)
-{
+void graphics::release(TextureSampler *sampler) {
 	RELEASE_DX_RESOURCE(sampler->sampler);
 }
 
-void graphics::release(CompiledShader *shader)
-{
+void graphics::release(CompiledShader *shader) {
 	RELEASE_DX_RESOURCE(shader->blob);
 }
 
@@ -1381,12 +1280,10 @@ float graphics::get_latest_profiling_time(ProfilingBlock *block) {
 /// HIGHER LEVEL API
 ////////////////////////////////////////////////
 
-int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs)
-{
+int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_t size, VertexInputDesc * vertex_input_descs) {
 	const char *struct_name = "VertexInput";
 	char *c = vertex_string;
-	enum State
-	{
+	enum State {
 		SEARCHING,
 		PARSING_TYPE,
 		SKIPPING_NAME,
@@ -1402,27 +1299,22 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 #define SHADER_TYPE_FLOAT2 1
 #define SHADER_TYPE_FLOAT3 2
 
-	char *types[] =
-	{
+	char *types[] = {
 		"float4", "float2", "float3", "int4", "uint"
 	};
 
-	DXGI_FORMAT formats[]
-	{
+	DXGI_FORMAT formats[] {
 		DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_SINT, DXGI_FORMAT_R32_UINT
 	};
 
 	uint32_t i = 0;
 	int32_t vertex_input_count = 0;
 
-	while (i < size)
-	{
-		switch (state)
-		{
+	while (i < size) {
+		switch (state) {
 		case SEARCHING:
 		{
-			if (strncmp(c, struct_name, strlen(struct_name)) == 0)
-			{
+			if (strncmp(c, struct_name, strlen(struct_name)) == 0) {
 				state = PARSING_TYPE;
 				i += (uint32_t)strlen(struct_name);
 				c += (uint32_t)strlen(struct_name);
@@ -1431,12 +1323,9 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 		break;
 		case PARSING_TYPE:
 		{
-			if (*c == ' ' && type_length > 0)
-			{
-				for (uint32_t j = 0; j < ARRAYSIZE(types); ++j)
-				{
-					if (strncmp(c - type_length, types[j], type_length) == 0)
-					{
+			if (*c == ' ' && type_length > 0) {
+				for (uint32_t j = 0; j < ARRAYSIZE(types); ++j) {
+					if (strncmp(c - type_length, types[j], type_length) == 0) {
 						type = j;
 
 						state = SKIPPING_NAME;
@@ -1445,30 +1334,25 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 						break;
 					}
 				}
-			}
-			else if (isalnum(*c))
-			{
+			} else if (isalnum(*c)) {
 				type_length++;
 			}
 		}
 		break;
 		case SKIPPING_NAME:
 		{
-			if (*c == ':')
-			{
+			if (*c == ':') {
 				state = PARSING_SEMANTIC_NAME;
 			}
 		}
 		break;
 		case PARSING_SEMANTIC_NAME:
 		{
-			if ((isspace(*c) || *c == ';') && semantic_name_length > 0)
-			{
+			if ((isspace(*c) || *c == ';') && semantic_name_length > 0) {
 				if(semantic_name_length >= MAX_SEMANTIC_NAME_LENGTH) {
 					return -1;
 				}
-				if (vertex_input_descs && strncmp(c - semantic_name_length, "SV_InstanceID", semantic_name_length) != 0)
-				{
+				if (vertex_input_descs && strncmp(c - semantic_name_length, "SV_InstanceID", semantic_name_length) != 0) {
 					vertex_input_descs[vertex_input_count].format = formats[type];
 					memcpy(vertex_input_descs[vertex_input_count].semantic_name, c - semantic_name_length, semantic_name_length);
 					vertex_input_descs[vertex_input_count].semantic_name[semantic_name_length] = 0;
@@ -1477,9 +1361,7 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 
 				state = PARSING_TYPE;
 				semantic_name_length = 0;
-			}
-			else if (isalnum(*c) || *c == '_')
-			{
+			} else if (isalnum(*c) || *c == '_') {
 				semantic_name_length++;
 			}
 		}
@@ -1490,8 +1372,7 @@ int32_t graphics::get_vertex_input_desc_from_shader(char *vertex_string, uint32_
 	return vertex_input_count;
 }
 
-VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
-{
+VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count) {
 	// Compile shader
     CompiledShader vertex_shader_compiled = graphics::compile_vertex_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&vertex_shader_compiled)) {
@@ -1517,8 +1398,7 @@ VertexShader graphics::get_vertex_shader_from_code(char *code, uint32_t code_len
 }
 
 
-PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
-{
+PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader pixel_shader_compiled = graphics::compile_pixel_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&pixel_shader_compiled)) {
 		return PixelShader{};
@@ -1530,8 +1410,7 @@ PixelShader graphics::get_pixel_shader_from_code(char *code, uint32_t code_lengt
 	return pixel_shader;
 }
 
-ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count)
-{
+ComputeShader graphics::get_compute_shader_from_code(char *code, uint32_t code_length, char **macro_defines, uint32_t macro_defines_count) {
 	CompiledShader compute_shader_compiled = graphics::compile_compute_shader(code, code_length, macro_defines, macro_defines_count);
 	if(!graphics::is_ready(&compute_shader_compiled)) {
 		return ComputeShader{};

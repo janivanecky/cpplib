@@ -25,8 +25,7 @@ while(platform::get_event(&event)) // Get all the events accumulated since the l
 */
 
 // All the event types
-enum EventType
-{
+enum EventType {
 	EMPTY = 0,
 	MOUSE_MOVE,
 	MOUSE_LBUTTON_DOWN,
@@ -40,14 +39,12 @@ enum EventType
 
 // Event specific data structures
 
-struct MouseMoveData
-{
+struct MouseMoveData {
 	float x;
 	float y;
 };
 
-enum KeyCode
-{
+enum KeyCode {
 	ESC = 0,
 	F1,
 	F2,
@@ -75,19 +72,16 @@ enum KeyCode
 	D
 };
 
-struct KeyPressedData
-{
+struct KeyPressedData {
 	KeyCode code;
 };
 
-struct MouseWheelData
-{
+struct MouseWheelData {
 	float delta;
 };
 
 // Event data struct
-struct Event
-{
+struct Event {
 	EventType type;
 	char data[32] = {};
 };
@@ -96,8 +90,7 @@ struct Event
 typedef LARGE_INTEGER Ticks;
 
 // `platform` namespace handles interfacing with windows API, with the exception of file system interface
-namespace platform
-{
+namespace platform {
 	// Create and return windows with specific name and dimensions
 	HWND get_window(char *window_name, uint32_t window_width, uint32_t window_height);
 
@@ -129,14 +122,12 @@ namespace platform
 /////////////////////////////////////////
 
 // Timer is used for simple timing purposes
-struct Timer
-{
+struct Timer {
     Ticks frequency;
     Ticks start;
 };
 
-namespace timer
-{
+namespace timer {
 	// Create a new timer
     Timer get();
 

@@ -22,8 +22,7 @@ bool ui_active_ = false;
 /// PUBLIC API
 ////////////////////////////
 
-void input::reset()
-{
+void input::reset() {
     mouse_lbutton_pressed = false;
     mouse_delta_position_x_ = 0.0f;
     mouse_delta_position_y_ = 0.0f;
@@ -32,48 +31,39 @@ void input::reset()
     characters_entered_count = 0;
 }   
 
-bool input::mouse_left_button_pressed()
-{
+bool input::mouse_left_button_pressed() {
     return mouse_lbutton_pressed;
 }
 
-bool input::mouse_left_button_down()
-{
+bool input::mouse_left_button_down() {
     return mouse_lbutton_down;
 }
 
-float input::mouse_position_x()
-{
+float input::mouse_position_x() {
     return mouse_position_x_;
 }
 
-float input::mouse_position_y()
-{
+float input::mouse_position_y() {
     return mouse_position_y_;
 }
 
-float input::mouse_delta_position_x()
-{
+float input::mouse_delta_position_x() {
     return mouse_delta_position_x_;
 }
 
-float input::mouse_delta_position_y()
-{
+float input::mouse_delta_position_y() {
     return mouse_delta_position_y_;
 }
 
-float input::mouse_scroll_delta()
-{
+float input::mouse_scroll_delta() {
     return mouse_scroll_delta_;
 }
 
-bool input::key_pressed(KeyCode code)
-{
+bool input::key_pressed(KeyCode code) {
     return key_pressed_[code];
 }
 
-bool input::key_down(KeyCode code)
-{
+bool input::key_down(KeyCode code) {
     return key_down_[code];
 }
 
@@ -84,10 +74,8 @@ int input::characters_entered(char *buffer) {
     return characters_entered_count;
 }
 
-void input::register_event(Event *event)
-{
-    switch(event->type)
-    {
+void input::register_event(Event *event) {
+    switch(event->type) {
         case MOUSE_MOVE:
         {
             // Set mouse position.
@@ -143,5 +131,4 @@ void input::register_event(Event *event)
             character_buffer[characters_entered_count++] = event->data[0];
         }
     }
-    
 }

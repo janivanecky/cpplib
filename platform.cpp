@@ -1,10 +1,8 @@
 #include <windowsx.h>
 #include "platform.h"
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uMsg)
-	{
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	switch (uMsg) {
 	case WM_CLOSE:
 	{
 		PostQuitMessage(0);
@@ -16,15 +14,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-bool platform::get_event(Event *event)
-{
+bool platform::get_event(Event *event) {
 	MSG message;
 
 	event->type = EMPTY;
 	bool is_message = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
 	if(!is_message) return false;
-	switch (message.message)
-	{
+	switch (message.message) {
 	case WM_INPUT:
 	{
 		KeyPressedData *data = (KeyPressedData *)event->data;
@@ -35,15 +31,11 @@ bool platform::get_event(Event *event)
 
 		// extract keyboard raw input data
 		RAWINPUT* raw = reinterpret_cast< RAWINPUT*>(buffer);
-		if (raw->header.dwType == RIM_TYPEKEYBOARD)
-		{
+		if (raw->header.dwType == RIM_TYPEKEYBOARD) {
 			const RAWKEYBOARD& raw_kb = raw->data.keyboard;
-			if (raw_kb.Flags & RI_KEY_BREAK)
-			{
+			if (raw_kb.Flags & RI_KEY_BREAK) {
 				event->type = KEY_UP;
-			}
-			else
-			{
+			} else {
 				event->type = KEY_DOWN;
 			}
 
@@ -141,8 +133,7 @@ bool platform::get_event(Event *event)
 	return true;
 }
 
-HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height)
-{
+HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height) {
 	HINSTANCE program_instance = GetModuleHandle(0);
 
 	WNDCLASSEXA window_class = {};
@@ -154,8 +145,7 @@ HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t win
 	window_class.lpszClassName = "CustomWindowClass";
 
 	HWND window = (HWND)INVALID_HANDLE_VALUE;
-	if (RegisterClassExA(&window_class))
-	{
+	if (RegisterClassExA(&window_class)) {
 		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
 		window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
@@ -177,18 +167,15 @@ HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t win
 	return window;
 }
 
-bool platform::is_window_valid(HWND window)
-{
+bool platform::is_window_valid(HWND window) {
 	return window != INVALID_HANDLE_VALUE;
 }
 
-void platform::show_cursor()
-{
+void platform::show_cursor() {
 	ShowCursor(TRUE);
 }
 
-void platform::hide_cursor()
-{
+void platform::hide_cursor() {
 	while(ShowCursor(FALSE) >= 0);
 }
 
@@ -198,8 +185,7 @@ SYSTEMTIME platform::get_datetime() {
 	return time;
 }
 
-Ticks platform::get_ticks()
-{
+Ticks platform::get_ticks() {
 	LARGE_INTEGER ticks;
 
 	QueryPerformanceCounter(&ticks);
@@ -207,8 +193,7 @@ Ticks platform::get_ticks()
 	return (Ticks)ticks;
 }
 
-Ticks platform::get_tick_frequency()
-{
+Ticks platform::get_tick_frequency() {
 	LARGE_INTEGER frequency;
 
 	QueryPerformanceFrequency(&frequency);
@@ -216,33 +201,28 @@ Ticks platform::get_tick_frequency()
 	return (Ticks)frequency;
 }
 
-float platform::get_dt_from_tick_difference(Ticks t1, Ticks t2, Ticks frequency)
-{
+float platform::get_dt_from_tick_difference(Ticks t1, Ticks t2, Ticks frequency) {
 	float dt = (float)((t2.QuadPart - t1.QuadPart) / (double)frequency.QuadPart);
 	return dt;
 }
 
-Timer timer::get()
-{
+Timer timer::get() {
 	Timer timer = {};
 	timer.frequency = platform::get_tick_frequency();
 	return timer;
 }
 
-void timer::start(Timer *timer)
-{
+void timer::start(Timer *timer) {
 	timer->start = platform::get_ticks();
 }
 
-float timer::end(Timer *timer)
-{
+float timer::end(Timer *timer) {
 	Ticks current = platform::get_ticks();
 	float dt = platform::get_dt_from_tick_difference(timer->start, current, timer->frequency);
 	return dt;
 }
 
-float timer::checkpoint(Timer *timer)
-{
+float timer::checkpoint(Timer *timer) {
 	Ticks current = platform::get_ticks();
 	float dt = platform::get_dt_from_tick_difference(timer->start, current, timer->frequency);
 	timer->start = current;

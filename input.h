@@ -5,8 +5,7 @@
 //
 // Usage:
 // Call `register_event` on all the events from `platform::get_event` each frame
-namespace input
-{
+namespace input {
     // Reset input states that are dependent on state change
     // e.g. - pressed event, mouse delta position....
     void reset();

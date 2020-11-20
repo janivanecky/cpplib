@@ -9,22 +9,19 @@
 #endif
 
 
-File file_system::read_file(char *path)
-{
+File file_system::read_file(char *path) {
     File file = {};
 
     // Open handle to a file
     HANDLE file_handle = CreateFileA(path, GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
+    if (file_handle == INVALID_HANDLE_VALUE) {
         PRINT_DEBUG("Unable to open read handle to file %s.", path);
         return file;
     }
 
     // Get file attributes, these are necessary to know how much data to allocate for reading
     WIN32_FILE_ATTRIBUTE_DATA file_attributes;
-    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes))
-    {
+    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &file_attributes)) {
         PRINT_DEBUG("Unable to get attributes of file %s.", path);
         CloseHandle(file_handle);
         return File{};
@@ -38,12 +35,9 @@ File file_system::read_file(char *path)
     // Read the file into allocated memory
     DWORD bytes_read_from_file = 0;
     if (ReadFile(file_handle, file.data, file_size, &bytes_read_from_file, NULL) &&
-        bytes_read_from_file == file_size)
-    {
+        bytes_read_from_file == file_size) {
         file.size = bytes_read_from_file;
-    }
-    else
-    {
+    } else {
         // In case of read error, deallocate memory and close handle
         PRINT_DEBUG("Unable to read opened file %s.", path);
         HeapFree(heap, 0, file.data);
@@ -56,29 +50,26 @@ File file_system::read_file(char *path)
     return file;
 }
 
-void file_system::release_file(File file)
-{
+void file_system::release_file(File file) {
     // Release allocated memory from the heap
     HANDLE heap = GetProcessHeap();
     HeapFree(heap, 0, file.data);
 }
 
-uint32_t file_system::write_file(char *path, void *data, uint32_t size)
-{
+uint32_t file_system::write_file(char *path, void *data, uint32_t size) {
     // Open handle to a file
     HANDLE file_handle = 0;
-    file_handle = CreateFileA(path, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS,
-                            FILE_ATTRIBUTE_NORMAL, NULL);
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
+    file_handle = CreateFileA(
+        path, GENERIC_WRITE, NULL, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+    );
+    if (file_handle == INVALID_HANDLE_VALUE) {
         PRINT_DEBUG("Unable to open write handle to file %s.", path);
         return 0;
     }
 
     // Write to a file
     DWORD bytes_written = 0;
-    if(!WriteFile(file_handle, data, size, &bytes_written, NULL))
-    {
+    if(!WriteFile(file_handle, data, size, &bytes_written, NULL)) {
         PRINT_DEBUG("Unable to write to file %s.", path);
         return 0;
     }

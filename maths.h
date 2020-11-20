@@ -4,32 +4,26 @@
 
 // TODO: Later split into separate files for Vectors/Matrices
 
-struct Vector2
-{
-	union
-	{
+struct Vector2 {
+	union {
 		float v[2];
-		struct
-		{
+		struct {
 			float x;
 			float y;
 		};
 	};
 
 	Vector2():
-		x(0), y(0)
-	{
+		x(0), y(0) {
 
 	}
 
 	Vector2(float x, float y) :
-		x(x), y(y)
-	{
+		x(x), y(y) {
 
 	}
 
-	Vector2 operator-(Vector2 v)
-	{
+	Vector2 operator-(Vector2 v) {
 		Vector2 result;
 
 		result.x = this->x - v.x;
@@ -38,8 +32,7 @@ struct Vector2
 		return result;
 	}
 
-	Vector2 operator+(Vector2 v)
-	{
+	Vector2 operator+(Vector2 v) {
 		Vector2 result;
 
 		result.x = this->x + v.x;
@@ -48,8 +41,7 @@ struct Vector2
 		return result;
 	}
 
-	Vector2 operator/(float x)
-	{
+	Vector2 operator/(float x) {
 		Vector2 result;
 
 		result.x = this->x / x;
@@ -58,8 +50,7 @@ struct Vector2
 		return result;
 	}
 
-	Vector2 operator*(float x)
-	{
+	Vector2 operator*(float x) {
 		Vector2 result;
 
 		result.x = this->x * x;
@@ -68,24 +59,21 @@ struct Vector2
 		return result;
 	}
 
-	Vector2& operator+=(Vector2 v)
-	{
+	Vector2& operator+=(Vector2 v) {
 		this->x += v.x;
 		this->y += v.y;
 
 		return *this;
 	}
 
-	Vector2& operator-=(Vector2 v)
-	{
+	Vector2& operator-=(Vector2 v) {
 		this->x -= v.x;
 		this->y -= v.y;
 
 		return *this;
 	}
 
-	Vector2& operator*=(float x)
-	{
+	Vector2& operator*=(float x) {
 		this->x *= x;
 		this->y *= x;
 
@@ -95,19 +83,15 @@ struct Vector2
 };
 
 struct Vector4;
-struct Vector3
-{
-	union
-	{
+struct Vector3 {
+	union {
 		float v[3];
-		struct
-		{
+		struct {
 			float x;
 			float y;
 			float z;
 		};
-		struct
-		{
+		struct {
 			float r;
 			float g;
 			float b;
@@ -115,26 +99,22 @@ struct Vector3
 	};
 
 	Vector3() :
-		v()
-	{
+		v() {
 
 	}
 
 	Vector3(float x, float y, float z) :
-		x(x), y(y), z(z)
-	{
+		x(x), y(y), z(z) {
 
 	}
 
 	Vector3(Vector4 v);
 
-	float& operator[](int index)
-	{
+	float& operator[](int index) {
 		return v[index];
 	}
 
-	Vector3 operator-()
-	{
+	Vector3 operator-() {
 		Vector3 result;
 
 		result.x = -this->x;
@@ -145,8 +125,7 @@ struct Vector3
 	}
 
 
-	Vector3 operator-(Vector3 v)
-	{
+	Vector3 operator-(Vector3 v) {
 		Vector3 result;
 
 		result.x = this->x - v.x;
@@ -156,8 +135,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3 operator+(Vector3 v)
-	{
+	Vector3 operator+(Vector3 v) {
 		Vector3 result;
 
 		result.x = this->x + v.x;
@@ -167,8 +145,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3 operator+(float x)
-	{
+	Vector3 operator+(float x) {
 		Vector3 result;
 
 		result.x = this->x + x;
@@ -178,8 +155,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3 operator-(float x)
-	{
+	Vector3 operator-(float x) {
 		Vector3 result;
 
 		result.x = this->x - x;
@@ -189,8 +165,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3 operator*(float x)
-	{
+	Vector3 operator*(float x) {
 		Vector3 result;
 
 		result.x = this->x * x;
@@ -200,8 +175,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3 operator/(float x)
-	{
+	Vector3 operator/(float x) {
 		Vector3 result;
 
 		result.x = this->x / x;
@@ -211,8 +185,7 @@ struct Vector3
 		return result;
 	}
 
-	Vector3& operator+=(Vector3 v)
-	{
+	Vector3& operator+=(Vector3 v) {
 		this->x += v.x;
 		this->y += v.y;
 		this->z += v.z;
@@ -220,8 +193,7 @@ struct Vector3
 		return *this;
 	}
 
-	Vector3& operator-=(Vector3 v)
-	{
+	Vector3& operator-=(Vector3 v) {
 		this->x -= v.x;
 		this->y -= v.y;
 		this->z -= v.z;
@@ -230,63 +202,52 @@ struct Vector3
 	}
 };
 
-struct Vector4
-{
-	union
-	{
+struct Vector4 {
+	union {
 		float v[4];
-		struct 
-		{
+		struct {
 			float x;
 			float y;
 			float z;
 			float w;
 		};
-		struct
-		{
+		struct {
 			float r;
 			float g;
 			float b;
 			float a;
 		};
-		struct
-		{
+		struct {
 			Vector3 xyz;
 			float w;
 		};
 	};
 
-	float& operator[](int index)
-	{
+	float& operator[](int index) {
 		return v[index];
 	}
 
 	Vector4() :
-		x(0), y(0), z(0), w(0)
-	{
+		x(0), y(0), z(0), w(0) {
 
 	}
 
 	Vector4(float x, float y, float z, float w) :
-		x(x), y(y), z(z), w(w)
-	{
+		x(x), y(y), z(z), w(w) {
 
 	}
 
 	Vector4(Vector2 v, float z, float w):
-		x(v.x), y(v.y), z(z), w(w)
-	{
+		x(v.x), y(v.y), z(z), w(w) {
 
 	}
 
 	Vector4(Vector3 v, float w):
-		x(v.x), y(v.y), z(v.z), w(w)
-	{
+		x(v.x), y(v.y), z(v.z), w(w) {
 
 	}
 
-	Vector4 operator-()
-	{
+	Vector4 operator-() {
 		Vector4 result;
 
 		result.x = -this->x;
@@ -297,8 +258,7 @@ struct Vector4
 		return result;
 	}
 
-	Vector4 operator+(Vector4 v)
-	{
+	Vector4 operator+(Vector4 v) {
 		Vector4 result;
 
 		result.x = this->x + v.x;
@@ -309,8 +269,7 @@ struct Vector4
 		return result;
 	}
 
-	Vector4 operator-(Vector4 v)
-	{
+	Vector4 operator-(Vector4 v) {
 		Vector4 result;
 
 		result.x = this->x - v.x;
@@ -321,8 +280,7 @@ struct Vector4
 		return result;
 	}
 
-	Vector4 operator*(float x)
-	{
+	Vector4 operator*(float x) {
 		Vector4 result;
 
 		result.x = this->x * x;
@@ -333,8 +291,7 @@ struct Vector4
 		return result;
 	}
 
-	Vector4 operator*=(float x)
-	{
+	Vector4 operator*=(float x) {
 		this->x = this->x * x;
 		this->y = this->y * x;
 		this->z = this->z * x;
@@ -343,8 +300,7 @@ struct Vector4
 		return *this;
 	}
 
-	Vector4& operator+=(Vector4 v)
-	{
+	Vector4& operator+=(Vector4 v) {
 		this->x += v.x;
 		this->y += v.y;
 		this->z += v.z;
@@ -353,8 +309,7 @@ struct Vector4
 		return *this;
 	}
 
-	Vector4 operator/(float x)
-	{
+	Vector4 operator/(float x) {
 		Vector4 result;
 
 		result.x = this->x / x;
@@ -370,13 +325,10 @@ typedef Vector4 Quaternion;
 Vector3 operator*(float x, Vector3 v);
 
 // TODO: switch to rows?
-struct Matrix4x4
-{
-	union
-	{
+struct Matrix4x4 {
+	union {
 		float x[16];
-		struct
-		{
+		struct {
 			// NOTE: these are columns
 			Vector4 v1;
 			Vector4 v2;
@@ -386,18 +338,15 @@ struct Matrix4x4
 	};
 
 	Matrix4x4() :
-		x{ 0 }
-	{
+		x{ 0 } {
 
 	}
 
-	float& operator[](int index)
-	{
+	float& operator[](int index) {
 		return x[index];
 	}
 
-	Matrix4x4 operator *(Matrix4x4 m)
-	{
+	Matrix4x4 operator *(Matrix4x4 m) {
 		Matrix4x4 result;
 		result[0] = x[0] * m[0] + x[4] * m[1] + x[8] * m[2] + x[12] * m[3];
 		result[1] = x[1] * m[0] + x[5] * m[1] + x[9] * m[2] + x[13] * m[3];
@@ -421,8 +370,7 @@ struct Matrix4x4
 		return result;
 	}
 
-	Vector4 operator *(Vector4 v)
-	{
+	Vector4 operator *(Vector4 v) {
 		Vector4 result;
 		result[0] = x[0] * v[0] + x[4] * v[1] + x[8] * v[2] + x[12] * v[3];
 		result[1] = x[1] * v[0] + x[5] * v[1] + x[9] * v[2] + x[13] * v[3];
@@ -432,8 +380,7 @@ struct Matrix4x4
 	}
 };
 
-namespace math
-{
+namespace math {
 	const float PIHALF = 1.57079633f;
 	const float PI     = 3.14159265f;
 	const float PI2    = 6.28318530f;
@@ -458,8 +405,7 @@ namespace math
 	float length_squared(Vector3 x);
 	float length_squared(Vector4 x);
 	template<typename T>
-	T clamp(T x, T min, T max)
-	{
+	T clamp(T x, T min, T max) {
 		if (x > max) return max;
 		if (x < min) return min;
 		return x;

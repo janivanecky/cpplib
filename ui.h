@@ -3,8 +3,7 @@
 
 struct Font;
 
-struct Panel
-{
+struct Panel {
     char *name;
     Vector2 pos;
     float width;
@@ -12,8 +11,7 @@ struct Panel
     Vector2 item_pos;
 };
 
-namespace ui
-{
+namespace ui {
     void init();
 
     Panel start_panel(char *name, Vector2 pos, float width);

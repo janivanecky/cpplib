@@ -14,16 +14,14 @@ static File font_file;
 static bool is_input_rensposive_ = true;
 static bool is_registering_input_ = false;
 
-struct TextItem
-{
+struct TextItem {
     Vector4 color;
     Vector2 pos;
     char text[100];
     Vector2 origin = Vector2(0,0);
 };
 
-struct RectItem
-{
+struct RectItem {
     Vector4 color;
     Vector2 pos;
     Vector2 size;
@@ -33,11 +31,9 @@ static Array<TextItem> text_items;
 static Array<RectItem> rect_items;
 static Array<RectItem> rect_items_bg;
 
-int32_t hash_string(char *string)
-{
+int32_t hash_string(char *string) {
     int32_t hash_value = 5381;
-    while(*string)
-    {
+    while(*string) {
         hash_value = ((hash_value << 5) + hash_value) + *string;
         string++;
     }
@@ -758,22 +754,18 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
     return false;
 }
 
-void ui::end()
-{
-    for(uint32_t i = 0; i < rect_items_bg.count; ++i)
-    {
+void ui::end() {
+    for(uint32_t i = 0; i < rect_items_bg.count; ++i) {
         RectItem *item = &rect_items_bg.data[i];
         ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color);
     }
 
-    for(uint32_t i = 0; i < rect_items.count; ++i)
-    {
+    for(uint32_t i = 0; i < rect_items.count; ++i) {
         RectItem *item = &rect_items.data[i];
         ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color);
     }
 
-    for(uint32_t i = 0; i < text_items.count; ++i)
-    {
+    for(uint32_t i = 0; i < text_items.count; ++i) {
         TextItem *item = &text_items.data[i];
         ui_draw::draw_text(item->text, item->pos, item->color, item->origin);
     }
@@ -783,23 +775,19 @@ void ui::end()
     array::reset(&text_items);
 }
 
-void ui::set_input_responsive(bool is_responsive)
-{
+void ui::set_input_responsive(bool is_responsive) {
     is_input_rensposive_ = is_responsive;
 }
 
-bool ui::is_input_responsive()
-{
+bool ui::is_input_responsive() {
     return is_input_rensposive_;
 }
 
-bool ui::is_registering_input()
-{
+bool ui::is_registering_input() {
     return is_registering_input_;
 }
 
-Font *ui::get_font()
-{
+Font *ui::get_font() {
     return &font_ui;
 }
 
@@ -807,9 +795,7 @@ void ui::set_background_opacity(float opacity) {
     color_background.w = opacity;
 }
 
-
-void ui::release()
-{
+void ui::release() {
     font::release(&font_ui);
     file_system::release_file(font_file);
 }

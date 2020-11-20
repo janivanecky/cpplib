@@ -5,8 +5,7 @@
 
 // TODO: do floats
 // Glyph specifies information aobut a single letter at a single scale
-struct Glyph
-{
+struct Glyph {
     int bitmap_x, bitmap_y;
     int bitmap_width, bitmap_height;
     int x_offset, y_offset;
@@ -14,8 +13,7 @@ struct Glyph
 };
 
 // Font contains data for rendering text at specific scale
-struct Font
-{
+struct Font {
     Glyph glyphs[96];
     float row_height;
     float top_pad;
@@ -26,8 +24,7 @@ struct Font
 };
 
 // font namespace handles loading Fonts and extracting information from it
-namespace font
-{
+namespace font {
     /*
     Return initialized Font object
 

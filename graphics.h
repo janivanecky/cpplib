@@ -4,8 +4,7 @@
 #include <stdint.h>
 
 // GraphicsContext wraps handles to D3D device and context
-struct GraphicsContext
-{
+struct GraphicsContext {
 	ID3D11Device *device;
 	ID3D11DeviceContext *context;
 };
@@ -18,16 +17,14 @@ extern GraphicsContext *graphics_context;
 /// D3D11 structures
 ////////////////////////////////////////////////////////////
 
-struct SwapChain
-{
+struct SwapChain {
 	IDXGISwapChain *swap_chain;
 };
 
 // Render target can be used both as render target and shader resource view.
 // Exception to this is RenderTarget obtained by calling get_render_target_window, which
 // cannot be used as a shader resource view.
-struct RenderTarget
-{
+struct RenderTarget {
 	ID3D11RenderTargetView *rt_view;
 	ID3D11ShaderResourceView *sr_view;
 	ID3D11Texture2D *texture;
@@ -36,8 +33,7 @@ struct RenderTarget
 };
 
 // Depth buffer can be used both as depth buffer (target) and shader resource view.
-struct DepthBuffer
-{
+struct DepthBuffer {
 	ID3D11DepthStencilView *ds_view;
 	ID3D11ShaderResourceView *sr_view;
 	ID3D11Texture2D *texture;
@@ -45,8 +41,7 @@ struct DepthBuffer
 	uint32_t height;
 };
 
-struct Texture2D
-{
+struct Texture2D {
 	ID3D11Texture2D *texture;
 	ID3D11ShaderResourceView *sr_view;
 	ID3D11UnorderedAccessView *ua_view;
@@ -54,8 +49,7 @@ struct Texture2D
 	uint32_t height;
 };
 
-struct Texture3D
-{
+struct Texture3D {
 	ID3D11Texture3D *texture;
 	ID3D11ShaderResourceView *sr_view;
 	ID3D11UnorderedAccessView *ua_view;
@@ -65,8 +59,7 @@ struct Texture3D
 };
 
 // Mesh references GPU-side memory with vertices and indices
-struct Mesh
-{
+struct Mesh {
 	ID3D11Buffer *vertex_buffer;
 	ID3D11Buffer *index_buffer;
 	uint32_t vertex_stride;
@@ -78,44 +71,37 @@ struct Mesh
 };
 
 // Vertex shader encapsulates both D3D vertex shader and input layou
-struct VertexShader
-{
+struct VertexShader {
 	ID3D11VertexShader *vertex_shader;
 	ID3D11InputLayout *input_layout;
 };
 
-struct GeometryShader
-{
+struct GeometryShader {
 	ID3D11GeometryShader *geometry_shader;
 };
 
-struct ComputeShader
-{
+struct ComputeShader {
 	ID3D11ComputeShader *compute_shader;
 };
 
-struct PixelShader
-{
+struct PixelShader {
 	ID3D11PixelShader *pixel_shader;
 };
 
-struct ConstantBuffer
-{
+struct ConstantBuffer {
 	ID3D11Buffer *buffer;
 	uint32_t size;
 };
 
 // TODO: Maybe unify with ConstantBuffer?
-struct StructuredBuffer
-{
+struct StructuredBuffer {
 	ID3D11Buffer *buffer;
 	ID3D11UnorderedAccessView *ua_view;
 	ID3D11ShaderResourceView *sr_view;
 	uint32_t size;
 };
 
-struct ByteAddressBuffer
-{
+struct ByteAddressBuffer {
 	ID3D11Buffer *buffer;
 	ID3D11UnorderedAccessView *ua_view;
 	uint32_t size;
@@ -129,54 +115,46 @@ struct ByteAddressBuffer
 // .semantic_name = "POSITION" and .format = DXGI_R32G32B32A32_FLOAT
 //
 const uint32_t MAX_SEMANTIC_NAME_LENGTH = 40;
-struct VertexInputDesc
-{
+struct VertexInputDesc {
 	char semantic_name[MAX_SEMANTIC_NAME_LENGTH];
 	DXGI_FORMAT format;
 };
 
 // Compiled shader represents shader byte code, compiled from source code.
-struct CompiledShader
-{
+struct CompiledShader {
 	ID3DBlob *blob;
 };
 
 // Sample modes for the texture sampling.
-enum SampleMode
-{
+enum SampleMode {
 	CLAMP = 0,
 	WRAP,
 	BORDER,
 };
 
-struct TextureSampler
-{
+struct TextureSampler {
 	ID3D11SamplerState *sampler;
 };
 
 #undef OPAQUE
-enum BlendType
-{
+enum BlendType {
 	ALPHA = 0,
 	OPAQUE = 1
 };
 
-enum RasterType
-{
+enum RasterType {
 	SOLID = 0,
 	WIREFRAME = 1
 };
 
-struct Viewport
-{
+struct Viewport {
 	float x;
 	float y;
 	float width;
 	float height;
 };
 
-struct ProfilingBlock
-{
+struct ProfilingBlock {
 	ID3D11Query *start;
 	ID3D11Query *end;
 	ID3D11Query *disjoint;
@@ -187,8 +165,7 @@ struct ProfilingBlock
 //////////////////////////////////////////
 
 // `graphics` namespace contains functions that provide mid-level API on top of D3D11
-namespace graphics
-{
+namespace graphics {
 	// Initialize graphics context and blending states
 	//
 	// Args:

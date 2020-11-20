@@ -466,8 +466,7 @@ void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 ori
     y = math::floor(y - origin.y * text_height);
 
     y += ui_draw_private::font_ui.top_pad;
-    while(*text)
-    {
+    while(*text) {
         char c = *text;
         Glyph glyph = ui_draw_private::font_ui.glyphs[c - 32];
 

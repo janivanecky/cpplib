@@ -4,15 +4,13 @@
 #include <windows.h>
 
 // File encapsulates data loaded from the file and its size.
-struct File
-{
+struct File {
     void *data;
     uint32_t size;
 };
 
 // file_system namespace enables interfacing with the Windows file system
-namespace file_system
-{
+namespace file_system {
     // Read file at path
     File read_file(char *path);
 

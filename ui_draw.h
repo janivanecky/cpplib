@@ -1,8 +1,7 @@
 #pragma once
 #include "maths.h"
 
-namespace ui_draw
-{
+namespace ui_draw {
     void init(float screen_width, float screen_height);
 
     void draw_text(char *text, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
