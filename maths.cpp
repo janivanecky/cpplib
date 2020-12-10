@@ -13,6 +13,14 @@ float math::min(float a, float b) {
 	return a <= b ? a : b;
 }
 
+int math::max(int a, int b) {
+	return a >= b ? a : b;
+}
+
+int math::min(int a, int b) {
+	return a <= b ? a : b;
+}
+
 float math::abs(float x) {
 	return fabsf(x);
 }
