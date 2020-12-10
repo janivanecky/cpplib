@@ -12,14 +12,12 @@ struct Panel {
 };
 
 namespace ui {
-    void init();
-
     Panel start_panel(char *name, Vector2 pos, float width);
     Panel start_panel(char *name, float x, float y, float width);
     void end_panel(Panel *panel);
     Vector4 get_panel_rect(Panel *panel);
 
-    void end();
+    void end_frame();
 
     bool add_toggle(Panel *panel, char *label, bool *state);
     bool add_toggle(Panel *panel, char *label, int *state);
@@ -29,8 +27,6 @@ namespace ui {
     bool add_function_plot(Panel *panel, char *label, float *x, float *y, int point_count, float *select_x, float select_y);
     bool add_textbox(Panel *panel, char *label, char *text, int buffer_size, int *cursor_position);
 
-    void release();
-
     // UI looks control functions.
     void set_background_opacity(float opacity);
 
@@ -39,9 +35,6 @@ namespace ui {
     bool is_input_responsive();
 
     bool is_registering_input();
-
-    // Getters for values on which UI operates
-    Font *get_font();
 }
 
 #ifdef CPPLIB_UI_IMPL

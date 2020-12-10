@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
     graphics::init_swap_chain(window, window_width, window_height);
 
     font::init();
-    ui::init();
     ui_draw::init((float)window_width, (float)window_height);
     ui::set_input_responsive(true);
 
@@ -46,7 +45,7 @@ int main(int argc, char **argv) {
     int combobox_selected_val = 0;
 
     // Textfield state variables
-    char text_buffer[100] = "HELLO THERE, WHAT'S UP";
+    char text_buffer[100] = "HELLO THERE, WHAT'S UP! SOMETHING.";
     int text_cursor = 0;
 
     // Function plot state variables
@@ -57,7 +56,6 @@ int main(int argc, char **argv) {
         sin_y[i] = math::sin(sin_x[i]);
     }
     float sin_x_selected = 0.5f;
-    float sin_y_selected = math::sin(sin_x_selected);
 
     // Render loop
     bool is_running = true;
@@ -102,6 +100,7 @@ int main(int argc, char **argv) {
         ui::add_textbox(&panel, "text", text_buffer, ARRAYSIZE(text_buffer), &text_cursor);
 
         // Test function plot
+        float sin_y_selected = math::sin(sin_x_selected);
         ui::add_function_plot(&panel, "sin function", sin_x, sin_y, ARRAYSIZE(sin_x), &sin_x_selected, sin_y_selected);
 
         // Test text drawing
@@ -124,11 +123,10 @@ int main(int argc, char **argv) {
 
         // End frame
         ui::end_panel(&panel);
-        ui::end();
+        ui::end_frame();
         graphics::swap_frames();
     }
 
-    ui::release();
     graphics::release();
     return 0;
 }
