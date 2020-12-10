@@ -1,5 +1,6 @@
 #pragma once
 #include "maths.h"
+#include "font.h"
 
 namespace ui_draw {
     void init(float screen_width, float screen_height);
@@ -15,6 +16,8 @@ namespace ui_draw {
     void draw_line(Vector2 *points, int point_count, float width, Vector4 color);
 
     void release();
+
+    Font *get_font();
 }
 
 #ifdef CPPLIB_UIDRAW_IMPL

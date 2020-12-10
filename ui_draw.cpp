@@ -1,6 +1,5 @@
 #include <cassert>
 #include "ui_draw.h"
-#include "font.h"
 #include "graphics.h"
 #include "file_system.h"
 
@@ -648,4 +647,8 @@ void ui_draw::release()
 
     font::release(&ui_draw_private::font_ui);
     file_system::release_file(ui_draw_private::font_file);
+}
+
+Font *ui_draw::get_font() {
+    return &ui_draw_private::font_ui;
 }
