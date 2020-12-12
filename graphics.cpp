@@ -709,7 +709,6 @@ Mesh graphics::get_mesh(ByteAddressBuffer buffer, uint32_t vertex_count, uint32_
 	return mesh;
 }
 
-
 void graphics::draw_mesh(Mesh *mesh) {
 	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
 
@@ -719,6 +718,18 @@ void graphics::draw_mesh(Mesh *mesh) {
 		graphics_context->context->DrawIndexed(mesh->index_count, 0, 0);
 	} else {
 		graphics_context->context->Draw(mesh->vertex_count, 0);
+	}
+}
+
+void graphics::draw_mesh_instanced(Mesh *mesh, int instance_count) {
+	graphics_context->context->IASetVertexBuffers(0, 1, &mesh->vertex_buffer, &mesh->vertex_stride, &mesh->vertex_offset);
+
+	graphics_context->context->IASetPrimitiveTopology(mesh->topology);
+	if(mesh->index_buffer) {
+		graphics_context->context->IASetIndexBuffer(mesh->index_buffer, mesh->index_format, 0);
+		graphics_context->context->DrawIndexedInstanced(mesh->index_count, instance_count, 0, 0, 0);
+	} else {
+		graphics_context->context->DrawInstanced(mesh->vertex_count, instance_count, 0, 0);
 	}
 }
 

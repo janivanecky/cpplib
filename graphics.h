@@ -294,6 +294,9 @@ namespace graphics {
 	// Draw a Mesh
 	void draw_mesh(Mesh *mesh);
 
+	// Draw multiple Mesh instances
+	void draw_mesh_instanced(Mesh *mesh, int instance_count);
+
 	// Get ConstantBuffer with specific size
 	ConstantBuffer get_constant_buffer(uint32_t size);
 
