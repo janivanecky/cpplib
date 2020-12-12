@@ -1,6 +1,6 @@
 #pragma once
-#include "maths.h"
 #include "font.h"
+#include "maths.h"
 
 namespace ui_draw {
     void init(float screen_width, float screen_height);

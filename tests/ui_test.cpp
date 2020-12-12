@@ -113,13 +113,24 @@ int main(int argc, char **argv) {
         ui_draw::draw_triangle(Vector2(600, 80), Vector2(700, 80), Vector2(650, 100), Vector4(0,1,0,1));
         Vector2 line_points[4] = {
             Vector2(600, 110),
-            Vector2(600, 120),
+            Vector2(600, 140),
             Vector2(700, 110),
-            Vector2(700, 120),
+            Vector2(700, 140),
         };
 
         // Test line drawing
-        ui_draw::draw_line(line_points, 4, 4, Vector4(0,1,1,1));
+        ui_draw::draw_line(line_points, 4, 8, Vector4(0,1,1,1));
+
+        const int circle_point_count = 16000;
+        Vector2 circle_points[circle_point_count];
+        for(int i = 0; i < circle_point_count; ++i) {
+            float a = math::PI2 / float(circle_point_count - 1) * i;
+            circle_points[i].x = 650 + math::sin(a) * 50.0f;
+            circle_points[i].y = 200 + math::cos(a) * 50.0f;
+        }
+
+        // Test line drawing
+        ui_draw::draw_line(circle_points, circle_point_count, 2, Vector4(0,1,1,1));
 
         // End frame
         ui::end_panel(&panel);
@@ -128,5 +139,7 @@ int main(int argc, char **argv) {
     }
 
     graphics::release();
+    ui_draw::release();
+
     return 0;
 }
