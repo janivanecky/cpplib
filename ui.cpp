@@ -6,8 +6,6 @@
 #include "array.h"
 #include "input.h"
 
-// TODO: Make sure sections are correctly ordered, and commented
-
 /*
 
 This section defines global UI parameters.

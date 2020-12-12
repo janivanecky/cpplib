@@ -3,7 +3,6 @@
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
-// TODO: do floats
 // Glyph specifies information aobut a single letter at a single scale
 struct Glyph {
     int bitmap_x, bitmap_y;

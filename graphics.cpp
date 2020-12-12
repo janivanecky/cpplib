@@ -426,7 +426,6 @@ Texture2D graphics::get_texture2D(void *data, uint32_t width, uint32_t height, D
 	texture_desc.Format = format;
 	texture_desc.SampleDesc.Count = 1;
 	texture_desc.SampleDesc.Quality = 0;
-	// TODO: Maybe not the best Usage flag.
 	texture_desc.Usage = staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
 	texture_desc.BindFlags = staging ? 0 : D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	texture_desc.CPUAccessFlags = staging ? D3D11_CPU_ACCESS_READ : 0;
@@ -499,7 +498,6 @@ Texture3D graphics::get_texture3D(void *data, uint32_t width, uint32_t height, u
 	texture_desc.Depth = depth;
 	texture_desc.MipLevels = 1;
 	texture_desc.Format = format;
-	// TODO: Maybe not the best Usage flag.
 	texture_desc.Usage = staging ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
 	texture_desc.BindFlags = staging ? 0 : D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	texture_desc.CPUAccessFlags = staging ? D3D11_CPU_ACCESS_READ : 0;

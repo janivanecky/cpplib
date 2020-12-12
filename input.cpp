@@ -127,7 +127,6 @@ void input::register_event(Event *event) {
         break;
         case CHAR_ENTERED:
         {
-            // TODO: Maybe provide API for this
             character_buffer[characters_entered_count++] = event->data[0];
         }
     }

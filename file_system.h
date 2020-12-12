@@ -1,6 +1,5 @@
 #pragma once
 #include <stdint.h>
-// TODO: Should not be here, it's just here for FILETIME
 #include <windows.h>
 
 // File encapsulates data loaded from the file and its size.
