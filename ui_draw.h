@@ -15,6 +15,12 @@ namespace ui_draw {
 
     void draw_line(Vector2 *points, int point_count, float width, Vector4 color);
 
+    void draw_circle(Vector2 pos, float radius, Vector4 color);
+
+    void draw_arc(
+        Vector2 pos, float radius_min, float radius_max, float start_radian, float end_radian, Vector4 color
+    );
+
     void release();
 
     Font *get_font();

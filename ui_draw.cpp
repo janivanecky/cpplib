@@ -21,6 +21,7 @@ This section defines CPU and GPU-side constants.
 #define TRIANGLE_VERTICES_BUFFER_INDEX 1
 #define LINE_VERTICES_BUFFER_INDEX 1
 #define LINE_SETTINGS_BUFFER_INDEX 2
+#define ARC_SETTINGS_BUFFER_INDEX 2
 
 // Max number of line points we can draw at once.
 #define LINE_POINTS_TO_DRAW_BATCH_SIZE 4096
@@ -115,6 +116,44 @@ VertexOutput main(VertexInput input) {
 	result.svPosition = mul(projection, mul(view, mul(model, input.position)));
 
 	return result;
+}
+)";
+
+char vertex_shader_arc_string[] = R"(
+struct VertexInput {
+	float4 position: POSITION;
+};
+
+struct VertexOutput {
+	float4 svPosition: SV_POSITION;
+};
+
+cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
+	matrix projection;
+	matrix view;
+};
+
+cbuffer ArcSettings : register(b)" STRINGIFY(ARC_SETTINGS_BUFFER_INDEX) R"() {
+	float2 pos;
+    float min_radius;
+    float max_radius;
+    float min_radian;
+    float max_radian;
+};
+
+VertexOutput main(VertexInput input) {
+	VertexOutput result;
+
+    float r = min_radius + (max_radius - min_radius) * input.position.y;
+    float a = min_radian + (max_radian - min_radian) * input.position.x;
+
+    float2 p = float2(sin(a) * r, cos(a) * r);
+
+    float4 vertex_position = float4(p + pos, 0.0f, 1.0f);
+
+    result.svPosition = mul(projection, mul(view, vertex_position));
+
+    return result;
 }
 )";
 
@@ -331,6 +370,7 @@ ConstantBuffer buffer_color;
 ConstantBuffer buffer_vertices;
 ConstantBuffer buffer_vertices_line;
 ConstantBuffer buffer_line_width;
+ConstantBuffer buffer_arc;
 
 // Vertex shaders.
 VertexShader vertex_shader_font;
@@ -338,6 +378,7 @@ VertexShader vertex_shader_rect;
 VertexShader vertex_shader_triangle;
 VertexShader vertex_shader_line;
 VertexShader vertex_shader_miter;
+VertexShader vertex_shader_arc;
 
 // Pixel shaders.
 PixelShader pixel_shader_font;
@@ -351,6 +392,8 @@ Mesh quad_mesh;
 Mesh triangle_mesh;
 Mesh line_mesh;
 Mesh miter_mesh;
+Mesh circle_mesh;
+Mesh arc_mesh;
 
 // Font + font texture.
 Font font_ui;
@@ -387,6 +430,7 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     _ui_draw::buffer_vertices = graphics::get_constant_buffer(sizeof(Vector4) * 3);
     _ui_draw::buffer_vertices_line = graphics::get_constant_buffer(sizeof(Vector4) * LINE_POINTS_TO_DRAW_BATCH_SIZE);
     _ui_draw::buffer_line_width = graphics::get_constant_buffer(sizeof(float));
+    _ui_draw::buffer_arc = graphics::get_constant_buffer(sizeof(float) * 6);
     assert(graphics::is_ready(&_ui_draw::buffer_model));
     assert(graphics::is_ready(&_ui_draw::buffer_pv));
     assert(graphics::is_ready(&_ui_draw::buffer_rect));
@@ -394,6 +438,7 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     assert(graphics::is_ready(&_ui_draw::buffer_vertices));
     assert(graphics::is_ready(&_ui_draw::buffer_vertices_line));
     assert(graphics::is_ready(&_ui_draw::buffer_line_width));
+    assert(graphics::is_ready(&_ui_draw::buffer_arc));
 
     // Create mesh
     _ui_draw::quad_mesh = graphics::get_mesh(
@@ -428,12 +473,15 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
         _ui_draw::vertex_shader_miter_string, ARRAYSIZE(_ui_draw::vertex_shader_miter_string));
     _ui_draw::pixel_shader_solid_color = graphics::get_pixel_shader_from_code(
         _ui_draw::pixel_shader_solid_color_string, ARRAYSIZE(_ui_draw::pixel_shader_solid_color_string));
+    _ui_draw::vertex_shader_arc = graphics::get_vertex_shader_from_code(
+        _ui_draw::vertex_shader_arc_string, ARRAYSIZE(_ui_draw::vertex_shader_arc_string));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_rect));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_font));
     assert(graphics::is_ready(&_ui_draw::pixel_shader_font));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_triangle));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_line));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_miter));
+    assert(graphics::is_ready(&_ui_draw::vertex_shader_arc));
     assert(graphics::is_ready(&_ui_draw::pixel_shader_solid_color));
 
     // Create texture sampler
@@ -455,8 +503,44 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
         DXGI_FORMAT_R8_UNORM, 1
     );
     assert(graphics::is_ready(&_ui_draw::font_ui_texture));
-}
 
+    // Initialize circle mesh.
+    const int CIRCLE_PARTS_COUNT = 64;
+    Vector4 *circle_vertices = (Vector4 *)malloc(sizeof(Vector4) * 3 * CIRCLE_PARTS_COUNT);
+    for (int i = 0; i < CIRCLE_PARTS_COUNT; ++i) {
+        float a1 = math::PI2 / float(CIRCLE_PARTS_COUNT) * i;
+        float a2 = math::PI2 / float(CIRCLE_PARTS_COUNT) * (i + 1);
+
+        circle_vertices[i * 3] = Vector4(
+            0.0f, 0.0f, 0.0f, 1.0f
+        );
+        circle_vertices[i * 3 + 1] = Vector4(
+            math::sin(a1), math::cos(a1), 0.0f, 1.0f
+        );
+        circle_vertices[i * 3 + 2] = Vector4(
+            math::sin(a2), math::cos(a2), 0.0f, 1.0f
+        );
+    }
+    _ui_draw::circle_mesh = graphics::get_mesh(circle_vertices, CIRCLE_PARTS_COUNT * 3, sizeof(Vector4), NULL, 0, 0);
+    free(circle_vertices);
+
+    // Initialize arc mesh.
+    const int ARC_PARTS_COUNT = 128;
+    Vector4 *arc_vertices = (Vector4 *)malloc(sizeof(Vector4) * 6 * ARC_PARTS_COUNT);
+    for (int i = 0; i < ARC_PARTS_COUNT; ++i) {
+        float a1 = 1.0f / float(ARC_PARTS_COUNT) * i;
+        float a2 = 1.0f / float(ARC_PARTS_COUNT) * (i + 1);
+
+        arc_vertices[i * 6] = Vector4(a1, 0.0f, 0.0f, 1.0f);
+        arc_vertices[i * 6 + 1] = Vector4(a2, 1.0f, 0.0f, 1.0f);
+        arc_vertices[i * 6 + 2] = Vector4(a1, 1.0f, 0.0f, 1.0f);
+        arc_vertices[i * 6 + 3] = Vector4(a1, 0.0f, 0.0f, 1.0f);
+        arc_vertices[i * 6 + 4] = Vector4(a2, 0.0f, 0.0f, 1.0f);
+        arc_vertices[i * 6 + 5] = Vector4(a2, 1.0f, 0.0f, 1.0f);
+    }
+    _ui_draw::arc_mesh = graphics::get_mesh(arc_vertices, ARC_PARTS_COUNT * 6, sizeof(Vector4), NULL, 0, 0);
+    free(arc_vertices);
+}
 
 
 void ui_draw::release() {
@@ -617,6 +701,80 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
 
 void ui_draw::draw_rect(Vector2 pos, float width, float height, Vector4 color) {
     ui_draw::draw_rect(pos.x, pos.y, width, height, color);
+}
+
+void ui_draw::draw_circle(Vector2 pos, float radius, Vector4 color) {
+    // Set circle shaders (same as for rectangle).
+    graphics::set_pixel_shader(&_ui_draw::pixel_shader_solid_color);
+    graphics::set_vertex_shader(&_ui_draw::vertex_shader_rect);
+
+    // Set alpha blending state
+    BlendType old_blend_state = graphics::get_blend_state();
+    graphics::set_blend_state(BlendType::ALPHA);
+
+    // Set constant bufers
+    graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_model, MODEL_MATRICES_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
+
+    // Get constant buffer values
+    Matrix4x4 pv_matrices[2] = {
+        get_projection_matrix(),
+        math::get_identity()
+    };
+    Matrix4x4 model_matrix =
+        math::get_translation(pos.x, _ui_draw::screen_height - pos.y, 0) *
+        math::get_scale(radius, radius, 1.0f);
+
+    // Update constant buffers
+    graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
+    graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
+    graphics::update_constant_buffer(&_ui_draw::buffer_model, &model_matrix);
+
+    // Render rect
+    graphics::draw_mesh(&_ui_draw::circle_mesh);
+
+    // Reset previous blending state
+    graphics::set_blend_state(old_blend_state);
+}
+
+void ui_draw::draw_arc(
+    Vector2 pos, float radius_min, float radius_max, float start_radian, float end_radian, Vector4 color
+) {
+    // Set arc shaders.
+    graphics::set_pixel_shader(&_ui_draw::pixel_shader_solid_color);
+    graphics::set_vertex_shader(&_ui_draw::vertex_shader_arc);
+
+    // Set alpha blending state
+    BlendType old_blend_state = graphics::get_blend_state();
+    graphics::set_blend_state(BlendType::ALPHA);
+
+    // Set constant bufers
+    graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_arc, ARC_SETTINGS_BUFFER_INDEX);
+
+    // Get constant buffer values
+    Matrix4x4 pv_matrices[2] = {
+        get_projection_matrix(),
+        math::get_identity()
+    };
+    float arc_values[6] = {
+        pos.x, pos.y,
+        radius_min, radius_max,
+        start_radian, end_radian
+    };
+
+    // Update constant buffers
+    graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
+    graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
+    graphics::update_constant_buffer(&_ui_draw::buffer_arc, &arc_values);
+
+    // Render rect
+    graphics::draw_mesh(&_ui_draw::arc_mesh);
+
+    // Reset previous blending state
+    graphics::set_blend_state(old_blend_state);
 }
 
 void ui_draw::draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color) {
