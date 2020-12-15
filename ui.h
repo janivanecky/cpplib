@@ -29,6 +29,7 @@ namespace ui {
 
     // UI looks control functions.
     void set_background_opacity(float opacity);
+    void invert_colors();
 
     // These functions enable turning UI on/off as a listener for inputs
     void set_input_responsive(bool is_responsive);

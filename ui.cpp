@@ -28,9 +28,8 @@ const float PLOT_BOX_VERTICAL_PADDING = 5.0f;
 const int MAX_TEXT_LENGTH = 100;
 
 #undef COLOR_BACKGROUND // For some reason this is defined in WinUser.h
-static Vector4 COLOR_BACKGROUND     = Vector4(0.01f, 0.01f, 0.01f, .9f);
-static Vector4 COLOR_FOREGROUND     = Vector4(0.8f, 0.8f, 0.8f, 0.6f);
-static Vector4 COLOR_LABEL          = Vector4(1.0f,1.0f,1.0f,0.8f);
+static Vector4 COLOR_BACKGROUND = Vector4(0.01f, 0.01f, 0.01f, .9f);
+static Vector4 COLOR_LABEL      = Vector4(1.0f, 1.0f, 1.0f, 0.9f);
 
 // Items that are not hot/active are faded.
 const float INACTIVE_COLOR_MODIFIER = 0.8f;
@@ -39,6 +38,17 @@ const float ACTIVE_COLOR_MODIFIER   = 1.0f;
 // API to change the background color opacity. 
 void ui::set_background_opacity(float opacity) {
     COLOR_BACKGROUND.w = opacity;
+}
+
+// Invert the UI colors.
+void ui::invert_colors() {
+    COLOR_BACKGROUND.x = 1.0f - COLOR_BACKGROUND.x;
+    COLOR_BACKGROUND.y = 1.0f - COLOR_BACKGROUND.y;
+    COLOR_BACKGROUND.z = 1.0f - COLOR_BACKGROUND.z;
+
+    COLOR_LABEL.x = 1.0f - COLOR_LABEL.x;
+    COLOR_LABEL.y = 1.0f - COLOR_LABEL.y;
+    COLOR_LABEL.z = 1.0f - COLOR_LABEL.z;
 }
 
 /*
@@ -432,7 +442,8 @@ bool update_toggle_state(int32_t toggle_id, Vector2 pos, Vector2 size, bool *act
 void render_toggle_state(int32_t toggle_id, Vector2 pos, Vector2 size, bool active, char *label) {
     // Set up colors.
     float color_modifier = is_hot(toggle_id) ? ACTIVE_COLOR_MODIFIER : INACTIVE_COLOR_MODIFIER;
-    Vector4 box_color = COLOR_FOREGROUND * color_modifier;
+    // Slightly toned-down so the color is less intensive.
+    Vector4 box_color = COLOR_LABEL * color_modifier * 0.9f;
     Vector4 label_color = COLOR_LABEL * color_modifier;
 
     // Draw bg rectangle box.
@@ -524,7 +535,8 @@ void render_slider_state(
     float bounds_width = slider_active ? LINES_WIDTH * 2.0f : LINES_WIDTH;
     float color_modifier = slider_active ? ACTIVE_COLOR_MODIFIER : INACTIVE_COLOR_MODIFIER;
     
-    Vector4 slider_color = COLOR_FOREGROUND * color_modifier;
+    // Slightly toned down so there's contrast between the current value and slider box.
+    Vector4 slider_color = COLOR_LABEL * color_modifier * 0.7f;
     Vector4 bounds_color = COLOR_LABEL * color_modifier;
     Vector4 label_color = COLOR_LABEL * color_modifier;
     
