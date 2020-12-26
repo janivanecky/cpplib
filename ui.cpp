@@ -159,6 +159,11 @@ void add_rect(Vector2 pos, Vector2 size, Vector4 color) {
     array::add(&rect_items, item);
 }
 
+void add_rect_bg(Vector2 pos, Vector2 size, Vector4 color) {
+    RectItem item = {color, pos, size};
+    array::add(&rect_items_bg, item);
+}
+
 void add_text(Vector2 pos, Vector4 color, Vector2 origin, char *fmt_string, ...) {
     TextItem item = {color, pos, origin};
 
@@ -306,7 +311,7 @@ Panel ui::start_panel(char *name, float x, float y, float width) {
 
 void ui::end_panel(Panel *panel) {
     Vector4 panel_rect = get_panel_rect(panel);
-    add_rect(
+    add_rect_bg(
         Vector2(panel_rect.x, panel_rect.y),
         Vector2(panel_rect.z, panel_rect.w),
         COLOR_BACKGROUND
