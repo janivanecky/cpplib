@@ -414,6 +414,7 @@ namespace math {
 	}
 	float floor(float x);
 
+	float lerp(float v1, float v2, float x);
 	Vector3 lerp(Vector3 v1, Vector3 v2, float x);
 	Vector4 lerp(Vector4 v1, Vector4 v2, float x);
 	Vector4 nlerp(Vector4 v1, Vector4 v2, float x);

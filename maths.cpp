@@ -111,6 +111,10 @@ float math::rad2deg(float rad) {
 	return deg;
 }
 
+float math::lerp(float v1, float v2, float x) {
+	return v1 * (1 - x) + v2 * x;
+}
+
 Vector3 math::lerp(Vector3 v1, Vector3 v2, float x) {
 	Vector3 result = {};
 
