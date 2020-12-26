@@ -2,7 +2,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <cassert>
-#include "memory.h"
 
 // Array is a data struct used as a dynamically allocated list.
 template <typename T>
@@ -27,7 +26,7 @@ namespace array {
     void init(Array<T> *array, uint32_t size) {
         array->size = size;
         array->count = 0;
-        array->data = memory::alloc_heap<T>(size);
+        array->data = (T *)malloc(size * sizeof(T));
         assert(array->data);
     }
 
@@ -50,10 +49,10 @@ namespace array {
     void add(Array<T> *array, T item) {
         // In case the array is full, reallocate
         if(array->size == array->count) {
-            T *new_mem = memory::alloc_heap<T>(array->size * array_expansion_ratio);
+            T *new_mem = (T *)malloc(array->size * array_expansion_ratio * sizeof(T));
             assert(new_mem);
             memcpy(new_mem, array->data, sizeof(T) * array->size);
-            memory::free_heap(array->data);
+            free(array->data);
             array->data = new_mem;
             array->size *= array_expansion_ratio;
         }
@@ -64,7 +63,7 @@ namespace array {
     // Completely release the array, freeing all the memory
     template <typename T>
     void release(Array<T> *array) {
-        memory::free_heap(array->data);
+        free(array->data);
         array->size = 0;
         array->count = 0;
     }
