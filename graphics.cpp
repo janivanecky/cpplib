@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include <d3dcompiler.h>
+#include <stdio.h>
 #ifdef DEBUG
 #include<stdio.h>
 #define PRINT_DEBUG(message, ...) {printf("ERROR in file %s on line %d: ", __FILE__, __LINE__); printf(message, __VA_ARGS__); printf("\n");}
@@ -1151,12 +1152,18 @@ bool graphics::is_ready(CompiledShader *shader) {
 
 void graphics::release() {
 	RELEASE_DX_RESOURCE(swap_chain->swap_chain);
-	RELEASE_DX_RESOURCE(graphics_context->context);
-	RELEASE_DX_RESOURCE(graphics_context->device);
 	RELEASE_DX_RESOURCE(blend_states[BlendType::OPAQUE]);
 	RELEASE_DX_RESOURCE(blend_states[BlendType::ALPHA]);
 	RELEASE_DX_RESOURCE(raster_states[RasterType::SOLID]);
 	RELEASE_DX_RESOURCE(raster_states[RasterType::WIREFRAME]);
+
+	// This is required so the swap chain is actually released.
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-flush#deferred-destruction-issues-with-flip-presentation-swap-chains
+	graphics_context->context->ClearState();
+	graphics_context->context->Flush();
+
+	RELEASE_DX_RESOURCE(graphics_context->context);
+	RELEASE_DX_RESOURCE(graphics_context->device);
 	free(mem_pool);
 }
 
