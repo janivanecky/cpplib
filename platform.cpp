@@ -1,6 +1,11 @@
 #include <windowsx.h>
 #include "platform.h"
 
+// Constants
+static const char *BROADCAST_MESSAGE_IDENTIFIER = "cpplib_broadcast";
+const uint32_t BROADCAST_MESSAGE_ID = RegisterWindowMessageA(BROADCAST_MESSAGE_IDENTIFIER);
+const char *WINDOW_CLASS_NAME = "cpplib_window_class";
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
 	case WM_CLOSE:
@@ -14,12 +19,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	return 0;
 }
 
-bool platform::get_event(Event *event) {
+bool platform::get_event(Event *event, bool broadcast_message) {
 	MSG message;
 
 	event->type = EMPTY;
 	bool is_message = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
 	if(!is_message) return false;
+
+	// In case message ID is higher than WM_USER it means that the message is a custom message.
+	// We'll assume that custom message is sent from other process by setting
+	// `broadcast_message` to `true`. This means that the message ID was incremented by 
+	// `BROADCAST_MESSAGE_ID`, so we had to adjust the received message ID to recover the original ID.
+	// Note that in case `broadcast_message` is true, we're assuming that previous caller of this function
+	// in this process broadcasted the message, so we should just discard it.
+	if(message.message > WM_USER) {
+		if(broadcast_message) return true;
+		message.message -= BROADCAST_MESSAGE_ID;
+	}
+
+	if(broadcast_message) {
+		// Broadcast message. This is used to send messages to other processes running platform:: code.
+		PostMessageA(HWND_BROADCAST, message.message + BROADCAST_MESSAGE_ID, message.wParam, message.lParam);
+	}
+
 	switch (message.message) {
 	case WM_INPUT:
 	{
@@ -30,7 +52,7 @@ bool platform::get_event(Event *event) {
 		GetRawInputData(reinterpret_cast<HRAWINPUT>(message.lParam), RID_INPUT, buffer, &size, sizeof(RAWINPUTHEADER));
 
 		// extract keyboard raw input data
-		RAWINPUT* raw = reinterpret_cast< RAWINPUT*>(buffer);
+		RAWINPUT* raw = reinterpret_cast<RAWINPUT*>(buffer);
 		if (raw->header.dwType == RIM_TYPEKEYBOARD) {
 			const RAWKEYBOARD& raw_kb = raw->data.keyboard;
 			if (raw_kb.Flags & RI_KEY_BREAK) {
@@ -133,6 +155,17 @@ bool platform::get_event(Event *event) {
 	return true;
 }
 
+HWND platform::get_existing_window(char *window_name) {
+	// Retrieve existing window.
+	HWND window = FindWindowA(WINDOW_CLASS_NAME, window_name);
+
+	// In case NULL was returned, the window was not found, so we
+	// set the value to INVALID_HANDLE_VALUE.
+	if(!window) window = (HWND)INVALID_HANDLE_VALUE;
+
+	return window;
+}
+
 HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height) {
 	HINSTANCE program_instance = GetModuleHandle(0);
 
@@ -142,18 +175,18 @@ HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t win
 	window_class.lpfnWndProc = &WindowProc;
 	window_class.hInstance = (HINSTANCE)program_instance;
 	window_class.hCursor = LoadCursor(0, IDC_ARROW);
-	window_class.lpszClassName = "CustomWindowClass";
+	window_class.lpszClassName = WINDOW_CLASS_NAME;
 
 	HWND window = (HWND)INVALID_HANDLE_VALUE;
 	if (RegisterClassExA(&window_class)) {
 		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
-		window_flags = WS_VISIBLE | WS_POPUP;
+		//window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
 		AdjustWindowRect(&window_rect, window_flags, FALSE);
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
 
-		window = CreateWindowA("CustomWindowClass", window_name, window_flags,
+		window = CreateWindowA(WINDOW_CLASS_NAME, window_name, window_flags,
 								0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
 
 		RAWINPUTDEVICE device;

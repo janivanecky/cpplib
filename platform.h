@@ -94,11 +94,14 @@ namespace platform {
 	// Create and return windows with specific name and dimensions
 	HWND get_window(char *window_name, uint32_t window_width, uint32_t window_height);
 
+	// Get existing window.
+	HWND get_existing_window(char *window_name);
+
 	// Check if window is valid
 	bool is_window_valid(HWND window);
 
 	// Get next Event, should be called per frame until false is returned
-	bool get_event(Event *event);
+	bool get_event(Event *event, bool broadcast_message=false);
 
 	// Cursor manipulation interface
 	void show_cursor();
