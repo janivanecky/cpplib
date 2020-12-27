@@ -6,6 +6,9 @@
 #include "array.h"
 #include "input.h"
 
+#undef min
+#undef max
+
 /*
 
 This section defines global UI parameters.
@@ -14,8 +17,8 @@ This section defines global UI parameters.
 
 // Width of individual items, does not include the item label.
 const float ITEMS_WIDTH = 225.0f * 1.25f;
-// Distance on X-axis from start of the panel position to start of the items' position.
-const float HORIZONTAL_PADDING = 15.0f;
+// Distance from start of the panel position to start of the items' position.
+const float OUTER_PADDING = 15.0f;
 // Vertical padding between items.
 const float INNER_PADDING = 5.0f;
 // Horizontal padding between the item and its label.
@@ -286,27 +289,34 @@ void delete_character(char *text, int text_length, int character_to_delete) {
     text[text_length - 1] = 0; // NULL terminating character.
 }
 
+float compute_item_width(float item_width, char *label) {
+    float total_width = OUTER_PADDING * 2.0f; // Left and right padding.
+    total_width += item_width;
+    total_width += LABEL_PADDING;
+    total_width += font::get_string_width(label, ui_draw::get_font());
+    return total_width;
+}
+
 /*
 
 This section handles UI panel manipulation (initialization etc.).
 
 */
 
-// TODO: width should be inferred, not user-specified
-Panel ui::start_panel(char *name, Vector2 pos, float width) {
+Panel ui::start_panel(char *name, Vector2 pos) {
     Panel panel = {};
 
     panel.pos = pos;
-    panel.width = width;
-    panel.item_pos.x = HORIZONTAL_PADDING;
-    panel.item_pos.y = get_item_height() + INNER_PADDING;
+    panel.width = OUTER_PADDING * 2.0f;
+    panel.item_pos.x = OUTER_PADDING;
+    panel.item_pos.y = get_item_height() + INNER_PADDING + OUTER_PADDING;
     panel.name = name;
 
     return panel;
 }
 
-Panel ui::start_panel(char *name, float x, float y, float width) {
-    return ui::start_panel(name, Vector2(x,y), width);
+Panel ui::start_panel(char *name, float x, float y) {
+    return ui::start_panel(name, Vector2(x,y));
 }
 
 void ui::end_panel(Panel *panel) {
@@ -317,14 +327,14 @@ void ui::end_panel(Panel *panel) {
         COLOR_BACKGROUND
     );
 
-    Vector2 title_pos = panel->pos + Vector2(HORIZONTAL_PADDING, 0);
+    Vector2 title_pos = panel->pos + Vector2(OUTER_PADDING, OUTER_PADDING);
     add_text(title_pos, panel->name, COLOR_LABEL);
 }
 
 Vector4 ui::get_panel_rect(Panel *panel) {
     Vector4 result = Vector4(
         panel->pos.x, panel->pos.y,
-        panel->width, panel->item_pos.y + HORIZONTAL_PADDING - INNER_PADDING
+        panel->width, panel->item_pos.y + OUTER_PADDING - INNER_PADDING
     );
     return result;
 }
@@ -509,6 +519,9 @@ bool ui::add_toggle(Panel *panel, char *label, bool *active) {
 
     // Move current panel's item position.
     panel->item_pos.y += toggle_size.y + INNER_PADDING;
+    
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(toggle_size.x, label));
 
     return changed;
 }
@@ -586,6 +599,9 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
 
     // Move current panel's item position.
     panel->item_pos.y += slider_size.y + INNER_PADDING;
+
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(slider_size.x, label));
 
     return changed;
 }
@@ -763,6 +779,9 @@ bool ui::add_combobox(
     int total_item_count = *expanded ? value_count + 1 : 1; 
     panel->item_pos.y += (combobox_value_size.y + INNER_PADDING) * total_item_count;
 
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(combobox_value_size.x, label));
+
     return changed;
 }
 
@@ -873,8 +892,6 @@ bool ui::add_function_plot(
     float min_x = 1000.0f, max_x = -1000.0f;
     float min_y = 1000.0f, max_y = -1000.0f;
     {
-        #undef min
-        #undef max
         for(int i = 0; i < point_count; ++i) {
             min_x = math::min(min_x, x[i]);
             max_x = math::max(max_x, x[i]);
@@ -898,6 +915,9 @@ bool ui::add_function_plot(
 
     // Move current panel's item position.
     panel->item_pos.y += height * plot_size_height_to_item_height + INNER_PADDING;
+
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(plot_box_size.x, label));
 
     return changed;
 }
@@ -1068,6 +1088,9 @@ bool ui::add_textbox(Panel *panel, char *label, char *text, int buffer_size, int
 
     // Move current panel's item position.
     panel->item_pos.y += height + INNER_PADDING;
+
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(textbox_size.x, label));
 
     return text_changed;
 }

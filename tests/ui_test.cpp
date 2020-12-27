@@ -80,11 +80,11 @@ int main(int argc, char **argv) {
 
         // Set up render target.
         graphics::set_render_targets_viewport(&render_target_window);
-        graphics::clear_render_target(&render_target_window, 0.0f, 0.0f, 0.0f, 1);
+        graphics::clear_render_target(&render_target_window, 0.5f, .5f, 0.5f, 1);
 
         // Start the UI panel
-        Panel panel = ui::start_panel("UI TEST", Vector2(10, 10.0f), 420.0f);
-        ui::set_background_opacity(0.0f);
+        Panel panel = ui::start_panel("UI TEST", Vector2(0, 0.0f));
+        ui::set_background_opacity(1.0f);
 
         // Test slider
         ui::add_slider(&panel, "slider", &slider_val, -1.0f, 1.0f);
