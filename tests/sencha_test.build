@@ -1,0 +1,2 @@
+include_dir(../../cpplib/)
+build_exe(sencha_test.exe, sencha_test.cpp)

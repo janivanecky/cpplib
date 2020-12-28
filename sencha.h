@@ -7,7 +7,7 @@ struct SenchaTable {
 };
 
 namespace sencha {
-    void add_variable(SenchaTable *var_table, char *name, float value);
+    void add_or_set_variable(SenchaTable *var_table, char *name, float value);
     bool get_variable(SenchaTable *var_table, char *name, float *value);
     bool parse_line(char *line, SenchaTable *var_table);
 };
