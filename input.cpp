@@ -1,12 +1,15 @@
 #include "input.h"
+#include <float.h> // For FLT_MAX
 
 // Input state variables
-bool mouse_lbutton_pressed    = false;
-bool mouse_lbutton_down       = false;
-float mouse_position_x_       = -1.0f;
-float mouse_position_y_       = -1.0f;
-float mouse_delta_position_x_ = 0.0f;
-float mouse_delta_position_y_ = 0.0f;
+bool mouse_lbutton_pressed      = false;
+bool mouse_lbutton_down         = false;
+float mouse_position_x_         = FLT_MAX;
+float mouse_position_y_         = FLT_MAX;
+float screen_mouse_position_x_  = FLT_MAX;
+float screen_mouse_position_y_  = FLT_MAX;
+float mouse_delta_position_x_   = 0.0f;
+float mouse_delta_position_y_   = 0.0f;
 
 float mouse_scroll_delta_ = 0.0f;
 
@@ -80,14 +83,23 @@ void input::register_event(Event *event) {
         {
             // Set mouse position.
             MouseMoveData *data = (MouseMoveData *)event->data;
-            // Don't update delta on the first frame (initial position (-1, -1))
-            if(mouse_position_x_ > 0.0f && mouse_position_y_ > 0.0f)
+            // Don't update delta on the first frame (initial position (FLT_MAX, FLT_MAX))
+            if(mouse_position_x_ < FLT_MAX && mouse_position_y_ < FLT_MAX)
             {
-                mouse_delta_position_x_ = data->x - mouse_position_x_;
-                mouse_delta_position_y_ = data->y - mouse_position_y_;
+                // Note that mouse delta is computed from mouse's screen position, not
+                // client position. This is to make sure that the delta is correct even
+                // if the window is moving.
+                mouse_delta_position_x_ = data->screen_x - screen_mouse_position_x_;
+                mouse_delta_position_y_ = data->screen_y - screen_mouse_position_y_;
             }
+
+            // Set client window relative position.
             mouse_position_x_ = data->x;
             mouse_position_y_ = data->y;
+
+            // Set screen position.
+            screen_mouse_position_x_ = data->screen_x;
+            screen_mouse_position_y_ = data->screen_y;
         }
         break;
         case MOUSE_LBUTTON_DOWN:

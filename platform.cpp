@@ -140,6 +140,16 @@ bool platform::get_event(Event *event, bool broadcast_message) {
 		MouseMoveData *data = (MouseMoveData *)event->data;
 		data->x = (float)GET_X_LPARAM(message.lParam);
 		data->y = (float)GET_Y_LPARAM(message.lParam);
+
+		// Compute mouse position relative to screen.
+		POINT pos = {
+			(LONG)GET_X_LPARAM(message.lParam),
+			(LONG)GET_Y_LPARAM(message.lParam)
+		};
+		HWND window = GetActiveWindow();
+		ClientToScreen(window, &pos);
+		data->screen_x = (float)pos.x;
+		data->screen_y = (float)pos.y;
 	} break;
 	case WM_MOUSEWHEEL:
 	{

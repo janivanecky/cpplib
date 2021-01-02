@@ -42,6 +42,8 @@ enum EventType {
 struct MouseMoveData {
 	float x;
 	float y;
+	float screen_x;
+	float screen_y;
 };
 
 enum KeyCode {
