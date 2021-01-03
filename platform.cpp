@@ -1,4 +1,5 @@
 #include <windowsx.h>
+#include <dwmapi.h>
 #include "platform.h"
 
 // Constants
@@ -8,6 +9,19 @@ const char *WINDOW_CLASS_NAME = "cpplib_window_class";
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
+	// We use this to not display window's client area before the first user draw.
+	case WM_ERASEBKGND:
+	{
+		return 1;
+	}
+	break;
+	// We handle this so there's no non-client area outside of window. This makes
+	// frame from WS_THICKFRAME disappear.
+	case WM_NCCALCSIZE:
+	{
+		return 0;
+	}
+	break;
 	case WM_CLOSE:
 	{
 		PostQuitMessage(0);
@@ -19,10 +33,60 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	return 0;
 }
 
+// This is a flag used to initialize window's shadows only once.
+// See below for more details.
+bool window_shadows_initialized = false;
+
 bool platform::get_event(Event *event, bool broadcast_message) {
-	MSG message;
+	// Initialize window shadows.
+	//
+	// We want to have both:
+	// - No visible borders around the window
+	// - Subtle shadows around the window so the window doesn't just lay "flat" on the screen.
+	//
+	// To get shadows we have to use WS_THICKFRAME window style. This however by itself produces
+	// very thick frame at the top of the window. This gets removed by overriding `WM_NCCALCSIZE`
+	// message handling and just returning 0. This means that there's supposed to be no non-client
+	// area around the window, so the thick frame doesn't get rendered. But! this means that the
+	// nice shadow around the window also gets removed. To keep it, we have to call
+	// DwmExtendFrameIntoClientArea with at least one non-zero margin. This results in nice shadows
+	// without any borders. But! If we use `WS_THICKFRAME` in `CreateWindowA` call, we're going to
+	// see an empty window with thick border until the first user draw call (e.g. DXGI swap
+	// chain's present). This means that if there's a big gap (for example because of initialization)
+	// between the point where window is created and the actual rendering, we would see the ugly
+	// window with thick borders for some time. To prevent this, we're going to set `WS_THICKFRAME`
+	// after `CreateWindowA` call. `DwmExtendFrameIntoClientArea` is called after `CreateWindowA`
+	// anyways, but there's an issue - if we call `DwmExtendFrameIntoClientArea` too soon before
+	// the first draw call, we're going to see an empty window with shadow (essentially just a shadow
+	// with very thin border). So we need to make that call as close to the first draw as possible -
+	// in the first call to `get_event` which should happen in the rendering loop so there should be
+	// just a small gap between drawing empty window with shadow and rendering an actual app. (Note
+	// that we could add `WS_THICKFRAME` style immediately after `CreateWindowA` call and we wouldn't
+	// see the ugly window, but we'd still need to call `DwmExtendFrameIntoClientArea` later. Since
+	// both of those settings/calls deal with setting up a shadow, it's better to call them close
+	// to each other).
+	if(!window_shadows_initialized) {
+		// Set `WS_THICKFRAME` style.
+		HWND window = GetActiveWindow();
+		SetWindowLongPtr(window, GWL_STYLE, GetWindowLongA(window, GWL_STYLE) | WS_THICKFRAME);
+
+		// Enable shadow around window.
+		// This is done by setting at least one non-zero margin. This call, actually adds very thin
+		// border around the window which gets overdrawn by the application. This is normally not
+		// a problem, but during resizing, the border is sometimes visible on right and bottom sides
+		// (why that happens is explained here: https://stackoverflow.com/questions/53000291/how-to-smooth-ugly-jitter-flicker-jumping-when-resizing-windows-especially-drag/53032800)
+		// Since we don't need to have the border on all sides for shadow to appear and the border
+		// gets accidentally rendered when resizing only on right and bottom side, we can enable border
+		// only on the left side.
+		MARGINS shadow_state = { 1, 0, 0, 0 };
+		DwmExtendFrameIntoClientArea(window, &shadow_state);
+
+		window_shadows_initialized = true;
+	}
 
 	event->type = EMPTY;
+
+	MSG message;
 	bool is_message = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
 	if(!is_message) return false;
 
@@ -189,8 +253,7 @@ HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t win
 
 	HWND window = (HWND)INVALID_HANDLE_VALUE;
 	if (RegisterClassExA(&window_class)) {
-		DWORD window_flags = WS_VISIBLE | WS_OVERLAPPEDWINDOW;
-		//window_flags = WS_VISIBLE | WS_POPUP;
+		DWORD window_flags = WS_VISIBLE | WS_POPUP;
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
 		AdjustWindowRect(&window_rect, window_flags, FALSE);
 		window_width = window_rect.right - window_rect.left;
