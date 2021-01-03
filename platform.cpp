@@ -2,7 +2,7 @@
 #include "platform.h"
 
 // Constants
-static const char *BROADCAST_MESSAGE_IDENTIFIER = "cpplib_broadcast";
+const char *BROADCAST_MESSAGE_IDENTIFIER = "cpplib_broadcast";
 const uint32_t BROADCAST_MESSAGE_ID = RegisterWindowMessageA(BROADCAST_MESSAGE_IDENTIFIER);
 const char *WINDOW_CLASS_NAME = "cpplib_window_class";
 
@@ -26,13 +26,13 @@ bool platform::get_event(Event *event, bool broadcast_message) {
 	bool is_message = PeekMessageA(&message, NULL, 0, 0, PM_REMOVE);
 	if(!is_message) return false;
 
-	// In case message ID is higher than WM_USER it means that the message is a custom message.
+	// In case message ID is higher than BROADCAST_MESSAGE_ID it means that the message is a custom message.
 	// We'll assume that custom message is sent from other process by setting
 	// `broadcast_message` to `true`. This means that the message ID was incremented by 
 	// `BROADCAST_MESSAGE_ID`, so we had to adjust the received message ID to recover the original ID.
 	// Note that in case `broadcast_message` is true, we're assuming that previous caller of this function
 	// in this process broadcasted the message, so we should just discard it.
-	if(message.message > WM_USER) {
+	if(message.message > BROADCAST_MESSAGE_ID) {
 		if(broadcast_message) return true;
 		message.message -= BROADCAST_MESSAGE_ID;
 	}
