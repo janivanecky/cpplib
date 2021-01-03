@@ -6,6 +6,9 @@
 const char *BROADCAST_MESSAGE_IDENTIFIER = "cpplib_broadcast";
 const uint32_t BROADCAST_MESSAGE_ID = RegisterWindowMessageA(BROADCAST_MESSAGE_IDENTIFIER);
 const char *WINDOW_CLASS_NAME = "cpplib_window_class";
+const uint32_t CM_WINDOW_RESIZED = WM_APP + 1;
+
+RECT pre_sizemove_rect;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
@@ -20,6 +23,38 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 	case WM_NCCALCSIZE:
 	{
 		return 0;
+	}
+	break;
+	case WM_ENTERSIZEMOVE:
+	{
+		// We remember window rectangle from before moving/resizing happened. This is to determine
+		// whether the window was moved or resized.
+		GetWindowRect(hwnd, &pre_sizemove_rect);
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
+	break;
+	case WM_EXITSIZEMOVE:
+	{
+		// Get window porectangle after moving/resizing.
+		RECT post_sizemove_rect;
+		GetWindowRect(hwnd, &post_sizemove_rect);
+
+		// Get window size from before the move/resize.
+		uint32_t pre_sizemove_width = pre_sizemove_rect.right - pre_sizemove_rect.left;
+		uint32_t post_sizemove_width = post_sizemove_rect.right - post_sizemove_rect.left;
+
+		// Get current window size.
+		uint32_t pre_sizemove_height = pre_sizemove_rect.bottom - pre_sizemove_rect.top;
+		uint32_t post_sizemove_height = post_sizemove_rect.bottom - post_sizemove_rect.top;
+
+		// If the sizes don't match, resizing happened. Otherwise this event was a move event and we
+		// can ignore it. In case resizing happened, we're going to send a custom CM_WINDOW_RESIZED
+		// message to the message queue. This gets propagated to lib user as WINDOW_RESIZED event.
+		if(pre_sizemove_width != post_sizemove_width || pre_sizemove_height != post_sizemove_height) {
+			uint32_t output_lparam = ((uint16_t)post_sizemove_height << 16) | ((uint16_t)post_sizemove_width);
+			PostMessageA(hwnd, CM_WINDOW_RESIZED, 0, output_lparam);
+		}
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	break;
 	case WM_CLOSE:
@@ -221,6 +256,15 @@ bool platform::get_event(Event *event, bool broadcast_message) {
 		MouseWheelData *data = (MouseWheelData *)event->data;
 		data->delta = GET_WHEEL_DELTA_WPARAM(message.wParam) / 120.0f;
 	} break;
+	// Custom message processing.
+	case CM_WINDOW_RESIZED:
+	{
+		event->type = WINDOW_RESIZED;
+		WindowResizedData *data = (WindowResizedData *)event->data;
+		data->window_width = (float) GET_X_LPARAM(message.lParam);
+		data->window_height = (float) GET_Y_LPARAM(message.lParam);
+	}
+	break;
 	default:
 		TranslateMessage(&message);
 		DispatchMessageA(&message);

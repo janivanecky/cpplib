@@ -34,6 +34,7 @@ enum EventType {
 	KEY_UP,
 	CHAR_ENTERED,
 	MOUSE_WHEEL,
+	WINDOW_RESIZED,
 	EXIT
 };
 
@@ -80,6 +81,11 @@ struct KeyPressedData {
 
 struct MouseWheelData {
 	float delta;
+};
+
+struct WindowResizedData {
+	float window_width;
+	float window_height;
 };
 
 // Event data struct
