@@ -4,6 +4,7 @@
 
 namespace ui_draw {
     void init(float screen_width, float screen_height);
+    void set_screen_size(float screen_width, float screen_height);
 
     void draw_text(char *text, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
     void draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin = Vector2(0,0));

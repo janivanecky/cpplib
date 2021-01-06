@@ -413,7 +413,7 @@ Font *ui_draw::get_font() {
 
 /*
 
-This section defines init/release functions for set up/tear down of the global state.
+This section defines init/release functions for set up/tear down/update of the global state.
 
 */
 
@@ -570,6 +570,12 @@ void ui_draw::release() {
     font::release(&_ui_draw::font_ui);
     file_system::release_file(_ui_draw::font_file);
     graphics::release(&_ui_draw::font_ui_texture);
+}
+
+
+void ui_draw::set_screen_size(float screen_width, float screen_height) {
+    _ui_draw::screen_width = screen_width;
+    _ui_draw::screen_height = screen_height;
 }
 
 /*
