@@ -30,6 +30,7 @@ struct RenderTarget {
 	ID3D11Texture2D *texture;
 	uint32_t width;
 	uint32_t height;
+	DXGI_FORMAT format;
 };
 
 // Depth buffer can be used both as depth buffer (target) and shader resource view.
@@ -330,6 +331,10 @@ namespace graphics {
 	// Copy resources.
 	// Should be used to copy from GPU-only to staging resources.
 	void copy_resource(StructuredBuffer *src, StructuredBuffer *dst);
+
+	// Resolve render targets.
+	// Should be used for "copying" from multisampled to non-ms targets.
+	void resolve_render_targets(RenderTarget *src, RenderTarget *dst);
 
 	// Read GPU resource.
 	// Should be used only with staging resources.

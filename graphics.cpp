@@ -218,8 +218,9 @@ RenderTarget graphics::get_render_target_window(bool srgb) {
 	}
 
 	D3D11_RENDER_TARGET_VIEW_DESC render_target_desc = {};
+	DXGI_FORMAT format = srgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 	render_target_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	render_target_desc.Format = srgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+	render_target_desc.Format = format;
 	hr = graphics_context->device->CreateRenderTargetView(buffer.texture, &render_target_desc, &buffer.rt_view);
 	if (FAILED(hr)) {
 		PRINT_DEBUG("Failed to create swap chain render target.");
@@ -228,6 +229,7 @@ RenderTarget graphics::get_render_target_window(bool srgb) {
 
 	buffer.width = swap_chain_desc.BufferDesc.Width;
 	buffer.height = swap_chain_desc.BufferDesc.Height;
+	buffer.format = format;
 
 	return buffer;
 }
@@ -283,6 +285,7 @@ RenderTarget graphics::get_render_target(uint32_t width, uint32_t height, DXGI_F
 
 	buffer.width = width;
 	buffer.height = height;
+	buffer.format = format;
 
 	return buffer;
 }
@@ -889,6 +892,10 @@ void graphics::set_byte_address_buffer(ByteAddressBuffer *buffer, uint32_t slot)
 
 void graphics::copy_resource(StructuredBuffer *src, StructuredBuffer *dst) {
     graphics_context->context->CopyResource(dst->buffer, src->buffer);
+}
+
+void graphics::resolve_render_targets(RenderTarget *src, RenderTarget *dst) {
+	graphics_context->context->ResolveSubresource(dst->texture, 0, src->texture, 0, dst->format);
 }
 
 void *graphics::read_resource(StructuredBuffer *buffer, void *data) {
