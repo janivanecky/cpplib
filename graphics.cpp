@@ -188,6 +188,18 @@ bool graphics::init_swap_chain(HWND window, uint32_t window_width, uint32_t wind
 	return true;
 }
 
+bool graphics::resize_swap_chain(uint32_t window_width, uint32_t window_height) {
+	HRESULT hr = swap_chain->swap_chain->ResizeBuffers(
+		0, window_width, window_height, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+	);
+	if(FAILED(hr)) {
+		PRINT_DEBUG("Failed to resize swap chain.");
+		return false;
+	}
+
+	return true;
+}
+
 RenderTarget graphics::get_render_target_window(bool srgb) {
 	// NOTE: buffer.sr_view is not filled and remains NULL - window render target cannot be used as a texture in shader
 	RenderTarget buffer = {};

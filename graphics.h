@@ -175,6 +175,9 @@ namespace graphics {
 	// Initialize swap chain for rendering to window
 	bool init_swap_chain(HWND window, uint32_t window_width, uint32_t window_height);
 
+	// Resize swap chain to specific size.
+	bool resize_swap_chain(uint32_t window_width, uint32_t window_height);
+
 	// Get RenderTarget to use for rendering directly to a window passed in to `init_swap_chain`
 	RenderTarget get_render_target_window(bool srgb=true);
 
