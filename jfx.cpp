@@ -1,23 +1,29 @@
 #include "jfx.h"
 #include "file_system.h"
 
-VertexShader jfx::get_vertex_shader_from_file(char *file_path) {
+VertexShader jfx::get_vertex_shader_from_file(char *file_path, char **macro_defines, uint32_t macro_defines_count) {
     File shader_file = file_system::read_file(file_path); 
-    VertexShader shader = graphics::get_vertex_shader_from_code((char *)shader_file.data, shader_file.size);
+    VertexShader shader = graphics::get_vertex_shader_from_code(
+        (char *)shader_file.data, shader_file.size, macro_defines, macro_defines_count
+    );
     file_system::release_file(shader_file);
     return shader;
 }
 
-PixelShader jfx::get_pixel_shader_from_file(char *file_path) {
+PixelShader jfx::get_pixel_shader_from_file(char *file_path, char **macro_defines, uint32_t macro_defines_count) {
     File shader_file = file_system::read_file(file_path); 
-    PixelShader shader = graphics::get_pixel_shader_from_code((char *)shader_file.data, shader_file.size);
+    PixelShader shader = graphics::get_pixel_shader_from_code(
+        (char *)shader_file.data, shader_file.size, macro_defines, macro_defines_count
+    );
     file_system::release_file(shader_file);
     return shader;
 }
 
-ComputeShader jfx::get_compute_shader_from_file(char *file_path) {
+ComputeShader jfx::get_compute_shader_from_file(char *file_path, char **macro_defines, uint32_t macro_defines_count) {
     File shader_file = file_system::read_file(file_path); 
-    ComputeShader shader = graphics::get_compute_shader_from_code((char *)shader_file.data, shader_file.size);
+    ComputeShader shader = graphics::get_compute_shader_from_code(
+        (char *)shader_file.data, shader_file.size, macro_defines, macro_defines_count
+    );
     file_system::release_file(shader_file);
     return shader;
 }
