@@ -32,7 +32,7 @@ const int MAX_TEXT_LENGTH = 100;
 
 #undef COLOR_BACKGROUND // For some reason this is defined in WinUser.h
 static Vector4 COLOR_BACKGROUND = Vector4(0.01f, 0.01f, 0.01f, .9f);
-static Vector4 COLOR_LABEL      = Vector4(1.0f, 1.0f, 1.0f, 0.9f);
+static Vector4 COLOR_LABEL      = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
 // Items that are not hot/active are faded.
 const float INACTIVE_COLOR_MODIFIER = 0.8f;
