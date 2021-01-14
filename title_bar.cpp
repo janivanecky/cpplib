@@ -155,28 +155,13 @@ void title_bar::draw() {
         ui_draw::draw_line(points + 2, 2, cross_width, close_button_color);
     }
 
-    // If we're hovering over the title bar, we'll draw its "filling".
-    if(title_bar_hover_flags & TITLE_BAR_HOVER) {
-        // Set up title bar parameters.
-        Vector4 title_bar_color = Vector4(BASE_COLOR, 0.2f);
-        float shading_period = 10.0f;
-        float shading_width = 5.0f;
-        
-        // Construct `count` skewed lines.
-        int count = (window_width + TITLE_BAR_HEIGHT) / int32_t(shading_period);
-        for(int i = 0; i < count; ++i) {
-            Vector2 start_point = Vector2(i * shading_period, 0.0f);
-            Vector2 end_point = Vector2(i * shading_period - TITLE_BAR_HEIGHT, TITLE_BAR_HEIGHT);
-            
-            Vector2 v1 = start_point + Vector2(-shading_width / 2.0f, 0.0f);
-            Vector2 v2 = start_point + Vector2(shading_width / 2.0f, 0.0f);
-            Vector2 v3 = end_point + Vector2(-shading_width / 2.0f, 0.0f);
-            Vector2 v4 = end_point + Vector2(shading_width / 2.0f, 0.0f);
+    // Set up title bar parameters.
+    Vector4 title_bar_color = Vector4(BASE_COLOR, title_bar_hover_flags & TITLE_BAR_HOVER ? 0.3f : 0.15f);
+    float shading_period = 10.0f;
+    float shading_width = 5.0f;
 
-            ui_draw::draw_triangle(v1, v3, v4, title_bar_color);
-            ui_draw::draw_triangle(v1, v4, v2, title_bar_color);
-        }
-    }
+    // Draw the title bar rectangle.
+    ui_draw::draw_rect(Vector2(0, 0), window_width, TITLE_BAR_HEIGHT, title_bar_color, LINES);
 }
 
 void title_bar::init(HWND window, bool resizable) {
