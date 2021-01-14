@@ -130,6 +130,7 @@ struct RectItem {
     Vector4 color;
     Vector2 pos;
     Vector2 size;
+    ShadingType shading;
 };
 
 // All the info needed to render a single triangle.
@@ -157,13 +158,13 @@ Array<TriangleItem> triangle_items = array::get<TriangleItem>(INITIAL_ITEM_COUNT
 Array<LineItem> line_items = array::get<LineItem>(INITIAL_ITEM_COUNT);
 
 // Helper function to store a rectangle for current frame.
-void add_rect(Vector2 pos, Vector2 size, Vector4 color) {
-    RectItem item = {color, pos, size};
+void add_rect(Vector2 pos, Vector2 size, Vector4 color, ShadingType shading=SOLID_COLOR) {
+    RectItem item = {color, pos, size, shading};
     array::add(&rect_items, item);
 }
 
-void add_rect_bg(Vector2 pos, Vector2 size, Vector4 color) {
-    RectItem item = {color, pos, size};
+void add_rect_bg(Vector2 pos, Vector2 size, Vector4 color, ShadingType shading=SOLID_COLOR) {
+    RectItem item = {color, pos, size, shading};
     array::add(&rect_items_bg, item);
 }
 
@@ -213,12 +214,12 @@ void add_line(Vector2 *points, int point_count, float width, Vector4 color) {
 void ui::end_frame() {
     for(uint32_t i = 0; i < rect_items_bg.count; ++i) {
         RectItem *item = &rect_items_bg.data[i];
-        ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color);
+        ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color, item->shading);
     }
 
     for(uint32_t i = 0; i < rect_items.count; ++i) {
         RectItem *item = &rect_items.data[i];
-        ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color);
+        ui_draw::draw_rect(item->pos, item->size.x, item->size.y, item->color, item->shading);
     }
 
     for(uint32_t i = 0; i < triangle_items.count; ++i) {
@@ -487,7 +488,7 @@ void render_toggle_state(int32_t toggle_id, Vector2 pos, Vector2 size, bool acti
         float active_box_size = get_item_height() - LINES_WIDTH * 4.0f;
         Vector2 box_fg_size = Vector2(active_box_size, active_box_size);
         Vector2 box_fg_pos = pos + (size - box_fg_size) / 2.0f;
-        add_rect(box_fg_pos, box_fg_size, box_color);
+        add_rect(box_fg_pos, box_fg_size, box_color, LINES);
     }
 
     // Draw toggle label.
@@ -568,7 +569,7 @@ void render_slider_state(
 
     // Add slider.
     Vector2 slider_size = Vector2((value - min) / (max - min) * ITEMS_WIDTH, height);
-    add_rect(pos, slider_size, slider_color);
+    add_rect(pos, slider_size, slider_color, LINES);
 
     // Slider label.
     Vector2 text_pos = Vector2(size.x + pos.x + LABEL_PADDING, pos.y);
