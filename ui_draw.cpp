@@ -18,6 +18,7 @@ This section defines CPU and GPU-side constants.
 #define MODEL_MATRICES_BUFFER_INDEX 1
 #define SOURCE_RECT_BUFFER_INDEX 2
 #define COLOR_BUFFER_INDEX 3
+#define SHADING_BUFFER_INDEX 4
 #define TRIANGLE_VERTICES_BUFFER_INDEX 1
 #define LINE_VERTICES_BUFFER_INDEX 1
 #define LINE_SETTINGS_BUFFER_INDEX 2
@@ -99,6 +100,7 @@ struct VertexInput {
 
 struct VertexOutput {
 	float4 svPosition: SV_POSITION;
+    float4 screenPos: SCREEN_POS;
 };
 
 cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
@@ -113,7 +115,10 @@ cbuffer ModelMatrix : register(b)" STRINGIFY(MODEL_MATRICES_BUFFER_INDEX) R"() {
 VertexOutput main(VertexInput input) {
 	VertexOutput result;
 
-	result.svPosition = mul(projection, mul(view, mul(model, input.position)));
+    float4 screenPos = mul(model, input.position);
+    float4 leftTop = mul(model, float4(-1, 1, 0, 1));
+    result.svPosition = mul(projection, mul(view, screenPos));
+    result.screenPos = screenPos - leftTop;
 
 	return result;
 }
@@ -164,6 +169,7 @@ struct VertexInput {
 
 struct VertexOutput {
 	float4 svPosition: SV_POSITION;
+    float4 screenPos: SCREEN_POS;
 };
 
 cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
@@ -181,6 +187,7 @@ VertexOutput main(VertexInput input) {
     float2 screen_pos = mul(vertices, input.position.xyz);
     float4 pos = float4(screen_pos, 0.0f, 1.0f);
 	result.svPosition = mul(projection, mul(view, pos));
+    result.screenPos = pos;
 
 	return result;
 }
@@ -282,13 +289,25 @@ VertexOutput main(VertexInput input) {
 char pixel_shader_solid_color_string[] = R"(
 struct PixelInput {
     float4 svPosition: SV_POSITION;
+    float4 screenPos: SCREEN_POS;
 };
 
 cbuffer ColorBuffer: register(b)" STRINGIFY(COLOR_BUFFER_INDEX) R"() {
     float4 color;
 }
 
+cbuffer ColorBuffer: register(b)" STRINGIFY(SHADING_BUFFER_INDEX) R"() {
+    uint shading;
+}
+
 float4 main(PixelInput input) : SV_TARGET {
+    if(shading > 0) {
+        // Line shading.
+        float t = input.screenPos.x - input.screenPos.y;
+        float a = sin(t * 3.1415 * 2.0f  / 7.0f);
+        a = smoothstep(0, 0.01f, a);
+        return color * a;
+    }
     return color;
 }
 )";
@@ -367,6 +386,7 @@ ConstantBuffer buffer_rect;
 ConstantBuffer buffer_pv;
 ConstantBuffer buffer_model;
 ConstantBuffer buffer_color;
+ConstantBuffer buffer_shading;
 ConstantBuffer buffer_vertices;
 ConstantBuffer buffer_vertices_line;
 ConstantBuffer buffer_line_width;
@@ -427,6 +447,7 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     _ui_draw::buffer_pv = graphics::get_constant_buffer(sizeof(Matrix4x4) * 2);
     _ui_draw::buffer_rect = graphics::get_constant_buffer(sizeof(Vector4));
     _ui_draw::buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
+    _ui_draw::buffer_shading = graphics::get_constant_buffer(sizeof(Vector4));
     _ui_draw::buffer_vertices = graphics::get_constant_buffer(sizeof(Vector4) * 3);
     _ui_draw::buffer_vertices_line = graphics::get_constant_buffer(sizeof(Vector4) * LINE_POINTS_TO_DRAW_BATCH_SIZE);
     _ui_draw::buffer_line_width = graphics::get_constant_buffer(sizeof(float));
@@ -548,6 +569,7 @@ void ui_draw::release() {
     graphics::release(&_ui_draw::buffer_pv);
     graphics::release(&_ui_draw::buffer_model);
     graphics::release(&_ui_draw::buffer_color);
+    graphics::release(&_ui_draw::buffer_shading);
     graphics::release(&_ui_draw::buffer_vertices);
     graphics::release(&_ui_draw::buffer_vertices_line);
     graphics::release(&_ui_draw::buffer_line_width);
@@ -668,7 +690,7 @@ void ui_draw::draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin) 
     ui_draw::draw_text(text, pos.x, pos.y, color, origin);
 }
 
-void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 color) {
+void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 color, ShadingType shading_type) {
     // Set rect shaders
     graphics::set_pixel_shader(&_ui_draw::pixel_shader_solid_color);
     graphics::set_vertex_shader(&_ui_draw::vertex_shader_rect);
@@ -681,6 +703,7 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
     graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_model, MODEL_MATRICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_shading, SHADING_BUFFER_INDEX);
 
     // Get constant buffer values
     Matrix4x4 pv_matrices[2] = {
@@ -696,6 +719,7 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
     // Update constant buffers
     graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
     graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
+    graphics::update_constant_buffer(&_ui_draw::buffer_shading, &shading_type);
     graphics::update_constant_buffer(&_ui_draw::buffer_model, &model_matrix);
 
     // Render rect
@@ -705,8 +729,8 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
     graphics::set_blend_state(old_blend_state);
 }
 
-void ui_draw::draw_rect(Vector2 pos, float width, float height, Vector4 color) {
-    ui_draw::draw_rect(pos.x, pos.y, width, height, color);
+void ui_draw::draw_rect(Vector2 pos, float width, float height, Vector4 color, ShadingType shading_type) {
+    ui_draw::draw_rect(pos.x, pos.y, width, height, color, shading_type);
 }
 
 void ui_draw::draw_circle(Vector2 pos, float radius, Vector4 color) {
@@ -796,6 +820,7 @@ void ui_draw::draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color) {
     graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_vertices, TRIANGLE_VERTICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_shading, SHADING_BUFFER_INDEX);
 
     // Get constant buffer values
     Matrix4x4 pv_matrices[2] = {
@@ -806,10 +831,12 @@ void ui_draw::draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color) {
     v2.y = _ui_draw::screen_height - v2.y;
     v3.y = _ui_draw::screen_height - v3.y;
     Vector4 vertices[3] = {Vector4(v1, 0, 0), Vector4(v2, 0, 0), Vector4(v3, 0, 0)};
+    ShadingType shading = SOLID_COLOR;
 
     // Update constant buffers
     graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
     graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
+    graphics::update_constant_buffer(&_ui_draw::buffer_shading, &shading);
     graphics::update_constant_buffer(&_ui_draw::buffer_vertices, &vertices);
 
     // Render rect

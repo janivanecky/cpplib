@@ -2,6 +2,11 @@
 #include "font.h"
 #include "maths.h"
 
+enum ShadingType {
+    SOLID_COLOR,
+    LINES
+};
+
 namespace ui_draw {
     void init(float screen_width, float screen_height);
     void set_screen_size(float screen_width, float screen_height);
@@ -9,8 +14,8 @@ namespace ui_draw {
     void draw_text(char *text, float x, float y, Vector4 color, Vector2 origin = Vector2(0,0));
     void draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin = Vector2(0,0));
 
-    void draw_rect(float x, float y, float width, float height, Vector4 color);
-    void draw_rect(Vector2 pos, float width, float height, Vector4 color);
+    void draw_rect(float x, float y, float width, float height, Vector4 color, ShadingType shading_type=SOLID_COLOR);
+    void draw_rect(Vector2 pos, float width, float height, Vector4 color, ShadingType shading_type=SOLID_COLOR);
 
     void draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color);
 
