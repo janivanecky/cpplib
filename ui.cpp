@@ -283,7 +283,7 @@ void add_min_max_markers(Vector2 pos, float width, float height, Vector4 color) 
 }
 
 void delete_character(char *text, int text_length, int character_to_delete) {
-    char *dst_ptr = text + character_to_delete - 1;
+    char *dst_ptr = text + character_to_delete;
     char *src_ptr = dst_ptr + 1;
     int text_length_after_deleted_char = text_length - character_to_delete - 1;
     memcpy(dst_ptr, src_ptr, text_length_after_deleted_char);
