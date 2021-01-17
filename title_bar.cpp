@@ -33,6 +33,7 @@ bool resizable;
 
 // Colors.
 Vector3 BASE_COLOR = Vector3(1, 1, 1);
+Vector3 CLOSE_BUTTON_TITLE_BAR_INACTIVE_COLOR = Vector3(0.5f, 0.5f, 0.5f);
 Vector3 CLOSE_BUTTON_COLOR_HOVER = Vector3(1.0f, 32.0f / 255.0f, 32.0f / 255.0f);
 
 
@@ -127,11 +128,22 @@ void title_bar::draw() {
     GetClientRect(title_bar::window, &window_rect);
     int32_t window_width = window_rect.right - window_rect.left;
 
+    // Set up title bar parameters.
+    Vector4 title_bar_color = Vector4(BASE_COLOR, title_bar_hover_flags & TITLE_BAR_HOVER ? 0.3f : 0.15f);
+    float shading_period = 10.0f;
+    float shading_width = 5.0f;
+
+    // Draw the title bar rectangle.
+    ui_draw::draw_rect(Vector2(0, 0), float(window_width), TITLE_BAR_HEIGHT, title_bar_color, LINES);
+
     // Draw the close button.
     {
         // Set up close button's position and color.
         Vector2 close_button_position = Vector2(float(window_width) - float(CLOSE_BUTTON_PADDING), float(CLOSE_BUTTON_PADDING));
-        Vector4 close_button_color = Vector4(BASE_COLOR, 1.0f);
+        Vector4 close_button_color = Vector4(CLOSE_BUTTON_TITLE_BAR_INACTIVE_COLOR, 1.0f);
+        if(title_bar_hover_flags & TITLE_BAR_HOVER) {
+            close_button_color = Vector4(BASE_COLOR, 1.0f);
+        }
         if(title_bar_hover_flags & CLOSE_BUTTON_HOVER) {
             close_button_color = Vector4(CLOSE_BUTTON_COLOR_HOVER, 1.0f);
         }
@@ -154,14 +166,6 @@ void title_bar::draw() {
         ui_draw::draw_line(points, 2, cross_width, close_button_color);
         ui_draw::draw_line(points + 2, 2, cross_width, close_button_color);
     }
-
-    // Set up title bar parameters.
-    Vector4 title_bar_color = Vector4(BASE_COLOR, title_bar_hover_flags & TITLE_BAR_HOVER ? 0.3f : 0.15f);
-    float shading_period = 10.0f;
-    float shading_width = 5.0f;
-
-    // Draw the title bar rectangle.
-    ui_draw::draw_rect(Vector2(0, 0), window_width, TITLE_BAR_HEIGHT, title_bar_color, LINES);
 }
 
 void title_bar::init(HWND window, bool resizable) {
