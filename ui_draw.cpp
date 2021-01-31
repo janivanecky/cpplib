@@ -790,7 +790,7 @@ void ui_draw::draw_arc(
         math::get_identity()
     };
     float arc_values[6] = {
-        pos.x, pos.y,
+        pos.x, _ui_draw::screen_height - pos.y,
         radius_min, radius_max,
         start_radian, end_radian
     };
@@ -860,17 +860,20 @@ void ui_draw::draw_line(Vector2 *points, int point_count, float width, Vector4 c
     graphics::set_constant_buffer(&_ui_draw::buffer_vertices_line, LINE_VERTICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_line_width, LINE_SETTINGS_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_shading, SHADING_BUFFER_INDEX);
 
     // Get constant buffer values
     Matrix4x4 pv_matrices[2] = {
         get_projection_matrix(),
         math::get_identity()
     };
+    ShadingType shading = SOLID_COLOR;
 
     // Update constant buffers
     graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
     graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
     graphics::update_constant_buffer(&_ui_draw::buffer_line_width, &width);
+    graphics::update_constant_buffer(&_ui_draw::buffer_shading, &shading);
 
     // Static buffer so we don't have to allocate memory for points when drawing lines.
     static Vector4 point_buffer[LINE_POINTS_TO_DRAW_BATCH_SIZE];
