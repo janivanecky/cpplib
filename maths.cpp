@@ -61,6 +61,10 @@ float math::sign(float x) {
 	return x < 0.0f ? -1.0f : 1.0f;
 }
 
+float math::dot2(Vector2 a) {
+	return math::dot(a, a);
+}
+
 float math::dot(Vector2 a, Vector2 b) {
 	return a.x * b.x + a.y * b.y;
 }

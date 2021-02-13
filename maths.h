@@ -32,6 +32,15 @@ struct Vector2 {
 		return result;
 	}
 
+	Vector2 operator-(float x) {
+		Vector2 result;
+
+		result.x = this->x - x;
+		result.y = this->y - x;
+
+		return result;
+	}
+
 	Vector2 operator+(Vector2 v) {
 		Vector2 result;
 
@@ -427,6 +436,7 @@ namespace math {
 	float fmod(float x, float m);
 	int32_t mod(int32_t x, int32_t m);
 
+	float dot2(Vector2 a);
 	float dot(Vector2 a, Vector2 b);
 	float dot(Vector3 a, Vector3 b);
 	float dot(Vector4 a, Vector4 b);
