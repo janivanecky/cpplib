@@ -28,7 +28,7 @@ This section defines CPU and GPU-side constants.
 #define LINE_POINTS_TO_DRAW_BATCH_SIZE 4096
 
 // Font parameters.
-const float FONT_TEXTURE_SIZE = 256.0f;
+const float FONT_TEXTURE_SIZE = 512.0f;
 const int32_t FONT_HEIGHT = 20;
 
 /*
@@ -88,8 +88,10 @@ cbuffer ColorBuffer: register(b)" STRINGIFY(COLOR_BUFFER_INDEX) R"() {
 }
 
 float4 main(PixelInput input) : SV_TARGET {
+	const float smoothing = 1.0f / 16.0f;
 	float alpha = tex.Sample(texSampler, input.texcoord).r;
-	return float4(color.xyz, color.w * alpha);;
+    alpha = 1.0f - smoothstep(0.5f - smoothing, 0.5f + smoothing, alpha);
+    return float4(color.xyz, color.w * alpha);
 }
 )";
 
@@ -418,8 +420,6 @@ Mesh arc_mesh;
 // Font + font texture.
 Font font_ui;
 Texture2D font_ui_texture;
-// We have to keep the file pointer because we cannot release the file until we release the font.
-File font_file;
 
 // We need the screen size for rendering. These values are set in ui::init
 float screen_width = -1, screen_height = -1;
@@ -510,12 +510,13 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     assert(graphics::is_ready(&_ui_draw::texture_sampler));
 
     // Init font
-    _ui_draw::font_file = file_system::read_file("consola.ttf");
-    assert(_ui_draw::font_file.data);
+    File font_file = file_system::read_file("consola.ttf");
+    assert(font_file.data);
     _ui_draw::font_ui = font::get(
-        (uint8_t *)_ui_draw::font_file.data, _ui_draw::font_file.size,
+        (uint8_t *)font_file.data, font_file.size,
         FONT_HEIGHT, (uint32_t)FONT_TEXTURE_SIZE
     );
+    file_system::release_file(font_file);
 
     // Initialize D3D texture for the Font
     _ui_draw::font_ui_texture = graphics::get_texture2D(
@@ -590,7 +591,6 @@ void ui_draw::release() {
     graphics::release(&_ui_draw::texture_sampler);
 
     font::release(&_ui_draw::font_ui);
-    file_system::release_file(_ui_draw::font_file);
     graphics::release(&_ui_draw::font_ui_texture);
 }
 

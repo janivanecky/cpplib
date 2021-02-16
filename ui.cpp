@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cassert>
 #include "ui.h"
 #include "ui_draw.h"

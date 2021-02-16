@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "ft2build.h"
-#include FT_FREETYPE_H
+#include "ttf.h"
 
 // Glyph specifies information aobut a single letter at a single scale
 struct Glyph {
@@ -14,12 +13,14 @@ struct Glyph {
 // Font contains data for rendering text at specific scale
 struct Font {
     Glyph glyphs[96];
+    // TODO: These should be ints.
     float row_height;
     float top_pad;
-    float scale;
     uint8_t *bitmap;
     int bitmap_width, bitmap_height;
-    FT_Face face;
+    KernSubTable kerning_table;
+    CmapTable cmap_table;
+    float scale;
 };
 
 // font namespace handles loading Fonts and extracting information from it
