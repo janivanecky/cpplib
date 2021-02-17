@@ -203,6 +203,7 @@ struct VertexInput {
 
 struct VertexOutput {
     float4 svPosition: SV_POSITION;
+    float4 screenPos: SCREEN_POS;
 };
 
 cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
@@ -210,9 +211,7 @@ cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
     matrix view;
 };
 
-cbuffer LineVertices : register(b)" STRINGIFY(LINE_VERTICES_BUFFER_INDEX) R"() {
-    float4 vertices[)" STRINGIFY(LINE_POINTS_TO_DRAW_BATCH_SIZE) R"(];
-};
+StructuredBuffer<float4> vertices: register(t)" STRINGIFY(LINE_VERTICES_BUFFER_INDEX) R"();
 
 cbuffer LineSettings : register(b)" STRINGIFY(LINE_SETTINGS_BUFFER_INDEX) R"() {
     float width;
@@ -230,6 +229,7 @@ VertexOutput main(VertexInput input) {
     float2 screen_pos = v1 + (v2 - v1) * input.position.x + width_axis * input.position.y * width * 0.5f;
     float4 pos = float4(screen_pos, 0.0f, 1.0f);
     result.svPosition = mul(projection, mul(view, pos));
+    result.screenPos = float4(0,0,0,0);
 
     return result;
 }
@@ -243,6 +243,7 @@ struct VertexInput {
 
 struct VertexOutput {
     float4 svPosition: SV_POSITION;
+    float4 screenPos: SCREEN_POS;
 };
 
 cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
@@ -250,9 +251,7 @@ cbuffer PVMatrices : register(b)" STRINGIFY(PV_MATRICES_BUFFER_INDEX) R"() {
     matrix view;
 };
 
-cbuffer LineVertices : register(b)" STRINGIFY(LINE_VERTICES_BUFFER_INDEX) R"() {
-    float4 vertices[)" STRINGIFY(LINE_POINTS_TO_DRAW_BATCH_SIZE) R"(];
-};
+StructuredBuffer<float4> vertices: register(t)" STRINGIFY(LINE_VERTICES_BUFFER_INDEX) R"();
 
 cbuffer LineSettings : register(b)" STRINGIFY(LINE_SETTINGS_BUFFER_INDEX) R"() {
     float width;
@@ -283,6 +282,7 @@ VertexOutput main(VertexInput input) {
     float2 screen_pos = mul(float2x4(p1.x, p2.x, p3.x, p4.x, p1.y, p2.y, p3.y, p4.y), input.position);
     float4 pos = float4(screen_pos, 0.0f, 1.0f);
     result.svPosition = mul(projection, mul(view, pos));
+    result.screenPos = float4(0,0,0,0);
 
     return result;
 }
@@ -390,7 +390,7 @@ ConstantBuffer buffer_model;
 ConstantBuffer buffer_color;
 ConstantBuffer buffer_shading;
 ConstantBuffer buffer_vertices;
-ConstantBuffer buffer_vertices_line;
+StructuredBuffer buffer_vertices_line;
 ConstantBuffer buffer_line_width;
 ConstantBuffer buffer_arc;
 
@@ -449,9 +449,9 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     _ui_draw::buffer_color = graphics::get_constant_buffer(sizeof(Vector4));
     _ui_draw::buffer_shading = graphics::get_constant_buffer(sizeof(Vector4));
     _ui_draw::buffer_vertices = graphics::get_constant_buffer(sizeof(Vector4) * 3);
-    _ui_draw::buffer_vertices_line = graphics::get_constant_buffer(sizeof(Vector4) * LINE_POINTS_TO_DRAW_BATCH_SIZE);
     _ui_draw::buffer_line_width = graphics::get_constant_buffer(sizeof(float));
     _ui_draw::buffer_arc = graphics::get_constant_buffer(sizeof(float) * 6);
+    _ui_draw::buffer_vertices_line = graphics::get_structured_buffer(sizeof(Vector4), LINE_POINTS_TO_DRAW_BATCH_SIZE);
     assert(graphics::is_ready(&_ui_draw::buffer_model));
     assert(graphics::is_ready(&_ui_draw::buffer_pv));
     assert(graphics::is_ready(&_ui_draw::buffer_rect));
@@ -857,7 +857,7 @@ void ui_draw::draw_line(Vector2 *points, int point_count, float width, Vector4 c
 
     // Set constant bufers
     graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
-    graphics::set_constant_buffer(&_ui_draw::buffer_vertices_line, LINE_VERTICES_BUFFER_INDEX);
+    graphics::set_texture(&_ui_draw::buffer_vertices_line, LINE_VERTICES_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_line_width, LINE_SETTINGS_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_color, COLOR_BUFFER_INDEX);
     graphics::set_constant_buffer(&_ui_draw::buffer_shading, SHADING_BUFFER_INDEX);
@@ -894,7 +894,7 @@ void ui_draw::draw_line(Vector2 *points, int point_count, float width, Vector4 c
             point_buffer[i].x = points[i + first_point].x;
             point_buffer[i].y = _ui_draw::screen_height - points[i + first_point].y;
         }
-        graphics::update_constant_buffer(&_ui_draw::buffer_vertices_line, point_buffer);
+        graphics::update_structured_buffer(&_ui_draw::buffer_vertices_line, point_buffer);
 
         // Draw line segments
         graphics::set_vertex_shader(&_ui_draw::vertex_shader_line);
@@ -907,6 +907,9 @@ void ui_draw::draw_line(Vector2 *points, int point_count, float width, Vector4 c
         // Update the first point for the next batch.
         first_point += no_points_lines - 1;
     } while(first_point + 1 < point_count);
+
+    // Unset structured buffer.
+    graphics::unset_texture(LINE_VERTICES_BUFFER_INDEX);
 
     // Reset previous blending state
     graphics::set_blend_state(old_blend_state);
