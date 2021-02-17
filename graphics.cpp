@@ -591,6 +591,12 @@ void graphics::set_texture(Texture3D *texture, uint32_t slot) {
 	graphics_context->context->CSSetShaderResources(slot, 1, &texture->sr_view);
 }
 
+void graphics::set_texture(StructuredBuffer *buffer, uint32_t slot) {
+	graphics_context->context->PSSetShaderResources(slot, 1, &buffer->sr_view);
+	graphics_context->context->CSSetShaderResources(slot, 1, &buffer->sr_view);
+	graphics_context->context->VSSetShaderResources(slot, 1, &buffer->sr_view);
+}
+
 void graphics::unset_texture(uint32_t slot) {
 	ID3D11ShaderResourceView *null[] = { NULL };
 	graphics_context->context->PSSetShaderResources(slot, 1, null);

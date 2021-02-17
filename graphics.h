@@ -245,6 +245,9 @@ namespace graphics {
 	// Set texture to accessible from shaders
 	void set_texture(Texture2D *texture, uint32_t slot);
 
+	// Set StructuredBuffer as SRV.
+	void set_texture(StructuredBuffer *buffer, uint32_t slot);
+
 	// Set texture to be accessible from compute shaders
 	void set_texture_compute(Texture2D *texture, uint32_t slot);
 
