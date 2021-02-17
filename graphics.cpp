@@ -1151,6 +1151,10 @@ bool graphics::is_ready(ConstantBuffer *buffer) {
 	return buffer->buffer;
 }
 
+bool graphics::is_ready(StructuredBuffer *buffer) {
+	return buffer->buffer && buffer->sr_view && buffer->ua_view;
+}
+
 bool graphics::is_ready(TextureSampler *sampler) {
 	return sampler->sampler;
 }
