@@ -570,7 +570,6 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
 
                 int dst_x = x + bitmap_x;
                 int dst_y = bitmap_height - 1 - y + bitmap_y;  // "glyph space" has y-axis up, bitmap down.
-                font_bitmap[dst_x + dst_y * bitmap_size] = d < 0.5f ? 255 : 0;
                 font_bitmap[dst_x + dst_y * bitmap_size] = uint8_t(math::clamp(d, 0.0f, 1.0f) * 255.0f);
             }
         }
