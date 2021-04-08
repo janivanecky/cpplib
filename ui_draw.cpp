@@ -306,7 +306,7 @@ float4 main(PixelInput input) : SV_TARGET {
     if(shading > 0) {
         // Line shading.
         float t = input.screenPos.x - input.screenPos.y;
-        float a = sin(t * 3.1415 * 2.0f  / 7.0f);
+        float a = sin(t * 3.1415 * 2.0f / 7.0f);
         a = smoothstep(0, 0.01f, a);
         return color * a;
     }
@@ -613,13 +613,22 @@ Matrix4x4 get_projection_matrix() {
     );
 }
 
-void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 origin) {
+void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 origin, Font *font, Texture2D *font_texture) {
+    // Set up font and font texture if not provided.
+    if(!font && !font_texture) {
+        font = &_ui_draw::font_ui;
+        font_texture = &_ui_draw::font_ui_texture;
+    } else if (!font || !font_texture) {
+        // In case only one of the font and texture were provided, we consider it an invalid input and exit.
+        return;
+    }
+
     // Set font shaders
     graphics::set_pixel_shader(&_ui_draw::pixel_shader_font);
     graphics::set_vertex_shader(&_ui_draw::vertex_shader_font);
 
     // Set font texture
-    graphics::set_texture(&_ui_draw::font_ui_texture, 0);
+    graphics::set_texture(font_texture, 0);
     graphics::set_texture_sampler(&_ui_draw::texture_sampler, 0);
 
     // Set alpha blending state
@@ -641,23 +650,23 @@ void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 ori
     graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
 
     // Get final text dimensions
-    float text_width = font::get_string_width(text, &_ui_draw::font_ui);
-    float text_height = font::get_row_height(&_ui_draw::font_ui);
+    float text_width = font::get_string_width(text, font);
+    float text_height = font::get_row_height(font);
 
     // Adjust starting point based on the origin
     x = math::floor(x - origin.x * text_width);
     y = math::floor(y - origin.y * text_height);
 
-    y += _ui_draw::font_ui.top_pad;
+    y += font->top_pad;
     while(*text) {
         char c = *text;
-        Glyph glyph = _ui_draw::font_ui.glyphs[c - 32];
+        Glyph glyph = font->glyphs[c - 32];
 
         // Set up source rectangle
-        float rel_x = glyph.bitmap_x / FONT_TEXTURE_SIZE;
-        float rel_y = glyph.bitmap_y / FONT_TEXTURE_SIZE;
-        float rel_width = glyph.bitmap_width / FONT_TEXTURE_SIZE;
-        float rel_height = glyph.bitmap_height / FONT_TEXTURE_SIZE;
+        float rel_x = glyph.bitmap_x / float(font->bitmap_width);
+        float rel_y = glyph.bitmap_y / float(font->bitmap_height);
+        float rel_width = glyph.bitmap_width / float(font->bitmap_height);
+        float rel_height = glyph.bitmap_height / float(font->bitmap_height);
         Vector4 source_rect = {rel_x, rel_y, rel_width, rel_height};
         graphics::update_constant_buffer(&_ui_draw::buffer_rect, &source_rect);
 
@@ -677,7 +686,7 @@ void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 ori
         graphics::draw_mesh(&_ui_draw::quad_mesh);
 
         // Update current position for next letter
-        if (*(text + 1)) x += font::get_kerning(&_ui_draw::font_ui, c, *(text + 1));
+        if (*(text + 1)) x += font::get_kerning(font, c, *(text + 1));
         x += glyph.advance;
         text++;
     }
@@ -686,8 +695,8 @@ void ui_draw::draw_text(char *text, float x, float y, Vector4 color, Vector2 ori
     graphics::set_blend_state(old_blend_state);
 };
 
-void ui_draw::draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin) {
-    ui_draw::draw_text(text, pos.x, pos.y, color, origin);
+void ui_draw::draw_text(char *text, Vector2 pos, Vector4 color, Vector2 origin, Font *font, Texture2D *font_texture) {
+    ui_draw::draw_text(text, pos.x, pos.y, color, origin, font, font_texture);
 }
 
 void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 color, ShadingType shading_type) {
