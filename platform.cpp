@@ -175,11 +175,14 @@ bool platform::get_event(Event *event, bool broadcast_message) {
 			else if(raw_kb.VKey == VK_SPACE) data->code = KeyCode::SPACE;
 			else if(raw_kb.VKey == VK_LEFT) data->code = KeyCode::LEFT;
 			else if(raw_kb.VKey == VK_RIGHT) data->code = KeyCode::RIGHT;
+			else if(raw_kb.VKey == VK_DOWN) data->code = KeyCode::DOWN;
+			else if(raw_kb.VKey == VK_UP) data->code = KeyCode::UP;
 			else if(raw_kb.VKey == VK_DELETE) data->code = KeyCode::DEL;
 			else if(raw_kb.VKey == VK_BACK) data->code = KeyCode::BACKSPACE;
 			else if(raw_kb.VKey == VK_HOME) data->code = KeyCode::HOME;
 			else if(raw_kb.VKey == VK_END) data->code = KeyCode::END;
 			else if(raw_kb.VKey == VK_RETURN) data->code = KeyCode::ENTER;
+			else if(raw_kb.VKey == VK_TAB) data->code = KeyCode::TAB;
 			else if(raw_kb.VKey == 0x57) data->code = KeyCode::W;
 			else if(raw_kb.VKey == 0x41) data->code = KeyCode::A;
 			else if(raw_kb.VKey == 0x53) data->code = KeyCode::S;
