@@ -685,11 +685,6 @@ uint8_t *ttf::get_table_ptr(TableDirectory *table_directory, uint8_t *ttf_file_p
 }
 
 uint16_t ttf::get_glyph_index(uint8_t character_code, CmapTable *cmap_table) {
-    // By convention, space is glyph id 3.
-    if (character_code == ' ') {
-        return 3;
-    }
-
     // TODO: This should find a suitable table.
     Format4SubTable subtable = cmap_table->encoding_records[0].subtable;
 
