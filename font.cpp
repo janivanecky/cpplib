@@ -514,7 +514,7 @@ Font font::get(uint8_t *data, int32_t data_size, int32_t size, int32_t bitmap_si
                 // Get the component glyph.
                 uint16_t component_glyph_id = component->glyph_index;
                 // NOTE: We're assuming that composite glyphs cannot have empty components.
-                uint16_t component_glyph_offset = loca_table.offsets[component_glyph_id];
+                uint32_t component_glyph_offset = loca_table.offsets[component_glyph_id];
                 TTFGlyph component_glyph = ttf::get_glyph(glyf_table_ptr + component_glyph_offset);
 
                 // Get the segments for this component glyph.
