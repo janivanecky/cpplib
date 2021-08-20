@@ -178,6 +178,14 @@ Vector3 math::rotate(Vector3 v, float angle, Vector3 axis) {
 	return result;
 }
 
+Vector3 math::polar_to_cartesian(float azimuth, float polar, float radius) {
+	return Vector3(
+		math::sin(polar) * math::sin(azimuth) * radius,
+		math::cos(polar) * radius,
+		math::sin(polar) * math::cos(azimuth) * radius
+	);
+}
+
 Vector3 math::cross(Vector3 a, Vector3 b) {
 	Vector3 result;
 
@@ -338,6 +346,20 @@ Matrix4x4 math::get_orthographics_projection_dx_rh(float left, float right, floa
 	result[12] = -(right + left) / (right - left);
 	result[13] = -(top + bottom) / (top - bottom);
 	result[14] = -(near) / (far - near);
+	result[15] = 1;
+
+	return result;
+}
+
+Matrix4x4 math::get_orthographics_projection_vk_rh(float left, float right, float bottom, float top, float near, float far) {
+	Matrix4x4 result;
+
+	result[0] = 2.0f / (right - left);
+	result[5] = 2.0f / (bottom - top);
+	result[10] = 2.0f / (far - near);
+	result[12] = -(right + left) / (right - left);
+	result[13] = -(top + bottom) / (bottom - top);
+	result[14] = -(far + near) / (far - near);
 	result[15] = 1;
 
 	return result;

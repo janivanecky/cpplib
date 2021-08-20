@@ -50,6 +50,15 @@ struct Vector2 {
 		return result;
 	}
 
+	Vector2 operator+(float x) {
+		Vector2 result;
+
+		result.x = this->x + x;
+		result.y = this->y + x;
+
+		return result;
+	}
+
 	Vector2 operator/(float x) {
 		Vector2 result;
 
@@ -82,6 +91,13 @@ struct Vector2 {
 		return *this;
 	}
 
+	Vector2& operator-=(float x) {
+		this->x -= x;
+		this->y -= x;
+
+		return *this;
+	}
+
 	Vector2& operator*=(float x) {
 		this->x *= x;
 		this->y *= x;
@@ -109,7 +125,6 @@ struct Vector3 {
 
 	Vector3() :
 		v() {
-
 	}
 
 	Vector3(float x, float y, float z) :
@@ -444,9 +459,10 @@ namespace math {
 	Vector2 normalize(Vector2);
 	Vector3 normalize(Vector3);
 	Vector4 normalize(Vector4);
-
 	Vector3 rotate(Vector3 v, Quaternion q);
 	Vector3 rotate(Vector3 v, float angle, Vector3 axis);
+
+	Vector3 polar_to_cartesian(float azimuth, float polar, float radius = 1.0f);
 
 	Matrix4x4 get_identity();
 	Matrix4x4 get_translation(Vector3 v);
@@ -465,6 +481,7 @@ namespace math {
 	// NOTE: This matrix is for RH systems and near/far are reverted with respect to RH system. E.g. passing -near produces z value of 0;
 	Matrix4x4 get_perspective_projection_dx_rh(float fov, float aspectRatio, float near, float far);
 	Matrix4x4 get_orthographics_projection_dx_rh(float left, float right, float bottom, float top, float near, float far);
+	Matrix4x4 get_orthographics_projection_vk_rh(float left, float right, float bottom, float top, float near, float far);
 
 	Matrix4x4 get_look_at(Vector3 eye, Vector3 target, Vector3 up);
 
