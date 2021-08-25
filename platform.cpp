@@ -10,6 +10,88 @@ const uint32_t CM_WINDOW_RESIZED = WM_APP + 1;
 
 RECT pre_sizemove_rect;
 
+bool store_last_window_size_pos(char *window_name, uint32_t width, uint32_t height, int32_t x, int32_t y) {
+	HKEY key;
+	DWORD disposition;
+
+	// Create/open the registry key.
+	LSTATUS result = RegCreateKeyExA(
+		HKEY_CURRENT_USER, window_name, 0, NULL, 0, KEY_SET_VALUE, NULL, &key, &disposition
+	);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	// Store window x, y, width and height.
+	bool stored_all = true;
+	result = RegSetValueExA(key, "x", 0, REG_DWORD, (uint8_t *)&x, sizeof(DWORD));
+	stored_all = stored_all && (result == ERROR_SUCCESS);
+	result = RegSetValueExA(key, "y", 0, REG_DWORD, (uint8_t *)&y, sizeof(DWORD));
+	stored_all = stored_all && (result == ERROR_SUCCESS);
+	result = RegSetValueExA(key, "width", 0, REG_DWORD, (uint8_t *)&width, sizeof(DWORD));
+	stored_all = stored_all && (result == ERROR_SUCCESS);
+	result = RegSetValueExA(key, "height", 0, REG_DWORD, (uint8_t *)&height, sizeof(DWORD));
+	stored_all = stored_all && (result == ERROR_SUCCESS);
+	if(!stored_all) {
+		return false;
+	}
+
+	// Close the registry key.
+	result = RegCloseKey(key);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	return true;
+}
+
+bool platform::get_last_window_size_pos(
+	char *window_name, uint32_t *width, uint32_t *height, int32_t *x, int32_t *y
+) {
+	HKEY key;
+
+	// Open the registry key.
+	LSTATUS result = RegOpenKeyExA(HKEY_CURRENT_USER, window_name, 0, KEY_READ, &key);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	// Load window x, y, width and height.
+	uint32_t last_width, last_height;
+	int32_t last_x, last_y;
+	bool loaded_all = true;
+	DWORD type, size;
+	size = sizeof(int32_t);
+	result = RegQueryValueExA(key, "x", NULL, &type, (uint8_t *)&last_x, &size);
+	loaded_all = loaded_all && (result == ERROR_SUCCESS);
+	size = sizeof(int32_t);
+	result = RegQueryValueExA(key, "y", NULL, &type, (uint8_t *)&last_y, &size);
+	loaded_all = loaded_all && (result == ERROR_SUCCESS);
+	size = sizeof(uint32_t);
+	result = RegQueryValueExA(key, "width", NULL, &type, (uint8_t *)&last_width, &size);
+	loaded_all = loaded_all && (result == ERROR_SUCCESS);
+	size = sizeof(uint32_t);
+	result = RegQueryValueExA(key, "height", NULL, &type, (uint8_t *)&last_height, &size);
+	loaded_all = loaded_all && (result == ERROR_SUCCESS);
+	if(!loaded_all) {
+		return false;
+	}
+
+	// Set the output values
+	*x = last_x;
+	*y = last_y;
+	*width = last_width;
+	*height = last_height;
+
+	// Close the registry key.
+	result = RegCloseKey(key);
+	if (result != ERROR_SUCCESS) {
+		return false;
+	}
+
+	return true;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	switch (uMsg) {
 	// We use this to not display window's client area before the first user draw.
@@ -50,10 +132,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 		// If the sizes don't match, resizing happened. Otherwise this event was a move event and we
 		// can ignore it. In case resizing happened, we're going to send a custom CM_WINDOW_RESIZED
 		// message to the message queue. This gets propagated to lib user as WINDOW_RESIZED event.
-		if(pre_sizemove_width != post_sizemove_width || pre_sizemove_height != post_sizemove_height) {
+		bool window_resized = (
+			pre_sizemove_width != post_sizemove_width ||
+			pre_sizemove_height != post_sizemove_height
+		);
+		if(window_resized) {
 			uint32_t output_lparam = ((uint16_t)post_sizemove_height << 16) | ((uint16_t)post_sizemove_width);
 			PostMessageA(hwnd, CM_WINDOW_RESIZED, 0, output_lparam);
 		}
+
+		// Store window's current size and position into registry file so
+		// the next time we create that window we can remember its position and size.
+		static char window_title[32];
+		if (GetWindowTextA(hwnd, window_title, ARRAYSIZE(window_title)) != 0) {
+			store_last_window_size_pos(
+				window_title,
+				post_sizemove_width,
+				post_sizemove_height,
+				post_sizemove_rect.left,
+				post_sizemove_rect.top
+			);
+		}
+
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	break;
@@ -287,7 +387,9 @@ HWND platform::get_existing_window(char *window_name) {
 	return window;
 }
 
-HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t window_height) {
+HWND platform::get_window(
+	char *window_name, uint32_t window_width, uint32_t window_height, int32_t x, int32_t y
+) {
 	HINSTANCE program_instance = GetModuleHandle(0);
 
 	WNDCLASSEXA window_class = {};
@@ -301,13 +403,18 @@ HWND platform::get_window(char *window_name, uint32_t window_width, uint32_t win
 	HWND window = (HWND)INVALID_HANDLE_VALUE;
 	if (RegisterClassExA(&window_class)) {
 		DWORD window_flags = WS_VISIBLE | WS_POPUP;
+
+		// NOTE: This is doing nothing for current window styles.
 		RECT window_rect = {0, 0, (LONG)window_width, (LONG)window_height};
 		AdjustWindowRect(&window_rect, window_flags, FALSE);
 		window_width = window_rect.right - window_rect.left;
 		window_height = window_rect.bottom - window_rect.top;
 
-		window = CreateWindowA(WINDOW_CLASS_NAME, window_name, window_flags,
-								0, 0, window_width, window_height, NULL, NULL, program_instance, NULL);
+		window = CreateWindowA(
+			WINDOW_CLASS_NAME, window_name, window_flags,
+			x, y, window_width, window_height,
+			NULL, NULL, program_instance, NULL
+		);
 
 		RAWINPUTDEVICE device;
 		device.usUsagePage = 0x01;

@@ -103,10 +103,17 @@ typedef LARGE_INTEGER Ticks;
 // `platform` namespace handles interfacing with windows API, with the exception of file system interface
 namespace platform {
 	// Create and return windows with specific name and dimensions
-	HWND get_window(char *window_name, uint32_t window_width, uint32_t window_height);
+	HWND get_window(
+		char *window_name, uint32_t window_width, uint32_t window_height, int32_t x = 0, int32_t y = 0
+	);
 
 	// Get existing window.
 	HWND get_existing_window(char *window_name);
+
+	// Get window size and position from the last time it was open
+	bool get_last_window_size_pos(
+		char *window_name, uint32_t *width, uint32_t *height, int32_t *x, int32_t *y
+	);
 
 	// Check if window is valid
 	bool is_window_valid(HWND window);
