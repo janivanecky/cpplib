@@ -314,6 +314,20 @@ float4 main(PixelInput input) : SV_TARGET {
 }
 )";
 
+char pixel_shader_texture_string[] = R"(
+struct PixelInput {
+    float4 svPosition: SV_POSITION;
+    float2 texcoord: TEXCOORD;
+};
+
+Texture2D tex : register(t0);
+SamplerState tex_sampler : register(s0);
+
+float4 main(PixelInput input) : SV_TARGET {
+    return float4(tex.Sample(tex_sampler, input.texcoord).xyz, 1.0f);
+}
+)";
+
 }
 
 /*
@@ -405,6 +419,7 @@ VertexShader vertex_shader_arc;
 // Pixel shaders.
 PixelShader pixel_shader_font;
 PixelShader pixel_shader_solid_color;
+PixelShader pixel_shader_texture;
 
 // Texture samplers.
 TextureSampler texture_sampler;
@@ -496,6 +511,8 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
         _ui_draw::pixel_shader_solid_color_string, ARRAYSIZE(_ui_draw::pixel_shader_solid_color_string));
     _ui_draw::vertex_shader_arc = graphics::get_vertex_shader_from_code(
         _ui_draw::vertex_shader_arc_string, ARRAYSIZE(_ui_draw::vertex_shader_arc_string));
+    _ui_draw::pixel_shader_texture = graphics::get_pixel_shader_from_code(
+        _ui_draw::pixel_shader_texture_string, ARRAYSIZE(_ui_draw::pixel_shader_texture_string));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_rect));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_font));
     assert(graphics::is_ready(&_ui_draw::pixel_shader_font));
@@ -504,6 +521,7 @@ void ui_draw::init(float screen_width_ui, float screen_height_ui) {
     assert(graphics::is_ready(&_ui_draw::vertex_shader_miter));
     assert(graphics::is_ready(&_ui_draw::vertex_shader_arc));
     assert(graphics::is_ready(&_ui_draw::pixel_shader_solid_color));
+    assert(graphics::is_ready(&_ui_draw::pixel_shader_texture));
 
     // Create texture sampler
     _ui_draw::texture_sampler = graphics::get_texture_sampler(SampleMode::CLAMP);
@@ -730,6 +748,47 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
     graphics::update_constant_buffer(&_ui_draw::buffer_color, &color);
     graphics::update_constant_buffer(&_ui_draw::buffer_shading, &shading_type);
     graphics::update_constant_buffer(&_ui_draw::buffer_model, &model_matrix);
+
+    // Render rect
+    graphics::draw_mesh(&_ui_draw::quad_mesh);
+
+    // Reset previous blending state
+    graphics::set_blend_state(old_blend_state);
+}
+
+void ui_draw::draw_rect_textured(float x, float y, float width, float height, Texture2D *texture) {
+    // Set rect shaders
+    graphics::set_pixel_shader(&_ui_draw::pixel_shader_texture);
+    graphics::set_vertex_shader(&_ui_draw::vertex_shader_font);
+
+    // Set alpha blending state
+    BlendType old_blend_state = graphics::get_blend_state();
+    graphics::set_blend_state(BlendType::ALPHA);
+
+    // Set constant bufers
+    graphics::set_constant_buffer(&_ui_draw::buffer_pv, PV_MATRICES_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_rect, SOURCE_RECT_BUFFER_INDEX);
+    graphics::set_constant_buffer(&_ui_draw::buffer_model, MODEL_MATRICES_BUFFER_INDEX);
+
+    // Get constant buffer values
+    Matrix4x4 pv_matrices[2] = {
+        get_projection_matrix(),
+        math::get_identity()
+    };
+    Matrix4x4 model_matrix =
+        math::get_translation(x, _ui_draw::screen_height - y, 0) *
+        math::get_scale(width, height, 1.0f) *
+        math::get_translation(Vector3(0.5f, -0.5f, 0.0f)) *
+        math::get_scale(0.5f);
+    Vector4 source_rect = {0.0f, 0.0f, 1.0f, 1.0f};
+
+    // Update constant buffers
+    graphics::update_constant_buffer(&_ui_draw::buffer_pv, pv_matrices);
+    graphics::update_constant_buffer(&_ui_draw::buffer_model, &model_matrix);
+    graphics::update_constant_buffer(&_ui_draw::buffer_rect, &source_rect);
+
+    graphics::set_texture_sampler(&_ui_draw::texture_sampler, 0);
+    graphics::set_texture(texture, 0);
 
     // Render rect
     graphics::draw_mesh(&_ui_draw::quad_mesh);
