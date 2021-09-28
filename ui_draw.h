@@ -34,6 +34,8 @@ namespace ui_draw {
     void release();
 
     Font *get_font();
+    float get_screen_width();
+    float get_screen_height();
 }
 
 #ifdef CPPLIB_UIDRAW_IMPL

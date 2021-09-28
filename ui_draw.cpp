@@ -618,6 +618,14 @@ void ui_draw::set_screen_size(float screen_width, float screen_height) {
     _ui_draw::screen_height = screen_height;
 }
 
+float ui_draw::get_screen_width() {
+    return _ui_draw::screen_width;
+}
+
+float ui_draw::get_screen_height() {
+    return _ui_draw::screen_height;
+}
+
 /*
 
 This section defines the core ui_draw functionality - functions for rendering UI.
