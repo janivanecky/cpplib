@@ -1,4 +1,4 @@
 include_dir(../)
 build_exe(ui_test.exe, ui_test.cpp)
-libs(kernel32.lib user32.lib D3D11.lib d3dcompiler.lib DXGI.lib Dwmapi.lib)
+libs(kernel32.lib user32.lib D3D11.lib d3dcompiler.lib DXGI.lib Dwmapi.lib Advapi32.lib)
 copy(../fonts/*, $BIN)

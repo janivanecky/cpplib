@@ -57,6 +57,19 @@ int main(int argc, char **argv) {
     }
     float sin_x_selected = 0.5f;
 
+    // Initialize test texture
+    const uint32_t texture_width = 256;
+    const uint32_t texture_height = 256;
+    uint32_t *texture_data = (uint32_t *)malloc(sizeof(uint32_t) * texture_width * texture_height);
+    for(uint32_t y = 0; y < texture_height; ++y) {
+        for(uint32_t x = 0; x < texture_width; ++x) {
+            bool checker = (((y / 32) % 2) + ((x / 32) % 2)) % 2;
+            texture_data[y * texture_width + x] = checker ? 0xFF000000 : 0xFFFFFFFF;
+        }
+    }
+    Texture2D texture = graphics::get_texture2D(texture_data, texture_width, texture_height);
+    free(texture_data);
+
     // Render loop
     bool is_running = true;
     while(is_running) {
@@ -104,29 +117,39 @@ int main(int argc, char **argv) {
         ui::add_function_plot(&panel, "sin function", sin_x, sin_y, ARRAYSIZE(sin_x), &sin_x_selected, sin_y_selected);
 
         // Test text drawing
-        ui_draw::draw_text("TEST", 600, 10, Vector4(1,1,1,1));
+        float y_pos = 10.0f;
+        ui_draw::draw_text("Test 123 0", 600, y_pos, Vector4(0,0,0,1), Vector2(0,0));
+        y_pos += 30.0f;
 
         // Test rect drawing
-        ui_draw::draw_rect(600, 50, 100, 20, Vector4(1,0,0,1));
+        ui_draw::draw_rect(600, y_pos, 100, 20, Vector4(1,0,0,1));
+        y_pos += 30.0f;
+
+        // Test textured rect drawing
+        ui_draw::draw_rect_textured(600, y_pos, 100, 100, &texture);
+        y_pos += 110.0f;
 
         // Test triangle drawing
-        ui_draw::draw_triangle(Vector2(600, 80), Vector2(700, 80), Vector2(650, 100), Vector4(0,1,0,1));
-        Vector2 line_points[4] = {
-            Vector2(600, 110),
-            Vector2(600, 140),
-            Vector2(700, 110),
-            Vector2(700, 140),
-        };
+        ui_draw::draw_triangle(Vector2(600, y_pos), Vector2(700, y_pos), Vector2(650, y_pos + 20), Vector4(0,1,0,1));
+        y_pos += 50.0f;
+
 
         // Test line drawing
+        Vector2 line_points[4] = {
+            Vector2(600, y_pos),
+            Vector2(600, y_pos + 30),
+            Vector2(700, y_pos),
+            Vector2(700, y_pos + 30),
+        };
         ui_draw::draw_line(line_points, 4, 8, Vector4(0,1,1,1));
+        y_pos += 100;
 
         const int circle_point_count = 16000;
         Vector2 circle_points[circle_point_count];
         for(int i = 0; i < circle_point_count; ++i) {
             float a = math::PI2 / float(circle_point_count - 1) * i;
             circle_points[i].x = 650 + math::sin(a) * 50.0f;
-            circle_points[i].y = 200 + math::cos(a) * 50.0f;
+            circle_points[i].y = y_pos + math::cos(a) * 50.0f;
         }
 
         // Test line drawing
