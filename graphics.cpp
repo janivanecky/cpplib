@@ -103,7 +103,7 @@ bool graphics::init(LUID *adapter_luid) {
 	blend_state_desc.RenderTarget[0].DestBlend 			   = D3D11_BLEND_INV_SRC_ALPHA;
 	blend_state_desc.RenderTarget[0].BlendOp	 		   = D3D11_BLEND_OP_ADD;
 	blend_state_desc.RenderTarget[0].SrcBlendAlpha	 	   = D3D11_BLEND_ONE;
-	blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_ZERO;
+	blend_state_desc.RenderTarget[0].DestBlendAlpha	 	   = D3D11_BLEND_INV_SRC_ALPHA;
 	blend_state_desc.RenderTarget[0].BlendOpAlpha	 	   = D3D11_BLEND_OP_ADD;
 
 	hr = graphics_context->device->CreateBlendState(&blend_state_desc, &blend_states[BlendType::ALPHA]);

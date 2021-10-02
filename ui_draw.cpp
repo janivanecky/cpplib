@@ -324,7 +324,7 @@ Texture2D tex : register(t0);
 SamplerState tex_sampler : register(s0);
 
 float4 main(PixelInput input) : SV_TARGET {
-    return float4(tex.Sample(tex_sampler, input.texcoord).xyz, 1.0f);
+    return tex.Sample(tex_sampler, input.texcoord);
 }
 )";
 
