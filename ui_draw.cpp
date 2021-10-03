@@ -764,6 +764,14 @@ void ui_draw::draw_rect(float x, float y, float width, float height, Vector4 col
     graphics::set_blend_state(old_blend_state);
 }
 
+void ui_draw::draw_rect(Vector2 pos, float width, float height, Vector4 color, ShadingType shading_type) {
+    ui_draw::draw_rect(pos.x, pos.y, width, height, color, shading_type);
+}
+
+void ui_draw::draw_rect(Vector2 pos, Vector2 size, Vector4 color, ShadingType shading_type) {
+    ui_draw::draw_rect(pos.x, pos.y, size.x, size.y, color, shading_type);
+}
+
 void ui_draw::draw_rect_textured(float x, float y, float width, float height, Texture2D *texture) {
     // Set rect shaders
     graphics::set_pixel_shader(&_ui_draw::pixel_shader_texture);
@@ -803,10 +811,6 @@ void ui_draw::draw_rect_textured(float x, float y, float width, float height, Te
 
     // Reset previous blending state
     graphics::set_blend_state(old_blend_state);
-}
-
-void ui_draw::draw_rect(Vector2 pos, float width, float height, Vector4 color, ShadingType shading_type) {
-    ui_draw::draw_rect(pos.x, pos.y, width, height, color, shading_type);
 }
 
 void ui_draw::draw_circle(Vector2 pos, float radius, Vector4 color) {

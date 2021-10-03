@@ -19,6 +19,7 @@ namespace ui_draw {
 
     void draw_rect(float x, float y, float width, float height, Vector4 color, ShadingType shading_type=SOLID_COLOR);
     void draw_rect(Vector2 pos, float width, float height, Vector4 color, ShadingType shading_type=SOLID_COLOR);
+    void draw_rect(Vector2 pos, Vector2 size, Vector4 color, ShadingType shading_type=SOLID_COLOR);
     void draw_rect_textured(float x, float y, float width, float height, Texture2D *texture);
 
     void draw_triangle(Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color);
