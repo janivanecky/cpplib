@@ -414,6 +414,7 @@ namespace math {
 	float min(float a, float b);
 	int max(int a, int b);
 	int min(int a, int b);
+	float round(float x);
 	float abs(float x);
 	float sin(float x);
 	float cos(float x);

@@ -21,6 +21,10 @@ int math::min(int a, int b) {
 	return a <= b ? a : b;
 }
 
+float math::round(float x) {
+	return roundf(x);
+}
+
 float math::abs(float x) {
 	return fabsf(x);
 }
