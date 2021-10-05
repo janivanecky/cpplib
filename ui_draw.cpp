@@ -274,10 +274,12 @@ VertexOutput main(VertexInput input) {
     float2 miter = float2(-tangent.y, tangent.x);
     float s = sign(dot(v3 - v2, miter));
 
+    const float max_miter_distance = 5.0f * width;
     float2 p1 = v2;
     float2 p2 = p1 - width_axis_1 * width * 0.5f * s;
     float2 p3 = p1 + width_axis_2 * width * 0.5f * s;
-    float2 p4 = p1 + miter * length(p2 - p1) / dot(normalize(p2 - p1), miter);
+    float miter_length = length(p2 - p1) / dot(normalize(p2 - p1), miter);
+    float2 p4 = p1 + miter * clamp(miter_length, -max_miter_distance, max_miter_distance);
 
     float2 screen_pos = mul(float2x4(p1.x, p2.x, p3.x, p4.x, p1.y, p2.y, p3.y, p4.y), input.position);
     float4 pos = float4(screen_pos, 0.0f, 1.0f);
