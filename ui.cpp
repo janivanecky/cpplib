@@ -547,8 +547,8 @@ bool update_slider_state(int32_t slider_id, Vector2 pos, Vector2 size, float *va
     return true;
 }
 
-void render_slider_state(
-    int32_t slider_id, Vector2 pos, Vector2 size, float value, float min, float max, char *label
+void render_slider_state_int(
+    int32_t slider_id, Vector2 pos, Vector2 size, int value, int min, int max, char *label
 ) {
     // Update visual parameters.
     bool slider_active = is_hot(slider_id) || is_active(slider_id);
@@ -566,6 +566,62 @@ void render_slider_state(
 
     // Add current value label.
     Vector2 current_pos = Vector2(pos.x + size.x / 2.0f, pos.y);
+    add_text(current_pos, label_color, Vector2(0.5f, 0.0f), "%d", value);
+
+    // Add slider.
+    Vector2 slider_size = Vector2((float(value) - min) / (max - min) * ITEMS_WIDTH, height);
+    add_rect(pos, slider_size, slider_color, LINES);
+
+    // Slider label.
+    Vector2 text_pos = Vector2(size.x + pos.x + LABEL_PADDING, pos.y);
+    add_text(text_pos, label, label_color);
+}
+
+bool ui::add_slider(Panel *panel, char *label, int *pos, int min, int max) {
+    int32_t slider_id = hash_string(label);
+
+    // Slider bar
+    float height = get_item_height();
+    Vector2 slider_pos = panel->pos + panel->item_pos;
+    Vector2 slider_size = Vector2(ITEMS_WIDTH, height);
+
+    // Update state.
+    update_hot_and_active(slider_id, slider_pos, slider_size, PRESS_AND_HOLD);
+    float pos_f = float(*pos);
+    bool changed = update_slider_state(slider_id, slider_pos, slider_size, &pos_f, float(min), float(max));
+    *pos = int(math::round(pos_f));
+
+    // Render state.
+    render_slider_state_int(slider_id, slider_pos, slider_size, *pos, min, max, label);
+
+    // Move current panel's item position.
+    panel->item_pos.y += slider_size.y + INNER_PADDING;
+
+    // Update panel's width.
+    panel->width = math::max(panel->width, compute_item_width(slider_size.x, label));
+
+    return changed;
+}
+
+void render_slider_state_float(
+    int32_t slider_id, Vector2 pos, Vector2 size, float value, float min, float max, char *label
+) {
+    // Update visual parameters.
+    bool slider_active = is_hot(slider_id) || is_active(slider_id);
+    float bounds_width = slider_active ? LINES_WIDTH * 2.0f : LINES_WIDTH;
+    float color_modifier = slider_active ? ACTIVE_COLOR_MODIFIER : INACTIVE_COLOR_MODIFIER;
+
+    // Slightly toned down so there's contrast between the current value and slider box.
+    Vector4 slider_color = COLOR_LABEL * color_modifier * 0.7f;
+    Vector4 bounds_color = COLOR_LABEL * color_modifier;
+    Vector4 label_color = COLOR_LABEL * color_modifier;
+
+    // Add min/max bound markers.
+    float height = get_item_height();
+    add_min_max_markers(pos, bounds_width, height, bounds_color);
+
+    // Add current value label.
+    Vector2 current_pos = Vector2(pos.x + size.x / 2.0f, pos.y);
     add_text(current_pos, label_color, Vector2(0.5f, 0.0f), "%.2f", value);
 
     // Add slider.
@@ -575,13 +631,6 @@ void render_slider_state(
     // Slider label.
     Vector2 text_pos = Vector2(size.x + pos.x + LABEL_PADDING, pos.y);
     add_text(text_pos, label, label_color);
-}
-
-bool ui::add_slider(Panel *panel, char *label, int *pos, int min, int max) {
-    float pos_f = float(*pos);
-    bool changed = add_slider(panel, label, &pos_f, float(min), float(max));
-    *pos = int(pos_f);
-    return changed;
 }
 
 bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max) {
@@ -597,7 +646,7 @@ bool ui::add_slider(Panel *panel, char *label, float *pos, float min, float max)
     bool changed = update_slider_state(slider_id, slider_pos, slider_size, pos, min, max);
 
     // Render state.
-    render_slider_state(slider_id, slider_pos, slider_size, *pos, min, max, label);
+    render_slider_state_float(slider_id, slider_pos, slider_size, *pos, min, max, label);
 
     // Move current panel's item position.
     panel->item_pos.y += slider_size.y + INNER_PADDING;
